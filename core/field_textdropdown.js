@@ -73,6 +73,44 @@ Blockly.FieldTextDropdown.fromJson = function(element) {
 };
 
 /**
+ * Horizontal distance that a checkmark overhangs the dropdown.
+ */
+Blockly.FieldTextDropdown.CHECKMARK_OVERHANG = Blockly.FieldDropdown.CHECKMARK_OVERHANG;
+
+/**
+ * Mouse cursor style when over the hotspot that initiates the editor.
+ */
+Blockly.FieldTextDropdown.prototype.CURSOR = Blockly.FieldDropdown.prototype.CURSOR;
+
+/**
+ * Closure menu item currently selected.
+ * @type {?goog.ui.MenuItem}
+ */
+Blockly.FieldTextDropdown.prototype.selectedItem = Blockly.FieldDropdown.prototype.selectedItem;
+
+/**
+ * Language-neutral currently selected string or image object.
+ * @type {string|!Object}
+ * @private
+ */
+Blockly.FieldTextDropdown.prototype.value_ = Blockly.FieldDropdown.prototype.value_;
+
+/**
+ * SVG image element if currently selected option is an image, or null.
+ * @type {SVGElement}
+ * @private
+ */
+Blockly.FieldTextDropdown.prototype.imageElement_ = Blockly.FieldDropdown.prototype.imageElement_;
+
+/**
+ * Object with src, height, width, and alt attributes if currently selected
+ * option is an image, or null.
+ * @type {Object}
+ * @private
+ */
+Blockly.FieldTextDropdown.prototype.imageJson_ = Blockly.FieldDropdown.prototype.imageJson_;
+
+/**
  * Install this text drop-down field on a block.
  */
 Blockly.FieldTextDropdown.prototype.init = function() {
