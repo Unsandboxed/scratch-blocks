@@ -503,16 +503,11 @@ Blockly.Blocks['control_clear_counter'] = {
 
 Blockly.Blocks['control_all_at_once'] = {
   /**
-   * Block to run the contained script. This is an obsolete block that is
-   * implemented for compatibility with Scratch 2.0 projects. Note that
-   * this was originally designed to run all of the contained blocks
-   * (sequentially, like normal) within a single frame, but this feature
-   * was removed in place of custom blocks marked "run without screen
-   * refresh". The "all at once" block was changed to run the contained
-   * blocks ordinarily, functioning the same way as an "if" block with a
-   * reporter that is always true (e.g. "if 1 = 1"). Also note that the
-   * Scratch 2.0 spec for this block is "warpSpeed", but the label shows
-   * "all at once".
+   * Block to run the contained script. This is an obsolete block that was
+   * implemented for compatibility with Scratch 2.0 projects. The original
+   * intended functionality was to run the blocks sequentially in 1 frame,
+   * not dissimilar from the "run without screen refresh" option in
+   * procedure definitions. In Unsandboxed, this has been reimplemented.
    * @this Blockly.Block
    */
   init: function() {
