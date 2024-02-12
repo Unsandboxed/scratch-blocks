@@ -29,6 +29,27 @@ goog.require('Blockly.constants');
 goog.require('Blockly.ScratchBlocks.VerticalExtensions');
 
 
+Blockly.Blocks['data_variablemenu'] = {
+  /**
+   * Block of Variables
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "%1",
+      "lastDummyAlign0": "CENTRE",
+      "args0": [
+        {
+          "type": "field_variable",
+          "name": "VARIABLE"
+        }
+      ],
+      "category": Blockly.Categories.data,
+      "extensions": ["colours_data", "output_string"]
+    });
+  }
+};
+
 Blockly.Blocks['data_variable'] = {
   /**
    * Block of Variables
