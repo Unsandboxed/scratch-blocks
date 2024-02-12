@@ -223,21 +223,23 @@ Blockly.DataCategory.addDeleteOfList = function(xmlList, variable) {
   //   </value>
   // </block>
   Blockly.DataCategory.addBlock(xmlList, variable, 'data_deleteoflist', 'LIST',
-      ['INDEX', 'math_integer', 1]);
+      ['INDEX', 'data_listindexall', 1]);
 };
 
 /**
  * Construct and add a data_deleteoflist block to xmlList.
+ * Deprecated in Unsandboxed.
  * @param {!Array.<!Element>} xmlList Array of XML block elements.
  * @param {?Blockly.VariableModel} variable Variable to select in the field.
  */
-Blockly.DataCategory.addDeleteAllOfList = function(xmlList, variable) {
-  // <block type="data_deletealloflist">
-  //   <field name="LIST" variabletype="list" id="">variablename</field>
-  // </block>
-  Blockly.DataCategory.addBlock(xmlList, variable, 'data_deletealloflist',
-      'LIST');
-};
+
+  //Blockly.DataCategory.addDeleteAllOfList = function(xmlList, variable) {
+    // <block type="data_deletealloflist">
+    //   <field name="LIST" variabletype="list" id="">variablename</field>
+    // </block>
+    //Blockly.DataCategory.addBlock(xmlList, variable, 'data_deletealloflist',
+      //  'LIST');
+  //};
 
 /**
  * Construct and add a data_insertatlist block to xmlList.
@@ -259,7 +261,7 @@ Blockly.DataCategory.addInsertAtList = function(xmlList, variable) {
   //   </value>
   // </block>
   Blockly.DataCategory.addBlock(xmlList, variable, 'data_insertatlist', 'LIST',
-      ['INDEX', 'math_integer', 1], ['ITEM', 'text', Blockly.Msg.DEFAULT_LIST_ITEM]);
+      ['INDEX', 'data_listindexrandom', 1], ['ITEM', 'text', Blockly.Msg.DEFAULT_LIST_ITEM]);
 };
 
 /**
@@ -282,7 +284,7 @@ Blockly.DataCategory.addReplaceItemOfList = function(xmlList, variable) {
   //   </value>
   // </block>
   Blockly.DataCategory.addBlock(xmlList, variable, 'data_replaceitemoflist',
-      'LIST', ['INDEX', 'math_integer', 1], ['ITEM', 'text', Blockly.Msg.DEFAULT_LIST_ITEM]);
+      'LIST', ['INDEX', 'data_listindexrandom', 1], ['ITEM', 'text', Blockly.Msg.DEFAULT_LIST_ITEM]);
 };
 
 /**
@@ -300,7 +302,7 @@ Blockly.DataCategory.addItemOfList = function(xmlList, variable) {
   //   </value>
   // </block>
   Blockly.DataCategory.addBlock(xmlList, variable, 'data_itemoflist', 'LIST',
-      ['INDEX', 'math_integer', 1]);
+      ['INDEX', 'data_listindexrandom', 1]);
 };
 
 /** Construct and add a data_itemnumoflist block to xmlList.
