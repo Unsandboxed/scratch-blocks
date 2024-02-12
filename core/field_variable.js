@@ -106,8 +106,14 @@ Blockly.FieldVariable.prototype.initModel = function() {
     return; // Initialization already happened.
   }
   this.workspace_ = this.sourceBlock_.workspace;
+  var workspaceVariables = this.workspace_.getVariablesOfType(this.defaultType_);
+  workspaceVariables = workspaceVariables.sort(Blockly.VariableModel.compareByName
   // Initialize this field if it's in a broadcast block in the flyout
-  var variable = this.initFlyoutBroadcast_(this.workspace_);
+  var variable = Blockly.Variables.getVariable(
+    this.workspace_, this.defaultVariableName, null, this.defaultType_);
+  if (workspaceVariables.length > 0 && this.workspace_.isFlyout && !variable) {
+    variable = workspaceVariables[0];
+  }
   if (!variable) {
     var variable = Blockly.Variables.getOrCreateVariablePackage(
         this.workspace_, null, this.defaultVariableName, this.defaultType_);
