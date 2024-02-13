@@ -272,6 +272,32 @@ Blockly.Blocks['operator_or'] = {
   }
 };
 
+Blockly.Blocks['operator_xor'] = {
+  /**
+   * Block for "xor" boolean comparator.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_XOR,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OPERAND1",
+          "check": "Boolean"
+        },
+        {
+          "type": "input_value",
+          "name": "OPERAND2",
+          "check": "Boolean"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_boolean"]
+    });
+  }
+};
+
 Blockly.Blocks['operator_not'] = {
   /**
    * Block for "not" unary boolean operator.
@@ -329,6 +355,34 @@ Blockly.Blocks['operator_letter_of'] = {
         {
           "type": "input_value",
           "name": "LETTER"
+        },
+        {
+          "type": "input_value",
+          "name": "STRING"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_string"]
+    });
+  }
+};
+
+Blockly.Blocks['operator_letters_of'] = {
+  /**
+   * Block for "letter _ to _ of _" operator.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_LETTERSOF,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "LETTER1"
+        },
+        {
+          "type": "input_value",
+          "name": "LETTER2"
         },
         {
           "type": "input_value",
