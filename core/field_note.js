@@ -474,10 +474,18 @@ Blockly.FieldNote.prototype.showEditor_ = function() {
       Blockly.bindEvent_(this.octaveUpButton, 'mousedown', this,function() {
         this.changeOctaveBy_(1);
       });
-  Blockly.DropDownDiv.setColour(this.sourceBlock_.parentBlock_.getColour(),
-      this.sourceBlock_.getColourTertiary());
-  Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
-  Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
+
+  if (this.sourceBlock_.isShadow()) {
+    Blockly.DropDownDiv.setColour(this.sourceBlock_.parentBlock_.getColour(),
+        this.sourceBlock_.getColourTertiary());
+    Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
+    Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
+  } else {
+    Blockly.DropDownDiv.setColour(this.sourceBlock_.getColour(),
+        this.sourceBlock_.getColourTertiary());
+    Blockly.DropDownDiv.setCategory(this.sourceBlock_.getCategory());
+    Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
+  }
 
   this.updateSelection_();
 };
