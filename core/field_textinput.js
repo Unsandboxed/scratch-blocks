@@ -133,9 +133,10 @@ Blockly.FieldTextInput.prototype.init = function() {
           'width': this.size_.width,
           'height': this.size_.height,
           'stroke': this.sourceBlock_.getColourTertiary(),
-          'fill': Blockly.Colours.textField
+          'fill': Blockly.Colours.textField,
         }
     );
+    this.textElement_.style.fill = Blockly.Colours.textFieldText;
     this.fieldGroup_.insertBefore(this.box_, this.textElement_);
   }
 };
