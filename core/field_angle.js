@@ -246,10 +246,28 @@ Blockly.FieldAngle.prototype.showEditor_ = function() {
       Blockly.mainWorkspace.options.pathToMedia + Blockly.FieldAngle.ARROW_SVG_PATH
   );
 
-  Blockly.DropDownDiv.setColour(this.sourceBlock_.parentBlock_.getColour(),
-      this.sourceBlock_.getColourTertiary());
-  Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
-  Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
+  if (this.sourceBlock_.isShadow()) {
+    Blockly.DropDownDiv.setColour(this.sourceBlock_.parentBlock_.getColour(),
+        this.sourceBlock_.getColourTertiary());
+    Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
+    Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
+  } else {
+    // Calculate positioning based on the field position.
+    var scale = this.sourceBlock_.workspace.scale;
+    var bBox = {width: this.size_.width, height: this.size_.height};
+    bBox.width *= scale;
+    bBox.height *= scale;
+    var position = this.fieldGroup_.getBoundingClientRect();
+    var primaryX = position.left + bBox.width / 2;
+    var primaryY = position.top + bBox.height;
+    var secondaryX = primaryX;
+    var secondaryY = position.top;
+
+    Blockly.DropDownDiv.setColour(this.sourceBlock_.getColour(),
+        this.sourceBlock_.getColourTertiary());
+    Blockly.DropDownDiv.setCategory(this.sourceBlock_.getCategory());
+    Blockly.DropDownDiv.show(this, this.sourceBlock_);
+  }
 
   this.mouseDownWrapper_ =
       Blockly.bindEvent_(this.handle_, 'mousedown', this, this.onMouseDown);
