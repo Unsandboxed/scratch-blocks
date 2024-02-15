@@ -237,7 +237,12 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
   returnBlock.appendChild(returnBlockValue);
   xmlList.push(returnBlock);
 
-  xmlList.push('<sep gap="36"/>');
+  var gap = 36;
+  var sepText = '<xml>' +
+      '<sep gap="' + gap + '"/>' +
+      '</xml>';
+  var sep = Blockly.Xml.textToDom(sepText).firstChild;
+  xmlList.push(sep);
 
   // Create call blocks for each procedure defined in the workspace
   var mutations = Blockly.Procedures.allProcedureMutations(workspace);
