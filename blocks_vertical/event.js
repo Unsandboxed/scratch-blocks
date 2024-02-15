@@ -94,6 +94,28 @@ Blockly.Blocks['event_whenflagclicked'] = {
   }
 };
 
+Blockly.Blocks['event_when'] = {
+  /**
+   * Block for when flag clicked.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "id": "event_when",
+      "message0": Blockly.Msg.EVENT_WHEN,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "CONDITION",
+          "check": "Boolean"
+        }
+      ],
+      "category": Blockly.Categories.event,
+      "extensions": ["colours_event", "shape_hat"]
+    });
+  }
+};
+
 Blockly.Blocks['event_whenthisspriteclicked'] = {
   /**
    * Block for when this sprite clicked.
