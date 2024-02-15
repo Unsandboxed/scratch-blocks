@@ -223,6 +223,22 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
 
   Blockly.Procedures.addCreateButton_(workspace, xmlList);
 
+  var returnBlock = goog.dom.createDom('block');
+  returnBlock.setAttribute('type', Blockly.PROCEDURES_RETURN_BLOCK_TYPE);
+  returnBlock.setAttribute('gap', 12);
+  var returnBlockValue = goog.dom.createDom('value');
+  returnBlockValue.setAttribute('name', 'VALUE');
+  var returnBlockShadow = goog.dom.createDom('shadow');
+  returnBlockShadow.setAttribute('type', 'text');
+  var returnBlockField = goog.dom.createDom('field');
+  returnBlockField.setAttribute('name', 'TEXT');
+  returnBlockShadow.appendChild(returnBlockField);
+  returnBlockValue.appendChild(returnBlockShadow);
+  returnBlock.appendChild(returnBlockValue);
+  xmlList.push(returnBlock);
+
+  xmlList.push('<sep gap="36"/>');
+
   // Create call blocks for each procedure defined in the workspace
   var mutations = Blockly.Procedures.allProcedureMutations(workspace);
   mutations = Blockly.Procedures.sortProcedureMutations_(mutations);
@@ -242,20 +258,6 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
     block.appendChild(mutation);
     xmlList.push(block);
   }
-
-  var returnBlock = goog.dom.createDom('block');
-  returnBlock.setAttribute('type', Blockly.PROCEDURES_RETURN_BLOCK_TYPE);
-  returnBlock.setAttribute('gap', 12);
-  var returnBlockValue = goog.dom.createDom('value');
-  returnBlockValue.setAttribute('name', 'VALUE');
-  var returnBlockShadow = goog.dom.createDom('shadow');
-  returnBlockShadow.setAttribute('type', 'text');
-  var returnBlockField = goog.dom.createDom('field');
-  returnBlockField.setAttribute('name', 'TEXT');
-  returnBlockShadow.appendChild(returnBlockField);
-  returnBlockValue.appendChild(returnBlockShadow);
-  returnBlock.appendChild(returnBlockValue);
-  xmlList.unshift(returnBlock);
 
   return xmlList;
 };
