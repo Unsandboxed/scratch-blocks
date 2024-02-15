@@ -167,6 +167,30 @@ Blockly.Blocks['motion_pointtowards'] = {
   }
 };
 
+Blockly.Blocks['motion_pointtowardsxy'] = {
+  /**
+   * Block to point towards a coordinate.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.MOTION_POINTTOWARDSXY,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "X"
+        },
+        {
+          "type": "input_value",
+          "name": "Y"
+        }
+      ],
+      "category": Blockly.Categories.motion,
+      "extensions": ["colours_motion", "shape_statement"]
+    });
+  }
+};
+
 Blockly.Blocks['motion_goto_menu'] = {
   /**
    * Go to drop-down menu.
@@ -230,6 +254,30 @@ Blockly.Blocks['motion_goto'] = {
         {
           "type": "input_value",
           "name": "TO"
+        }
+      ],
+      "category": Blockly.Categories.motion,
+      "extensions": ["colours_motion", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['motion_changebyxy'] = {
+  /**
+   * Block to go to a menu item.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.MOTION_CHANGEBYXY,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "X"
+        },
+        {
+          "type": "input_value",
+          "name": "Y"
         }
       ],
       "category": Blockly.Categories.motion,
@@ -474,6 +522,21 @@ Blockly.Blocks['motion_direction'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.MOTION_DIRECTION,
+      "category": Blockly.Categories.motion,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_motion", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['motion_rotationstyle'] = {
+  /**
+   * Block to report direction.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.MOTION_ROTATIONSTYLE,
       "category": Blockly.Categories.motion,
       "checkboxInFlyout": true,
       "extensions": ["colours_motion", "output_number"]
