@@ -330,13 +330,11 @@ Blockly.Blocks['operator_join'] = {
       "args0": [
         {
           "type": "input_value",
-          "name": "STRING1",
-          "check": "String"
+          "name": "STRING1"
         },
         {
           "type": "input_value",
-          "name": "STRING2",
-          "check": "String"
+          "name": "STRING2"
         }
       ],
       "category": Blockly.Categories.operators,
