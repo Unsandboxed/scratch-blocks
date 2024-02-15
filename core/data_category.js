@@ -191,7 +191,7 @@ Blockly.DataCategory.addForEach = function(xmlList, variable) {
   //   </value>
   // </block>
   Blockly.DataCategory.addBlock(xmlList, variable, 'control_for_each',
-      'VARIABLE', ['VALUE', 'math_number', 1]);
+      'VARIABLE', ['VALUE', 'math_whole_number', 10]);
 };
 
 /**
