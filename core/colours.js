@@ -57,10 +57,10 @@ Blockly.Colours = {
   },
   // usb
   "camera": {
-    "primary": "#FF6680",
-    "secondary": "#FF4D6A",
-    "tertiary": "#FF3355",
-    "quaternary": "#FF3355"
+    "primary": "#FF4C4C",
+    "secondary": "#E64444",
+    "tertiary": "#C73A3A",
+    "quaternary": "#C73A3A"
   },
   "sensing": {
     "primary": "#5CB1D6",

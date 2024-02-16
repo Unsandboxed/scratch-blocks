@@ -186,7 +186,14 @@ Blockly.Msg.MOTION_YSCROLL = 'y scroll';
 Blockly.Msg.MOTION_STAGE_SELECTED = 'Stage selected: no motion blocks';
 
 // Camera blocks
-Blockly.Msg.CAMERA_MOVETOXY = 'move camera to x: %1 y: %2';
+Blockly.Msg.CAMERA_MOVETOXY = 'move %1 to x: %2 y: %3';
+Blockly.Msg.CAMERA_CHANGEBYXY = 'change %1 by x: %2 y: %3';
+Blockly.Msg.CAMERA_SETX = 'set %1 x to %2';
+Blockly.Msg.CAMERA_CHANGEX = 'change %1 x by %2';
+Blockly.Msg.CAMERA_SETY = 'set %1 y to %2';
+Blockly.Msg.CAMERA_CHANGEY = 'change %1 y by %2';
+Blockly.Msg.CAMERA_XPOSITION = '%1 x position';
+Blockly.Msg.CAMERA_YPOSITION = '%1 y position';
 
 // Operators blocks
 Blockly.Msg.OPERATORS_ADD = '%1 + %2';
