@@ -37,6 +37,12 @@ Blockly.Blocks['camera_movetoxy'] = {
       "message0": Blockly.Msg.CAMERA_MOVETOXY,
       "args0": [
         {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
           "type": "input_value",
           "name": "X"
         },
@@ -47,6 +53,186 @@ Blockly.Blocks['camera_movetoxy'] = {
       ],
       "category": Blockly.Categories.camera,
       "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_changebyxy'] = {
+  /**
+   * Block to move change the camera's X, Y.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_CHANGEBYXY,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "X"
+        },
+        {
+          "type": "input_value",
+          "name": "Y"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_setx'] = {
+  /**
+   * Block to set the camera's X.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_SETX,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "X"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_changex'] = {
+  /**
+   * Block to change the camera's X.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_CHANGEX,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "X"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_sety'] = {
+  /**
+   * Block to set the camera's Y.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_SETY,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "Y"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_changey'] = {
+  /**
+   * Block to change the camera's Y.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_CHANGEY,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "Y"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_xposition'] = {
+  /**
+   * Block to report camera's X.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_XPOSITION,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_camera", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_yposition'] = {
+  /**
+   * Block to report camera's Y.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_YPOSITION,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_camera", "output_number"]
     });
   }
 };
