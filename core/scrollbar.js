@@ -822,7 +822,7 @@ Blockly.Scrollbar.prototype.cleanUp_ = function() {
  * @private
  */
 Blockly.Scrollbar.prototype.constrainHandle_ = function(value) {
-  if (value < 0 || isNaN(value) || this.scrollViewSize_ < this.handleLength_) {
+  if (value <= 1 || isNaN(value) || this.scrollViewSize_ < this.handleLength_) {
     value = 1;
   } else {
     value = Math.min(value, this.scrollViewSize_ - this.handleLength_);
