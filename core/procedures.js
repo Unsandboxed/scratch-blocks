@@ -264,6 +264,8 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
     xmlList.push(block);
   }
 
+  xmlList.push(sep);
+
   return xmlList;
 };
 
