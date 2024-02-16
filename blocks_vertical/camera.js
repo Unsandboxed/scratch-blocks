@@ -27,14 +27,14 @@ goog.require('Blockly.Colours');
 goog.require('Blockly.constants');
 goog.require('Blockly.ScratchBlocks.VerticalExtensions');
 
-Blockly.Blocks['camera_gotoxy'] = {
+Blockly.Blocks['camera_movetoxy'] = {
   /**
    * Block to move the camera to X, Y.
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.CAMERA_GOTOXY,
+      "message0": Blockly.Msg.CAMERA_MOVETOXY,
       "args0": [
         {
           "type": "input_value",
