@@ -185,6 +185,9 @@ Blockly.Msg.MOTION_XSCROLL = 'x scroll';
 Blockly.Msg.MOTION_YSCROLL = 'y scroll';
 Blockly.Msg.MOTION_STAGE_SELECTED = 'Stage selected: no motion blocks';
 
+// Camera blocks
+Blockly.Msg.CAMERA_MOVETOXY = 'move camera to x: %1 y: %2';
+
 // Operators blocks
 Blockly.Msg.OPERATORS_ADD = '%1 + %2';
 Blockly.Msg.OPERATORS_SUBTRACT = '%1 - %2';
