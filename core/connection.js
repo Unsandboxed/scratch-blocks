@@ -351,10 +351,6 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
       throw 'Attempt to connect incompatible types.';
     case Blockly.Connection.REASON_TARGET_NULL:
       throw 'Target connection is null.';
-    case Blockly.Connection.REASON_CHECKS_FAILED:
-      var msg = 'Connection checks failed. ';
-      msg += this + ' expected '  + this.check_ + ', found ' + target.check_;
-      throw msg;
     case Blockly.Connection.REASON_SHADOW_PARENT:
       throw 'Connecting non-shadow to shadow block.';
     case Blockly.Connection.REASON_CUSTOM_PROCEDURE:
