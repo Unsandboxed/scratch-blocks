@@ -473,6 +473,7 @@ Blockly.Blocks['motion_setrotationstyle'] = {
           "name": "STYLE",
           "options": [
             [Blockly.Msg.MOTION_SETROTATIONSTYLE_LEFTRIGHT, 'left-right'],
+            [Blockly.Msg.MOTION_SETROTATIONSTYLE_LOOKING, 'looking'],
             [Blockly.Msg.MOTION_SETROTATIONSTYLE_DONTROTATE, 'don\'t rotate'],
             [Blockly.Msg.MOTION_SETROTATIONSTYLE_ALLAROUND, 'all around']
           ]
