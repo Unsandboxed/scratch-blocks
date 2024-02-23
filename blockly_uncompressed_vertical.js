@@ -94,6 +94,7 @@ goog.addDependency("../../../" + dir + "/core/flyout_dragger.js", ['Blockly.Flyo
 goog.addDependency("../../../" + dir + "/core/flyout_extension_category_header.js", ['Blockly.FlyoutExtensionCategoryHeader'], ['Blockly.FlyoutButton']);
 goog.addDependency("../../../" + dir + "/core/flyout_horizontal.js", ['Blockly.HorizontalFlyout'], ['Blockly.Block', 'Blockly.Comment', 'Blockly.Events', 'Blockly.FlyoutButton', 'Blockly.Flyout', 'Blockly.WorkspaceSvg', 'goog.dom', 'goog.dom.animationFrame.polyfill', 'goog.events', 'goog.math.Rect', 'goog.userAgent']);
 goog.addDependency("../../../" + dir + "/core/flyout_vertical.js", ['Blockly.VerticalFlyout'], ['Blockly.Block', 'Blockly.Comment', 'Blockly.Events', 'Blockly.Flyout', 'Blockly.FlyoutButton', 'Blockly.utils', 'Blockly.WorkspaceSvg', 'goog.dom', 'goog.dom.animationFrame.polyfill', 'goog.events', 'goog.math.Rect', 'goog.userAgent']);
+goog.addDependency("../../../" + dir + "/core/frames.js", ['Blockly.ScratchBlockComment'], ['Blockly.Comment', 'Blockly.Events.BlockChange', 'Blockly.Events.Ui', 'Blockly.Icon', 'Blockly.ScratchBubble', 'goog.math.Coordinate', 'goog.userAgent']);
 goog.addDependency("../../../" + dir + "/core/generator.js", ['Blockly.Generator'], ['Blockly.Block', 'goog.asserts']);
 goog.addDependency("../../../" + dir + "/core/gesture.js", ['Blockly.Gesture'], ['Blockly.BlockAnimations', 'Blockly.BlockDragger', 'Blockly.BubbleDragger', 'Blockly.constants', 'Blockly.Events.Ui', 'Blockly.FlyoutDragger', 'Blockly.scratchBlocksUtils', 'Blockly.Tooltip', 'Blockly.Touch', 'Blockly.WorkspaceDragger', 'goog.asserts', 'goog.math.Coordinate']);
 goog.addDependency("../../../" + dir + "/core/grid.js", ['Blockly.Grid'], ['Blockly.utils', 'goog.userAgent']);
@@ -1164,6 +1165,7 @@ goog.require('Blockly.Names');
 goog.require('Blockly.Options');
 goog.require('Blockly.Procedures');
 goog.require('Blockly.RenderedConnection');
+goog.require('Blockly.ScratchBlockComment');
 goog.require('Blockly.ScratchBlockComment');
 goog.require('Blockly.ScratchBubble');
 goog.require('Blockly.ScratchMsgs');
