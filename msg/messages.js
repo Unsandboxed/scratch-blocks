@@ -169,6 +169,7 @@ Blockly.Msg.MOTION_SETROTATIONSTYLE = 'set rotation style %1';
 Blockly.Msg.MOTION_SETROTATIONSTYLE_LEFTRIGHT = 'left-right';
 Blockly.Msg.MOTION_SETROTATIONSTYLE_DONTROTATE = 'don\'t rotate';
 Blockly.Msg.MOTION_SETROTATIONSTYLE_ALLAROUND = 'all around';
+Blockly.Msg.MOTION_SETROTATIONSTYLE_LOOKING = 'looking';
 Blockly.Msg.MOTION_XPOSITION = 'x position';
 Blockly.Msg.MOTION_YPOSITION = 'y position';
 Blockly.Msg.MOTION_DIRECTION = 'direction';
@@ -184,16 +185,6 @@ Blockly.Msg.MOTION_ALIGNSCENE_TOPRIGHT = 'top-right';
 Blockly.Msg.MOTION_XSCROLL = 'x scroll';
 Blockly.Msg.MOTION_YSCROLL = 'y scroll';
 Blockly.Msg.MOTION_STAGE_SELECTED = 'Stage selected: no motion blocks';
-
-// Camera blocks
-Blockly.Msg.CAMERA_MOVETOXY = 'move %1 to x: %2 y: %3';
-Blockly.Msg.CAMERA_CHANGEBYXY = 'change %1 by x: %2 y: %3';
-Blockly.Msg.CAMERA_SETX = 'set %1 x to %2';
-Blockly.Msg.CAMERA_CHANGEX = 'change %1 x by %2';
-Blockly.Msg.CAMERA_SETY = 'set %1 y to %2';
-Blockly.Msg.CAMERA_CHANGEY = 'change %1 y by %2';
-Blockly.Msg.CAMERA_XPOSITION = '%1 x position';
-Blockly.Msg.CAMERA_YPOSITION = '%1 y position';
 
 // Operators blocks
 Blockly.Msg.OPERATORS_ADD = '%1 + %2';
@@ -284,9 +275,20 @@ Blockly.Msg.SENSING_CURRENT_DAYOFWEEK = 'day of week';
 Blockly.Msg.SENSING_CURRENT_HOUR = 'hour';
 Blockly.Msg.SENSING_CURRENT_MINUTE = 'minute';
 Blockly.Msg.SENSING_CURRENT_SECOND = 'second';
+Blockly.Msg.SENSING_CURRENT_MILLISECOND = 'millisecond';
 Blockly.Msg.SENSING_DAYSSINCE2000 = 'days since 2000';
 Blockly.Msg.SENSING_USERNAME = 'username';
 Blockly.Msg.SENSING_USERID = 'user id';
+
+// Camera blocks
+Blockly.Msg.CAMERA_MOVETOXY = 'move %1 to x: %2 y: %3';
+Blockly.Msg.CAMERA_CHANGEBYXY = 'change %1 by x: %2 y: %3';
+Blockly.Msg.CAMERA_SETX = 'set %1 x to %2';
+Blockly.Msg.CAMERA_CHANGEX = 'change %1 x by %2';
+Blockly.Msg.CAMERA_SETY = 'set %1 y to %2';
+Blockly.Msg.CAMERA_CHANGEY = 'change %1 y by %2';
+Blockly.Msg.CAMERA_XPOSITION = '%1 x position';
+Blockly.Msg.CAMERA_YPOSITION = '%1 y position';
 
 // Sound blocks
 Blockly.Msg.SOUND_PLAY = 'start sound %1';
