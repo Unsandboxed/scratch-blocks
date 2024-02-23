@@ -485,7 +485,8 @@ Blockly.Blocks['sensing_current'] = {
             [Blockly.Msg.SENSING_CURRENT_DAYOFWEEK, 'DAYOFWEEK'],
             [Blockly.Msg.SENSING_CURRENT_HOUR, 'HOUR'],
             [Blockly.Msg.SENSING_CURRENT_MINUTE, 'MINUTE'],
-            [Blockly.Msg.SENSING_CURRENT_SECOND, 'SECOND']
+            [Blockly.Msg.SENSING_CURRENT_SECOND, 'SECOND'],
+            [Blockly.Msg.SENSING_CURRENT_MILLISECOND, 'MILLISECOND']
           ]
         }
       ],
