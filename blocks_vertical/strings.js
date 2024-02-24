@@ -20,7 +20,7 @@
 
 /**
  * IMPORTANT NOTE:
- * 
+ *
  * Unsandboxed splits the standard Scratch/TurboWarp "operators" category
  * into Strings and Operators. Some of these blocks still have the "operator"
  * prefix to remain compatible with versions of TurboWarp and legacy versions
