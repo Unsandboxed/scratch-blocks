@@ -124,6 +124,30 @@ Blockly.Blocks['operator_divide'] = {
   }
 };
 
+Blockly.Blocks['operator_exponent'] = { // usb
+  /**
+   * Block for getting a number to the power of another number.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_EXPONENT,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "NUM1"
+        },
+        {
+          "type": "input_value",
+          "name": "NUM2"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_number"]
+    });
+  }
+};
+
 Blockly.Blocks['operator_random'] = {
   /**
    * Block for picking a random number.
@@ -148,6 +172,34 @@ Blockly.Blocks['operator_random'] = {
   }
 };
 
+Blockly.Blocks['operator_clamp'] = { // usb
+  /**
+   * Block for constraining a number between 2 values.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_CLAMP,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "NUM"
+        },
+        {
+          "type": "input_value",
+          "name": "FROM"
+        },
+        {
+          "type": "input_value",
+          "name": "TO"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_number"]
+    });
+  }
+};
+
 Blockly.Blocks['operator_lt'] = {
   /**
    * Block for less than comparator.
@@ -156,6 +208,30 @@ Blockly.Blocks['operator_lt'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_LT,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OPERAND1"
+        },
+        {
+          "type": "input_value",
+          "name": "OPERAND2"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_boolean"]
+    });
+  }
+};
+
+Blockly.Blocks['operator_lt_equals'] = { // usb
+  /**
+   * Block for less than or equal to comparator.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_LT_EQUALS,
       "args0": [
         {
           "type": "input_value",
@@ -204,6 +280,30 @@ Blockly.Blocks['operator_gt'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_GT,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "OPERAND1"
+        },
+        {
+          "type": "input_value",
+          "name": "OPERAND2"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_boolean"]
+    });
+  }
+};
+
+Blockly.Blocks['operator_gt_equals'] = { // usb
+  /**
+   * Block for greater than or equal to comparator.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_GT_EQUALS,
       "args0": [
         {
           "type": "input_value",
@@ -272,7 +372,7 @@ Blockly.Blocks['operator_or'] = {
   }
 };
 
-Blockly.Blocks['operator_xor'] = {
+Blockly.Blocks['operator_xor'] = { // usb
   /**
    * Block for "xor" boolean comparator.
    * @this Blockly.Block
@@ -319,126 +419,6 @@ Blockly.Blocks['operator_not'] = {
   }
 };
 
-Blockly.Blocks['operator_join'] = {
-  /**
-   * Block for string join operator.
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_JOIN,
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "STRING1"
-        },
-        {
-          "type": "input_value",
-          "name": "STRING2"
-        }
-      ],
-      "category": Blockly.Categories.operators,
-      "extensions": ["colours_operators", "output_string"]
-    });
-  }
-};
-
-Blockly.Blocks['operator_letter_of'] = {
-  /**
-   * Block for "letter _ of _" operator.
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_LETTEROF,
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "LETTER"
-        },
-        {
-          "type": "input_value",
-          "name": "STRING"
-        }
-      ],
-      "category": Blockly.Categories.operators,
-      "extensions": ["colours_operators", "output_string"]
-    });
-  }
-};
-
-Blockly.Blocks['operator_letters_of'] = {
-  /**
-   * Block for "letter _ to _ of _" operator.
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_LETTERSOF,
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "LETTER1"
-        },
-        {
-          "type": "input_value",
-          "name": "LETTER2"
-        },
-        {
-          "type": "input_value",
-          "name": "STRING"
-        }
-      ],
-      "category": Blockly.Categories.operators,
-      "extensions": ["colours_operators", "output_string"]
-    });
-  }
-};
-
-Blockly.Blocks['operator_length'] = {
-  /**
-   * Block for string length operator.
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_LENGTH,
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "STRING"
-        }
-      ],
-      "category": Blockly.Categories.operators,
-      "extensions": ["colours_operators", "output_string"]
-    });
-  }
-};
-
-Blockly.Blocks['operator_contains'] = {
-  /**
-   * Block for _ contains _ operator
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_CONTAINS,
-      "args0": [
-        {
-          "type": "input_value",
-          "name": "STRING1"
-        },
-        {
-          "type": "input_value",
-          "name": "STRING2"
-        }
-      ],
-      "category": Blockly.Categories.operators,
-      "extensions": ["colours_operators", "output_boolean"]
-    });
-  }
-};
-
 Blockly.Blocks['operator_mod'] = {
   /**
    * Block for mod two numbers.
@@ -447,6 +427,54 @@ Blockly.Blocks['operator_mod'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_MOD,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "NUM1"
+        },
+        {
+          "type": "input_value",
+          "name": "NUM2"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['operator_min'] = { // usb
+  /**
+   * Returns the smallest value out of the 2 numbers.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_MIN,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "NUM1"
+        },
+        {
+          "type": "input_value",
+          "name": "NUM2"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['operator_max'] = { // usb
+  /**
+   * Returns the biggest value of the 2 numbers.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_MAX,
       "args0": [
         {
           "type": "input_value",

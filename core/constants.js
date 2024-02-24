@@ -268,7 +268,9 @@ Blockly.Categories = {
   "event": "events",
   "control": "control",
   "sensing": "sensing",
+  "camera": "camera",
   "operators": "operators",
+  "string": "string",
   "more": "more"
 };
 
