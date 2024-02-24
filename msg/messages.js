@@ -74,8 +74,10 @@ Blockly.Msg.DATA_SHOWLIST = 'show list %1';
 Blockly.Msg.DATA_HIDELIST = 'hide list %1';
 Blockly.Msg.DATA_INDEX_ALL = 'all';
 Blockly.Msg.DATA_INDEX_LAST = 'last';
-Blockly.Msg.DATA_INDEX_RANDOM = 'randoBlockly.Msg.EVENT_WHEN = 'when %1';
-Blockly.Msg.EVENT_WHENTHISSPRITECLICKED Blockly.Msg.EVENT_WHEN = 'when %1'; // usb
+Blockly.Msg.DATA_INDEX_RANDOM = 'random'
+
+// Event blocks
+Blockly.Msg.EVENT_WHEN = 'when %1';
 Blockly.Msg.EVENT_WHENTHISSPRITECLICKED = 'when this sprite clicked';
 Blockly.Msg.EVENT_WHENSTAGECLICKED = 'when stage clicked';
 Blockly.Msg.EVENT_WHENTOUCHINGOBJECT = 'when this sprite touches %1';
