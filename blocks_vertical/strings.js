@@ -377,7 +377,7 @@ Blockly.Blocks['string_is'] = {
       "args0": [
         {
           "type": "input_value",
-          "name": "STRING1"
+          "name": "STRING1" // TO DO: change this to just "String" (I forgor)
         },
         {
           "type": "field_dropdown",
