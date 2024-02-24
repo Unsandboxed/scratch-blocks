@@ -243,7 +243,8 @@ Blockly.Blocks['string_ternary'] = { // usb
       "args0": [
         {
           "type": "input_value",
-          "name": "CONDITION"
+          "name": "CONDITION",
+          "check": "Boolean"
         },
         {
           "type": "input_value",
