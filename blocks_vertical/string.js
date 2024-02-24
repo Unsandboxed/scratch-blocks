@@ -51,7 +51,7 @@ Blockly.Blocks['operator_length'] = {
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -75,7 +75,7 @@ Blockly.Blocks['operator_join'] = {
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -95,7 +95,7 @@ Blockly.Blocks['string_reverse'] = { // usb
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -119,7 +119,7 @@ Blockly.Blocks['string_repeat'] = { // usb
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -147,7 +147,7 @@ Blockly.Blocks['string_replace'] = { // usb
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -171,7 +171,7 @@ Blockly.Blocks['operator_letter_of'] = {
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -199,7 +199,7 @@ Blockly.Blocks['operator_letters_of'] = {
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -227,7 +227,7 @@ Blockly.Blocks['string_item_split'] = { // usb
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -257,7 +257,7 @@ Blockly.Blocks['string_ternary'] = { // usb
       ],
       "output": null,
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings"],
+      "extensions": ["colours_string"],
       "outputShape": Blockly.OUTPUT_SHAPE_ROUND
     });
   }
@@ -286,7 +286,7 @@ Blockly.Blocks['string_convert'] = { // usb
         },
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -314,7 +314,7 @@ Blockly.Blocks['string_index_of'] = { // usb
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_string"]
+      "extensions": ["colours_string", "output_string"]
     });
   }
 };
@@ -338,7 +338,7 @@ Blockly.Blocks['operator_contains'] = {
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_boolean"]
+      "extensions": ["colours_string", "output_boolean"]
     });
   }
 };
@@ -362,7 +362,7 @@ Blockly.Blocks['string_exactly'] = {
         }
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_boolean"]
+      "extensions": ["colours_string", "output_boolean"]
     });
   }
 };
@@ -390,7 +390,7 @@ Blockly.Blocks['string_is'] = {
         },
       ],
       "category": Blockly.Categories.string,
-      "extensions": ["colours_strings", "output_boolean"]
+      "extensions": ["colours_string", "output_boolean"]
     });
   }
 };
