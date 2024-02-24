@@ -126,7 +126,7 @@ Blockly.Blocks['operator_divide'] = {
 
 Blockly.Blocks['operator_exponent'] = { // usb
   /**
-   * Block for dividing two numbers.
+   * Block for getting a number to the power of another number.
    * @this Blockly.Block
    */
   init: function() {
@@ -174,7 +174,7 @@ Blockly.Blocks['operator_random'] = {
 
 Blockly.Blocks['operator_clamp'] = { // usb
   /**
-   * Block for picking a random number.
+   * Block for constraining a number between 2 values.
    * @this Blockly.Block
    */
   init: function() {
@@ -226,7 +226,7 @@ Blockly.Blocks['operator_lt'] = {
 
 Blockly.Blocks['operator_lt_equals'] = { // usb
   /**
-   * Block for less than comparator.
+   * Block for less than or equal to comparator.
    * @this Blockly.Block
    */
   init: function() {
@@ -298,7 +298,7 @@ Blockly.Blocks['operator_gt'] = {
 
 Blockly.Blocks['operator_gt_equals'] = { // usb
   /**
-   * Block for greater than comparator.
+   * Block for greater than or equal to comparator.
    * @this Blockly.Block
    */
   init: function() {
@@ -445,7 +445,7 @@ Blockly.Blocks['operator_mod'] = {
 
 Blockly.Blocks['operator_min'] = { // usb
   /**
-   * Block for mod two numbers.
+   * Returns the smallest value out of the 2 numbers.
    * @this Blockly.Block
    */
   init: function() {
@@ -469,7 +469,7 @@ Blockly.Blocks['operator_min'] = { // usb
 
 Blockly.Blocks['operator_max'] = { // usb
   /**
-   * Block for mod two numbers.
+   * Returns the biggest value of the 2 numbers.
    * @this Blockly.Block
    */
   init: function() {
