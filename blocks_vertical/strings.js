@@ -82,7 +82,7 @@ Blockly.Blocks['operator_join'] = {
 
 Blockly.Blocks['string_reverse'] = { // usb
   /**
-   * Block for string length operator.
+   * Block for string reverse operator.
    * @this Blockly.Block
    */
   init: function() {
@@ -102,7 +102,7 @@ Blockly.Blocks['string_reverse'] = { // usb
 
 Blockly.Blocks['string_repeat'] = { // usb
   /**
-   * Block for string join operator.
+   * Block for string repeat operator.
    * @this Blockly.Block
    */
   init: function() {
@@ -126,7 +126,7 @@ Blockly.Blocks['string_repeat'] = { // usb
 
 Blockly.Blocks['string_replace'] = { // usb
   /**
-   * Block for string join operator.
+   * Block for string replace operator.
    * @this Blockly.Block
    */
   init: function() {
@@ -206,7 +206,7 @@ Blockly.Blocks['operator_letters_of'] = {
 
 Blockly.Blocks['string_item_split'] = { // usb
   /**
-   * Block for string join operator.
+   * Block for string split operator.
    * @this Blockly.Block
    */
   init: function() {
@@ -234,7 +234,7 @@ Blockly.Blocks['string_item_split'] = { // usb
 
 Blockly.Blocks['string_ternary'] = { // usb
   /**
-   * Block for string join operator.
+   * Block for string ternary operator.
    * @this Blockly.Block
    */
   init: function() {
@@ -264,7 +264,7 @@ Blockly.Blocks['string_ternary'] = { // usb
 
 Blockly.Blocks['string_convert'] = { // usb
   /**
-   * Block for string join operator.
+   * Block for making a string upper or lowercase.
    * @this Blockly.Block
    */
   init: function() {
@@ -292,7 +292,7 @@ Blockly.Blocks['string_convert'] = { // usb
 
 Blockly.Blocks['string_index_of'] = { // usb
   /**
-   * Block for string join operator.
+   * Block for getting the index of a value in a string.
    * @this Blockly.Block
    */
   init: function() {
@@ -344,7 +344,7 @@ Blockly.Blocks['operator_contains'] = {
 
 Blockly.Blocks['string_exactly'] = {
   /**
-   * Block for _ contains _ operator
+   * Block for _ === _ operator
    * @this Blockly.Block
    */
   init: function() {
@@ -368,7 +368,7 @@ Blockly.Blocks['string_exactly'] = {
 
 Blockly.Blocks['string_is'] = {
   /**
-   * Block for _ contains _ operator
+   * Block to get whether a string is uppercase or lowercase.
    * @this Blockly.Block
    */
   init: function() {
@@ -377,7 +377,7 @@ Blockly.Blocks['string_is'] = {
       "args0": [
         {
           "type": "input_value",
-          "name": "STRING1" // TO DO: change this to just "String" (I forgor)
+          "name": "STRING"
         },
         {
           "type": "field_dropdown",
