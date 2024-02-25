@@ -342,6 +342,9 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
   switch (this.canConnectWithReason_(target)) {
     case Blockly.Connection.CAN_CONNECT:
       break;
+    case Blockly.Connection.REASON_CHECKS_FAILED:
+      // usb: We allow blocks to be connected into anything through an addon.
+      break;
     case Blockly.Connection.REASON_SELF_CONNECTION:
       throw 'Attempted to connect a block to itself.';
     case Blockly.Connection.REASON_DIFFERENT_WORKSPACES:
@@ -705,6 +708,12 @@ Blockly.Connection.prototype.getOutputShape = function() {
   }
   if (this.check_.indexOf('String') !== -1) {
     return Blockly.OUTPUT_SHAPE_SQUARE;
+  }
+  if (this.check_.indexOf('Array') !== -1) {
+    return Blockly.OUTPUT_SHAPE_SQUARE;
+  }
+  if (this.check_.indexOf('Object') !== -1) {
+    return Blockly.OUTPUT_SHAPE_OBJECT;
   }
   return Blockly.OUTPUT_SHAPE_ROUND;
 };
