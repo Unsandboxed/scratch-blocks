@@ -322,14 +322,14 @@ Blockly.BlockSvg.INPUT_SHAPE_ROUND_WIDTH = 12 * Blockly.BlockSvg.GRID_UNIT;
  * @const
  */
 Blockly.BlockSvg.INPUT_SHAPE_OBJECT =
-  'M ' + (4 * Blockly.BlockSvg.GRID_UNIT) + ' 0' + 
+  'M ' + (4 * Blockly.BlockSvg.GRID_UNIT) + ' 0' +
   ' h ' + (4 * Blockly.BlockSvg.GRID_UNIT) +
-  ' C ' + (9.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
+  ' C ' + (9.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
       (9.75 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (11.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) +
-  ' c ' + (0.25 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
+  ' c ' + (0.25 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
       (0.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (0.25 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (0.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
@@ -340,28 +340,28 @@ Blockly.BlockSvg.INPUT_SHAPE_OBJECT =
       (4.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (11.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (4.5 * Blockly.BlockSvg.GRID_UNIT) +
-  ' c ' + (-1.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
+  ' c ' + (-1.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
       (-1.75 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (-3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) +
   ' h ' + (-4 * Blockly.BlockSvg.GRID_UNIT) +
-  ' c ' + (-1.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
+  ' c ' + (-1.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
       (-1.75 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (-3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (-3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (-3.5 * Blockly.BlockSvg.GRID_UNIT) +
   ' C ' + (0.25 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
-      (4.5 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
-      (4.25 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
+      (4.5 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
+      (4.25 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
       (4 * Blockly.BlockSvg.GRID_UNIT) +
-  ' C 0 ' + 
+  ' C 0 ' +
       (3.75 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (0.25 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (0.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) +
-  ' c ' + (1.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' + 
+  ' c ' + (1.75 * Blockly.BlockSvg.GRID_UNIT) + ' 0 ' +
       (1.75 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (-3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
       (3.5 * Blockly.BlockSvg.GRID_UNIT) + ' ' +
