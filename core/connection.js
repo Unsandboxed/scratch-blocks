@@ -342,6 +342,9 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
   switch (this.canConnectWithReason_(target)) {
     case Blockly.Connection.CAN_CONNECT:
       break;
+    case Blockly.Connection.REASON_CHECKS_FAILED:
+      // usb: We allow blocks to be connected into anything through an addon.
+      break;
     case Blockly.Connection.REASON_SELF_CONNECTION:
       throw 'Attempted to connect a block to itself.';
     case Blockly.Connection.REASON_DIFFERENT_WORKSPACES:
@@ -351,10 +354,6 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
       throw 'Attempt to connect incompatible types.';
     case Blockly.Connection.REASON_TARGET_NULL:
       throw 'Target connection is null.';
-    case Blockly.Connection.REASON_CHECKS_FAILED:
-      var msg = 'Connection checks failed. ';
-      msg += this + ' expected '  + this.check_ + ', found ' + target.check_;
-      throw msg;
     case Blockly.Connection.REASON_SHADOW_PARENT:
       throw 'Connecting non-shadow to shadow block.';
     case Blockly.Connection.REASON_CUSTOM_PROCEDURE:
