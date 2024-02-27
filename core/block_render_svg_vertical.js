@@ -1549,19 +1549,19 @@ Blockly.BlockSvg.prototype.renderDrawLeft_ = function(steps) {
     } else if (this.edgeShape_ === Blockly.OUTPUT_SHAPE_OBJECT) {
       // Draw a half-lemon.
       steps.push('c ' + (this.edgeShapeWidth_ * -0.4375) + ' 0 ' + (this
-      .edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ * -
-      0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
-      .edgeShapeWidth_ * -0.875) + ' c ' + (this.edgeShapeWidth_ * -
-      0.0625) + ' 0 ' + (this.edgeShapeWidth_ * -0.125) + ' ' + (this
-      .edgeShapeWidth_ * -0.0625) + ' ' + (this.edgeShapeWidth_ * -
-      0.125) + ' ' + (this.edgeShapeWidth_ * -0.125) + ' c 0 ' + (this
-      .edgeShapeWidth_ * -0.0625) + ' ' + (this.edgeShapeWidth_ *
-      0.0625) + ' ' + (this.edgeShapeWidth_ * -0.125) + ' ' + (this
-      .edgeShapeWidth_ * 0.125) + ' ' + (this.edgeShapeWidth_ * -
-      0.125) + ' c ' + (this.edgeShapeWidth_ * 0.4375) + ' 0 ' + (this
-      .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ * -
-      0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
-      .edgeShapeWidth_ * -0.875));
+          .edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ * -
+          0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
+          .edgeShapeWidth_ * -0.875) + ' c ' + (this.edgeShapeWidth_ * -
+          0.0625) + ' 0 ' + (this.edgeShapeWidth_ * -0.125) + ' ' + (this
+          .edgeShapeWidth_ * -0.0625) + ' ' + (this.edgeShapeWidth_ * -
+          0.125) + ' ' + (this.edgeShapeWidth_ * -0.125) + ' c 0 ' + (this
+          .edgeShapeWidth_ * -0.0625) + ' ' + (this.edgeShapeWidth_ *
+          0.0625) + ' ' + (this.edgeShapeWidth_ * -0.125) + ' ' + (this
+          .edgeShapeWidth_ * 0.125) + ' ' + (this.edgeShapeWidth_ * -
+          0.125) + ' c ' + (this.edgeShapeWidth_ * 0.4375) + ' 0 ' + (this
+          .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ * -
+          0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
+          .edgeShapeWidth_ * -0.875));
     }
   }
   steps.push('z');
@@ -1587,19 +1587,19 @@ Blockly.BlockSvg.prototype.drawEdgeShapeRight_ = function(steps) {
     } else if (this.edgeShape_ === Blockly.OUTPUT_SHAPE_OBJECT) {
       // Draw an half-lemon.
       steps.push('c ' + (this.edgeShapeWidth_ * 0.4375) + ' 0 ' + (this
-      .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ *
-      0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
-      .edgeShapeWidth_ * 0.875) + ' c ' + (this.edgeShapeWidth_ *
-      0.0625) + ' 0 ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
-      .edgeShapeWidth_ * 0.0625) + ' ' + (this.edgeShapeWidth_ *
-      0.125) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' c 0 ' + (this
-      .edgeShapeWidth_ * 0.0625) + ' ' + (this.edgeShapeWidth_ * -
-      0.0625) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
-      .edgeShapeWidth_ * -0.125) + ' ' + (this.edgeShapeWidth_ *
-      0.125) + ' c ' + (this.edgeShapeWidth_ * -0.4375) + ' 0 ' + (
-      this.edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ *
-      0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
-      .edgeShapeWidth_ * 0.875));
+          .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ *
+          0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
+          .edgeShapeWidth_ * 0.875) + ' c ' + (this.edgeShapeWidth_ *
+          0.0625) + ' 0 ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
+          .edgeShapeWidth_ * 0.0625) + ' ' + (this.edgeShapeWidth_ *
+          0.125) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' c 0 ' + (this
+          .edgeShapeWidth_ * 0.0625) + ' ' + (this.edgeShapeWidth_ * -
+          0.0625) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
+          .edgeShapeWidth_ * -0.125) + ' ' + (this.edgeShapeWidth_ *
+          0.125) + ' c ' + (this.edgeShapeWidth_ * -0.4375) + ' 0 ' + (
+          this.edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ *
+          0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
+          .edgeShapeWidth_ * 0.875));
     }
   }
 };
