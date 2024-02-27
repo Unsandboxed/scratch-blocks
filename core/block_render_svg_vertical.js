@@ -1217,7 +1217,7 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
   if (this.outputConnection) {
     // Width of the curve/pointy-curve
     var shape = this.getOutputShape();
-    if (shape === Blockly.OUTPUT_SHAPE_HEXAGONAL || shape === Blockly.OUTPUT_SHAPE_ROUND) {
+    if (shape !== Blockly.OUTPUT_SHAPE_SQUARE) {
       this.edgeShapeWidth_ = inputRows.bottomEdge / 2;
       this.edgeShape_ = shape;
       this.squareTopLeftCorner_ = true;
@@ -1546,6 +1546,22 @@ Blockly.BlockSvg.prototype.renderDrawLeft_ = function(steps) {
       // Draw a half-hexagon.
       steps.push('l ' + -this.edgeShapeWidth_ + ' ' + -this.edgeShapeWidth_ +
         ' l ' + this.edgeShapeWidth_ + ' ' + -this.edgeShapeWidth_);
+    } else if (this.edgeShape_ === Blockly.OUTPUT_SHAPE_OBJECT) {
+      // Draw a half-lemon.
+      steps.push('c ' + (this.edgeShapeWidth_ * -0.4375) + ' 0 ' + (this
+          .edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ * -
+      0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
+          .edgeShapeWidth_ * -0.875) + ' c ' + (this.edgeShapeWidth_ * -
+      0.0625) + ' 0 ' + (this.edgeShapeWidth_ * -0.125) + ' ' + (this
+          .edgeShapeWidth_ * -0.0625) + ' ' + (this.edgeShapeWidth_ * -
+      0.125) + ' ' + (this.edgeShapeWidth_ * -0.125) + ' c 0 ' + (this
+          .edgeShapeWidth_ * -0.0625) + ' ' + (this.edgeShapeWidth_ *
+      0.0625) + ' ' + (this.edgeShapeWidth_ * -0.125) + ' ' + (this
+          .edgeShapeWidth_ * 0.125) + ' ' + (this.edgeShapeWidth_ * -
+      0.125) + ' c ' + (this.edgeShapeWidth_ * 0.4375) + ' 0 ' + (this
+          .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ * -
+      0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
+          .edgeShapeWidth_ * -0.875));
     }
   }
   steps.push('z');
@@ -1568,6 +1584,22 @@ Blockly.BlockSvg.prototype.drawEdgeShapeRight_ = function(steps) {
       // Draw an half-hexagon.
       steps.push('l ' + this.edgeShapeWidth_ + ' ' + this.edgeShapeWidth_ +
           ' l ' + -this.edgeShapeWidth_ + ' ' + this.edgeShapeWidth_);
+    } else if (this.edgeShape_ === Blockly.OUTPUT_SHAPE_OBJECT) {
+      // Draw an half-lemon.
+      steps.push('c ' + (this.edgeShapeWidth_ * 0.4375) + ' 0 ' + (this
+          .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ *
+      0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
+          .edgeShapeWidth_ * 0.875) + ' c ' + (this.edgeShapeWidth_ *
+      0.0625) + ' 0 ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
+          .edgeShapeWidth_ * 0.0625) + ' ' + (this.edgeShapeWidth_ *
+      0.125) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' c 0 ' + (this
+          .edgeShapeWidth_ * 0.0625) + ' ' + (this.edgeShapeWidth_ * -
+      0.0625) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
+          .edgeShapeWidth_ * -0.125) + ' ' + (this.edgeShapeWidth_ *
+      0.125) + ' c ' + (this.edgeShapeWidth_ * -0.4375) + ' 0 ' + (
+        this.edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ *
+      0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
+          .edgeShapeWidth_ * 0.875));
     }
   }
 };
