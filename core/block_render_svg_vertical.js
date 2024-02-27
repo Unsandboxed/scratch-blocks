@@ -1597,7 +1597,7 @@ Blockly.BlockSvg.prototype.drawEdgeShapeRight_ = function(steps) {
       0.0625) + ' ' + (this.edgeShapeWidth_ * 0.125) + ' ' + (this
           .edgeShapeWidth_ * -0.125) + ' ' + (this.edgeShapeWidth_ *
       0.125) + ' c ' + (this.edgeShapeWidth_ * -0.4375) + ' 0 ' + (
-          this.edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ *
+        this.edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ *
       0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
           .edgeShapeWidth_ * 0.875));
     }
