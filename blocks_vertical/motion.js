@@ -134,6 +134,7 @@ Blockly.Blocks['motion_pointtowards_menu'] = {
           "name": "TOWARDS",
           "options": [
             [Blockly.Msg.MOTION_POINTTOWARDS_POINTER, '_mouse_'],
+            [Blockly.Msg.MOTION_POINTTOWARDS_CAMERA, '_camera_'],
             [Blockly.Msg.MOTION_POINTTOWARDS_RANDOM, '_random_']
           ]
         }
@@ -205,6 +206,7 @@ Blockly.Blocks['motion_goto_menu'] = {
           "name": "TO",
           "options": [
             [Blockly.Msg.MOTION_GOTO_POINTER, '_mouse_'],
+            [Blockly.Msg.MOTION_GOTO_CAMERA, '_camera_'],
             [Blockly.Msg.MOTION_GOTO_RANDOM, '_random_']
           ]
         }
@@ -328,6 +330,7 @@ Blockly.Blocks['motion_glideto_menu'] = {
           "name": "TO",
           "options": [
             [Blockly.Msg.MOTION_GLIDETO_POINTER, '_mouse_'],
+            [Blockly.Msg.MOTION_GLIDETO_CAMERA, '_camera_'],
             [Blockly.Msg.MOTION_GLIDETO_RANDOM, '_random_']
           ]
         }
