@@ -148,7 +148,8 @@ Blockly.Blocks['sensing_distancetomenu'] = {
           "type": "field_dropdown",
           "name": "DISTANCETOMENU",
           "options": [
-            [Blockly.Msg.SENSING_DISTANCETO_POINTER, '_mouse_']
+            [Blockly.Msg.SENSING_DISTANCETO_POINTER, '_mouse_'],
+            [Blockly.Msg.SENSING_DISTANCETO_CAMERA, '_camera_']
           ]
         }
       ],
