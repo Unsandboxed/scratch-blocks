@@ -250,8 +250,11 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
   for (var i = 0; i < mutations.length; i++) {
     var mutation = mutations[i].cloneNode(false);
     var procCode = mutation.getAttribute('proccode');
+    var hat = Blockly.Procedures.getProcedureHat(procCode, workspace);
     var returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
-    if (returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+    if (hat) {
+      mutation.setAttribute('hat', true);
+    } else if (returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       mutation.setAttribute('return', returnType);
     }
     // <block type="procedures_call">
@@ -722,6 +725,7 @@ Blockly.Procedures.getBlockReturnType = function(block) {
       }
     }
   }
+  // to do: array and object types?
   if (hasSeenBooleanReturn) {
     return Blockly.PROCEDURES_CALL_TYPE_BOOLEAN;
   } else {
