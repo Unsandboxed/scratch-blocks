@@ -768,8 +768,8 @@ Blockly.ScratchBlocks.ProcedureUtils.setWarp = function(warp) {
 };
 
 /**
- * Externally-visible function to set the warp on procedure declaration.
- * @param {boolean} warp The value of the warp_ property.
+ * Externally-visible function to set the hat on procedure declaration.
+ * @param {boolean} hat The value of the hat_ property.
  * @public
  */
 Blockly.ScratchBlocks.ProcedureUtils.setHat = function(hat) {
