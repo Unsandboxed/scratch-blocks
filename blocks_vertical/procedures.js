@@ -57,7 +57,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('proccode', this.procCode_);
   container.setAttribute('argumentids', JSON.stringify(this.argumentIds_));
   container.setAttribute('warp', JSON.stringify(this.warp_));
-  container.setAttribute('hat', this.hat_);
+  container.setAttribute('hat', JSON.stringify(this.hat_));
   container.setAttribute('colour', this.colour_);
   if (this.return_ !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
     container.setAttribute('return', this.return_);
@@ -86,7 +86,8 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
     this.workspace.enableProcedureReturns();
   }
   
-  this.hat_ = xmlElement.getAttribute('hat');
+  this.hat_ = JSON.parse(xmlElement.getAttribute('hat'));
+
   this.updateDisplay_();
 };
 
@@ -112,6 +113,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
       JSON.stringify(this.argumentDefaults_));
   container.setAttribute('warp', JSON.stringify(this.warp_));
   container.setAttribute('colour', this.colour_);
+  container.setAttribute('hat', JSON.stringify(this.hat_));
   return container;
 };
 
@@ -123,6 +125,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
  */
 Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlElement) {
   this.procCode_ = xmlElement.getAttribute('proccode');
+  this.hat_ = JSON.parse(xmlElement.getAttribute('hat'));
   this.warp_ = JSON.parse(xmlElement.getAttribute('warp'));
   if (xmlElement.getAttribute('colour')) {
     this.colour_ = xmlElement.getAttribute('colour');
@@ -173,13 +176,15 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
   this.deleteShadows_(connectionMap);
 
   this.setColour(this.colour_);
-  if (!wasRendered && this.hat_) {
-    this.setPreviousStatement(false);
-    this.setNextStatement(true);
-  } else if (!wasRendered && this.getReturn) {
+  if (!wasRendered && this.getReturn) {
     this.setInputsInline(true);
     if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
-      this.setPreviousStatement(true, null);
+      // very important to not do this to prototypes, else editor will crash.
+      if (this.hat_ && this.type !== 'procedures_prototype') {
+        this.setPreviousStatement(false, null);
+      } else {
+        this.setPreviousStatement(true, null);
+      }
       this.setNextStatement(true, null);
     } else {
       if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_BOOLEAN) {
@@ -768,8 +773,8 @@ Blockly.ScratchBlocks.ProcedureUtils.setWarp = function(warp) {
 };
 
 /**
- * Externally-visible function to set the hat on procedure declaration.
- * @param {boolean} hat The value of the hat_ property.
+ * Externally-visible function to set the warp on procedure declaration.
+ * @param {boolean} warp The value of the warp_ property.
  * @public
  */
 Blockly.ScratchBlocks.ProcedureUtils.setHat = function(hat) {
