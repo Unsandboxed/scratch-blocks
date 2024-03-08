@@ -250,11 +250,9 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
   for (var i = 0; i < mutations.length; i++) {
     var mutation = mutations[i].cloneNode(false);
     var procCode = mutation.getAttribute('proccode');
-    var hat = Blockly.Procedures.getProcedureHat(procCode, workspace);
+    var hat = JSON.parse(mutation.getAttribute('hat'));
     var returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
-    if (hat) {
-      mutation.setAttribute('hat', true);
-    } else if (returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+    if (returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT && !hat) {
       mutation.setAttribute('return', returnType);
     }
     // <block type="procedures_call">
@@ -415,6 +413,7 @@ Blockly.Procedures.newProcedureMutation = function() {
       ' argumentids="[]"' +
       ' argumentnames="[]"' +
       ' argumentdefaults="[]"' +
+      ' hat="false">' +
       ' warp="false">' +
       '</mutation>' +
       '</xml>';
@@ -556,7 +555,7 @@ Blockly.Procedures.makeEditOption = function(block) {
 Blockly.Procedures.makeChangeTypeOption = function(block) {
   var isStatement = block.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   var option = {
-    enabled: true,
+    enabled: !block.hat_,
     text: isStatement ? Blockly.Msg.PROCEDURES_TO_REPORTER : Blockly.Msg.PROCEDURES_TO_STATEMENT,
     callback: function() {
       var newType;
@@ -709,6 +708,7 @@ Blockly.Procedures.getAllProcedureReturnTypes = function(workspace) {
  * @returns {number} The type of the return block
  */
 Blockly.Procedures.getBlockReturnType = function(block) {
+  if (block.hat_) return Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   var hasSeenBooleanReturn = false;
   /** @type {Blockly.Block[]} */
   var descendants = block.getDescendants();
