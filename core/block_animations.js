@@ -80,7 +80,7 @@ Blockly.BlockAnimations.disposeUiStep_ = function(clone, rtl, start,
 
 /**
  * Play some UI effects (sound, ripple) after a connection has been established.
- * @param {!Blockly.BlockSvg} block The block being connected.
+ * @param {!Blockly.BlockSvg} _block The block being connected.
  * @package
  */
 Blockly.BlockAnimations.disconnectUiEffect = function(

@@ -1109,6 +1109,7 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
  * Create and apply color highlighting onto the report box div.
  * @param {?string} value String value to visually report.
  * @param {?string} type The type that the value represents.
+ * @returns The final div element.
  */
 Blockly.WorkspaceSvg.prototype.constructReportBox = function(value, type) {
   // TODO: For JSON this will need to be a lot more
@@ -1118,16 +1119,16 @@ Blockly.WorkspaceSvg.prototype.constructReportBox = function(value, type) {
     "boolean": "#9966FF", // looks
     "bigint": "#5CB1D6", // sensing
     "number": "#5CB1D6"
-  }
+  };
 
-  goog.dom.createElement('div');
+  var valueReportBox = goog.dom.createElement('div');
   valueReportBox.setAttribute('class', 'valueReportBox');
   if (colorTypeMap[type]) {
     valueReportBox.setAttribute("color", colorTypeMap[type]);
   }
   valueReportBox.textContent = value;
 
-  return fontDiv;
+  return valueReportBox;
 };
 
 /**
