@@ -1109,7 +1109,7 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
  * Create and apply color highlighting onto the report box div.
  * @param {?string} value String value to visually report.
  * @param {?string} type The type that the value represents.
- * @returns The final div element.
+ * @returns {!Element} The final div element.
  */
 Blockly.WorkspaceSvg.prototype.constructReportBox = function(value, type) {
   // TODO: For JSON this will need to be a lot more
