@@ -1124,7 +1124,7 @@ Blockly.WorkspaceSvg.prototype.constructReportBox = function(value, type) {
   var valueReportBox = goog.dom.createElement('div');
   valueReportBox.setAttribute('class', 'valueReportBox');
   if (colorTypeMap[type]) {
-    valueReportBox.setAttribute("style", `color:${colorTypeMap[type]}`);
+    valueReportBox.style.color = colorTypeMap[type];
   }
   valueReportBox.textContent = value;
 
