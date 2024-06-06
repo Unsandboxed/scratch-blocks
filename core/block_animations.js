@@ -83,7 +83,7 @@ Blockly.BlockAnimations.disposeUiStep_ = function(clone, rtl, start,
  * @param {!Blockly.BlockSvg} _block The block being connected.
  * @package
  */
-Blockly.BlockAnimations.disconnectUiEffect = function(
+Blockly.BlockAnimations.connectionUiEffect = function(
     /* eslint-disable no-unused-vars */ _block
     /* eslint-enable no-unused-vars */) {
   // block.workspace.getAudioManager().play('click');
