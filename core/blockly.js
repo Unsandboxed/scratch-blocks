@@ -616,3 +616,5 @@ if (!goog.global['Blockly']) {
   goog.global['Blockly'] = {};
 }
 goog.global['Blockly']['getMainWorkspace'] = Blockly.getMainWorkspace;
+
+Blockly.goog = goog;
