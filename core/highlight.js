@@ -12,6 +12,28 @@ goog.provide('Blockly.Highlight');
 goog.require('goog.dom');
 
 /**
+ * A object for all the colours used by the highlighter
+ */
+Blockly.Highlight.Colours = {
+  'not.found': '#ffffff',
+  // Text part definitions
+  'text': '#ffffff',
+  'Infinity': '#9966ff',
+  'null': '#898196',
+  'object.openParenth': '#cf63cf',
+  'object.closeParenth': '#cf63cf',
+  'object.openBracket': '#cf63cf',
+  'object.closeBracket': '#cf63cf',
+  // typeof definitions
+  // Objects + Arrays can be skipped as they have custom definitions
+  'number': '#9966ff',
+  'string': '#5cb1d6',
+  'boolean': '#ff8c1a',
+  // @todo Check if this is even needed smh
+  'undefined': '#898196',
+};
+
+/**
  * Highlight a single value
  * @param {value} The value to highlight
  * @param {?type} The type of the value
@@ -20,23 +42,7 @@ Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
   // @todo Pick better colours
   const node = goog.dom.createElement('span');
   node.textContent = value;
-  node.style = `color: ${({
-    // Text part definitions
-    'text': '#ffffff',
-    'Infinity': '#9966ff',
-    'null': '#898196',
-    'object.openParenth': '#cf63cf',
-    'object.closeParenth': '#cf63cf',
-    'object.openBracket': '#cf63cf',
-    'object.closeBracket': '#cf63cf',
-    // typeof definitions
-    // Objects + Arrays can be skipped as they have custom definitions
-    'number': '#9966ff',
-    'string': '#5cb1d6',
-    'boolean': '#ff8c1a',
-    // @todo Check if this is even needed smh
-    'undefined': '#898196',
-  })[type || (typeof value)] || '#ffffff'};`;
+  node.style = `color: ${this.Colours[type || (typeof value)] || this.Colours['not.found']};`;
   return node;
 }
 /**
