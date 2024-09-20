@@ -51,6 +51,7 @@ goog.require('Blockly.WorkspaceDragSurfaceSvg');
 goog.require('Blockly.Xml');
 goog.require('Blockly.ZoomControls');
 goog.require('Blockly.IntersectionObserver');
+goog.require('Blockly.Highlight');
 
 goog.require('goog.array');
 goog.require('goog.dom');
@@ -123,6 +124,9 @@ Blockly.WorkspaceSvg = function(options, opt_blockDragSurface, opt_wsDragSurface
   this.checkProcedureReturnAfterGesture_ = false;
 };
 goog.inherits(Blockly.WorkspaceSvg, Blockly.Workspace);
+
+// To keep closure from deleting the file
+Blockly.WorkspaceSvg.Highlight = Blockly.Highlight;
 
 /**
  * A wrapper function called when a resize event occurs.
@@ -1106,29 +1110,16 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
 };
 
 /**
- * Create and apply color highlighting onto the report box div.
+ * Visually report a value associated with a block.
+ * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
+ * @param {?string} id ID of block to report associated value.
  * @param {?string} value String value to visually report.
- * @param {?string} type The type that the value represents.
- * @returns {!Element} The final div element.
+ * @param {?function} callback Callback to call when the report is shown.
  */
-Blockly.WorkspaceSvg.prototype.constructReportBox = function(value, type) {
-  // TODO: For JSON this will need to be a lot more
-  // in-depth to allow inline color mapping.
-
-  var colorTypeMap = {
-    "boolean": "#9966FF", // looks
-    "bigint": "#5CB1D6", // sensing
-    "number": "#5CB1D6"
-  };
-
-  var valueReportBox = goog.dom.createElement('div');
-  valueReportBox.setAttribute('class', 'valueReportBox');
-  if (colorTypeMap[type]) {
-    valueReportBox.style.color = colorTypeMap[type];
-  }
-  valueReportBox.textContent = value;
-
-  return valueReportBox;
+Blockly.WorkspaceSvg.prototype.reportValueWithCallback = function(id, value, callback) {
+  const potentialValue = this.reportValue(id, value);
+  if (callback) callback(Blockly.DropDownDiv.DIV_);
+  return potentialValue;
 };
 
 /**
