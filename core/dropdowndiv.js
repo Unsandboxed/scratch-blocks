@@ -185,6 +185,8 @@ Blockly.DropDownDiv.setCategory = function(category) {
  */
 Blockly.DropDownDiv.showPositionedByBlock = function(owner, block,
     opt_onHide, opt_secondaryYOffset) {
+  // @private
+  this._blockId = block.id;
   var scale = block.workspace.scale;
   var bBox = {width: block.width, height: block.height};
   bBox.width *= scale;
