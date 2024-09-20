@@ -1110,9 +1110,14 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
 };
 
 /**
+<<<<<<< HEAD
  * Visually report a value associated with a block.
  * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
  * @param {?string} id ID of block to report associated value.
+=======
+<<<<<<< HEAD
+ * Create and apply color highlighting onto the report box div.
+>>>>>>> b5cfdb8efd89d23e62843a763379cd8b2d6d200e
  * @param {?string} value String value to visually report.
  * @param {?function} callback Callback to call when the report is shown.
  */
