@@ -1106,6 +1106,7 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
 };
 
 /**
+<<<<<<< HEAD
  * Create and apply color highlighting onto the report box div.
  * @param {?string} value String value to visually report.
  * @param {?string} type The type that the value represents.
@@ -1129,6 +1130,18 @@ Blockly.WorkspaceSvg.prototype.constructReportBox = function(value, type) {
   valueReportBox.textContent = value;
 
   return valueReportBox;
+=======
+ * Visually report a value associated with a block.
+ * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
+ * @param {?string} id ID of block to report associated value.
+ * @param {?string} value String value to visually report.
+ * @param {?function} callback Callback to call when the report is shown.
+ */
+Blockly.WorkspaceSvg.prototype.reportValueWithCallback = function(id, value, callback) {
+  const potentialValue = this.reportValue(id, value);
+  if (callback) callback(this.DropDownDiv.DIV_);
+  return potentialValue;
+>>>>>>> 20161881 (Visual report with callback)
 };
 
 /**
