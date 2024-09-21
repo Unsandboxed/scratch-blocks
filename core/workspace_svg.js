@@ -1088,8 +1088,9 @@ Blockly.WorkspaceSvg.prototype.glowStack = function(id, isGlowingStack) {
  * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
  * @param {?string} id ID of block to report associated value.
  * @param {?string} value String value to visually report.
+ * @param {?string} type The type that the value represents.
  */
-Blockly.WorkspaceSvg.prototype.reportValue = function(id, value) {
+Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
   var block = this.getBlockById(id);
   if (!block) {
     throw 'Tried to report value on block that does not exist.';
@@ -1097,9 +1098,9 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value) {
   Blockly.DropDownDiv.hideWithoutAnimation();
   Blockly.DropDownDiv.clearContent();
   var contentDiv = Blockly.DropDownDiv.getContentDiv();
-  var valueReportBox = goog.dom.createElement('div');
-  valueReportBox.setAttribute('class', 'valueReportBox');
-  valueReportBox.textContent = value;
+
+  var valueReportBox = this.constructReportBox(String(value), type);
+
   contentDiv.appendChild(valueReportBox);
   Blockly.DropDownDiv.setColour(
       Blockly.Colours.valueReportBackground,
@@ -1109,9 +1110,14 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value) {
 };
 
 /**
+<<<<<<< HEAD
  * Visually report a value associated with a block.
  * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
  * @param {?string} id ID of block to report associated value.
+=======
+<<<<<<< HEAD
+ * Create and apply color highlighting onto the report box div.
+>>>>>>> b5cfdb8efd89d23e62843a763379cd8b2d6d200e
  * @param {?string} value String value to visually report.
  * @param {?function} callback Callback to call when the report is shown.
  */

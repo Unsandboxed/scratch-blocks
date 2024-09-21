@@ -35,7 +35,7 @@ goog.provide('Blockly.BlockAnimations');
 Blockly.BlockAnimations.disposeUiEffect = function(block) {
   var workspace = block.workspace;
   var svgGroup = block.getSvgRoot();
-  workspace.getAudioManager().play('delete');
+  // workspace.getAudioManager().play('delete');
 
   var xy = workspace.getSvgXY(svgGroup);
   // Deeply clone the current block.
@@ -80,11 +80,13 @@ Blockly.BlockAnimations.disposeUiStep_ = function(clone, rtl, start,
 
 /**
  * Play some UI effects (sound, ripple) after a connection has been established.
- * @param {!Blockly.BlockSvg} block The block being connected.
+ * @param {!Blockly.BlockSvg} _block The block being connected.
  * @package
  */
-Blockly.BlockAnimations.connectionUiEffect = function(block) {
-  block.workspace.getAudioManager().play('click');
+Blockly.BlockAnimations.connectionUiEffect = function(
+    /* eslint-disable no-unused-vars */ _block
+    /* eslint-enable no-unused-vars */) {
+  // block.workspace.getAudioManager().play('click');
 };
 
 /**

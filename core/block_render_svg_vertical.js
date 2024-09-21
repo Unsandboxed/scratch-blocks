@@ -29,7 +29,7 @@ goog.provide('Blockly.BlockSvg.render');
 goog.require('Blockly.BlockSvg');
 goog.require('Blockly.scratchBlocksUtils');
 goog.require('Blockly.utils');
-
+goog.require('Blockly.CustomShapes');
 
 // UI constants for rendering blocks.
 /**
@@ -997,7 +997,8 @@ Blockly.BlockSvg.prototype.computeInputWidth_ = function(input) {
   // Empty input shape widths.
   if (input.type == Blockly.INPUT_VALUE &&
       (!input.connection || !input.connection.isConnected())) {
-    switch (input.connection.getOutputShape()) {
+    const outputShape = input.connection.getOutputShape();
+    switch (outputShape) {
       case Blockly.OUTPUT_SHAPE_SQUARE:
         return Blockly.BlockSvg.INPUT_SHAPE_SQUARE_WIDTH;
       case Blockly.OUTPUT_SHAPE_ROUND:
@@ -1007,6 +1008,9 @@ Blockly.BlockSvg.prototype.computeInputWidth_ = function(input) {
       case Blockly.OUTPUT_SHAPE_OBJECT:
         return Blockly.BlockSvg.INPUT_SHAPE_OBJECT_WIDTH;
       default:
+        if (Blockly.CustomShapes.has(outputShape)) {
+          return Blockly.CustomShapes.get(outputShape).width;
+        }
         return 0;
     }
   } else {
@@ -1264,6 +1268,8 @@ Blockly.BlockSvg.prototype.renderClassify_ = function() {
       shapes.push('square');
     } else if (this.edgeShape_ === Blockly.OUTPUT_SHAPE_OBJECT) {
       shapes.push('object');
+    } else if (Blockly.CustomShapes.has(this.edgeShape_)) {
+      shapes.push(Blockly.CustomShapes.get(this.edgeShape_).name);
     }
   } else {
     // count the number of statement inputs
@@ -1562,6 +1568,8 @@ Blockly.BlockSvg.prototype.renderDrawLeft_ = function(steps) {
           .edgeShapeWidth_ * 0.4375) + ' ' + (this.edgeShapeWidth_ * -
       0.875) + ' ' + (this.edgeShapeWidth_ * 0.875) + ' ' + (this
           .edgeShapeWidth_ * -0.875));
+    } else if (Blockly.CustomShapes.has(this.edgeShape_)) {
+      steps = Blockly.CustomShapes.get(this.edgeShape_).paths.left(this, steps);
     }
   }
   steps.push('z');
@@ -1600,6 +1608,8 @@ Blockly.BlockSvg.prototype.drawEdgeShapeRight_ = function(steps) {
         this.edgeShapeWidth_ * -0.4375) + ' ' + (this.edgeShapeWidth_ *
       0.875) + ' ' + (this.edgeShapeWidth_ * -0.875) + ' ' + (this
           .edgeShapeWidth_ * 0.875));
+    } else if (Blockly.CustomShapes.has(this.edgeShape_)) {
+      steps = Blockly.CustomShapes.get(this.edgeShape_).paths.right(this, steps);
     }
   }
 };
@@ -1775,11 +1785,20 @@ Blockly.BlockSvg.getInputShapeInfo_ = function(shape) {
       inputShapeArgType = 'object';
       break;
     case Blockly.OUTPUT_SHAPE_SQUARE:
-    default:  // If the input connection is not connected, draw a hole shape.
+    default: {
+      if (Blockly.CustomShapes.has(shape)) {
+        const shapeInfo = Blockly.CustomShapes.get(shape);
+        inputShapePath = shapeInfo.paths.argument;
+        inputShapeWidth = shapeInfo.width;
+        inputShapeArgType = shapeInfo.name;
+        break;
+      }
+      // If the input connection is not connected, draw a hole shape.
       inputShapePath = Blockly.BlockSvg.INPUT_SHAPE_SQUARE;
       inputShapeWidth = Blockly.BlockSvg.INPUT_SHAPE_SQUARE_WIDTH;
       inputShapeArgType = 'square';
       break;
+    }
   }
   return {
     path: inputShapePath,
