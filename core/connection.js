@@ -27,7 +27,6 @@
 goog.provide('Blockly.Connection');
 
 goog.require('Blockly.Events.BlockMove');
-goog.require('Blockly.CustomShapes');
 
 goog.require('goog.asserts');
 goog.require('goog.dom');
@@ -715,9 +714,6 @@ Blockly.Connection.prototype.getOutputShape = function() {
   }
   if (this.check_.indexOf('Object') !== -1) {
     return Blockly.OUTPUT_SHAPE_OBJECT;
-  }
-  if (Blockly.CustomShapes.has(this.check_)) {
-    return Blockly.CustomShapes.get(this.check_).shape.name;
   }
   return Blockly.OUTPUT_SHAPE_ROUND;
 };
