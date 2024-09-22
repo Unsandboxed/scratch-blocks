@@ -148,7 +148,6 @@ Blockly.Blocks['data_showvariable'] = {
 
 Blockly.Blocks['data_hidevariable'] = {
   /**
-   * @deprecated
    * Block to hide a variable
    * @this Blockly.Block
    */
@@ -171,7 +170,7 @@ Blockly.Blocks['data_hidevariable'] = {
 
 Blockly.Blocks['data_listcontents'] = {
   /**
-   * List reporter that outputs a raw array.
+   * List reporter.
    * @this Blockly.Block
    */
   init: function() {
@@ -196,7 +195,7 @@ Blockly.Blocks['data_listcontents'] = {
 
 Blockly.Blocks['data_listarraycontents'] = {
   /**
-   * List reporter.
+   * List reporter that outputs a raw array.
    * @this Blockly.Block
    */
   init: function() {
