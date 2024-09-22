@@ -193,6 +193,31 @@ Blockly.Blocks['data_listcontents'] = {
   }
 };
 
+Blockly.Blocks['data_listarraycontents'] = {
+  /**
+   * List reporter that outputs a raw array.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_variable_getter",
+          "text": "",
+          "name": "LIST",
+          "variableType": Blockly.LIST_VARIABLE_TYPE
+        }
+      ],
+      "output": null,
+      "category": Blockly.Categories.dataLists,
+      "checkboxInFlyout": true,
+      "extensions": ["contextMenu_getListBlock", "colours_data_lists"],
+      "outputShape": Blockly.OUTPUT_SHAPE_SQUARE
+    });
+  }
+};
+
 Blockly.Blocks['data_listindexall'] = {
   /**
    * List index menu, with all option.
