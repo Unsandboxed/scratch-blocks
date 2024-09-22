@@ -205,7 +205,10 @@ Blockly.DataCategory.addDataList = function(xmlList, variable) {
   // <block id="variableId" type="data_listcontents">
   //    <field name="LIST">variablename</field>
   // </block>
-  Blockly.DataCategory.addBlock(xmlList, variable, 'data_listcontents', 'LIST');
+
+  // USB: We use a new block called "data_listarraycontents".
+  // "data_listcontents" is deprecated.
+  Blockly.DataCategory.addBlock(xmlList, variable, 'data_listarraycontents', 'LIST');
   // In the flyout, this ID must match variable ID for monitor syncing reasons
   xmlList[xmlList.length - 1].setAttribute('id', variable.getId());
 };
