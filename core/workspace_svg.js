@@ -51,7 +51,6 @@ goog.require('Blockly.WorkspaceDragSurfaceSvg');
 goog.require('Blockly.Xml');
 goog.require('Blockly.ZoomControls');
 goog.require('Blockly.IntersectionObserver');
-goog.require('Blockly.Highlight');
 
 goog.require('goog.array');
 goog.require('goog.dom');
@@ -124,9 +123,6 @@ Blockly.WorkspaceSvg = function(options, opt_blockDragSurface, opt_wsDragSurface
   this.checkProcedureReturnAfterGesture_ = false;
 };
 goog.inherits(Blockly.WorkspaceSvg, Blockly.Workspace);
-
-// To keep closure from deleting the file
-Blockly.WorkspaceSvg.Highlight = Blockly.Highlight;
 
 /**
  * A wrapper function called when a resize event occurs.
@@ -1088,9 +1084,8 @@ Blockly.WorkspaceSvg.prototype.glowStack = function(id, isGlowingStack) {
  * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
  * @param {?string} id ID of block to report associated value.
  * @param {?string} value String value to visually report.
- * @param {?string} type The type that the value represents.
  */
-Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
+Blockly.WorkspaceSvg.prototype.reportValue = function(id, value) {
   var block = this.getBlockById(id);
   if (!block) {
     throw 'Tried to report value on block that does not exist.';
@@ -1098,9 +1093,8 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
   Blockly.DropDownDiv.hideWithoutAnimation();
   Blockly.DropDownDiv.clearContent();
   var contentDiv = Blockly.DropDownDiv.getContentDiv();
-
-  var valueReportBox = this.constructReportBox(String(value), type);
-
+  var valueReportBox = goog.dom.createElement('div');
+  valueReportBox.textContent = value;
   contentDiv.appendChild(valueReportBox);
   Blockly.DropDownDiv.setColour(
       Blockly.Colours.valueReportBackground,
@@ -1110,21 +1104,46 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value, type) {
 };
 
 /**
-<<<<<<< HEAD
+ * The length to check above for when doing a visual report with size call
+ */
+Blockly.WorkspaceSvg.VISUAL_REPORT_CHECK_SIZE = 100000;
+
+/**
  * Visually report a value associated with a block.
  * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
  * @param {?string} id ID of block to report associated value.
-=======
-<<<<<<< HEAD
- * Create and apply color highlighting onto the report box div.
->>>>>>> b5cfdb8efd89d23e62843a763379cd8b2d6d200e
  * @param {?string} value String value to visually report.
+ * @param {?string} type The type that the value represents.
  * @param {?function} callback Callback to call when the report is shown.
  */
 Blockly.WorkspaceSvg.prototype.reportValueWithCallback = function(id, value, callback) {
   const potentialValue = this.reportValue(id, value);
   if (callback) callback(Blockly.DropDownDiv.DIV_);
   return potentialValue;
+};
+
+/**
+ * Visually report a value associated with a block.
+ * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
+ * @param {?string} id ID of block to report associated value.
+ * @param {?string} value String value to visually report.
+ * @param {?string} type The type that the value represents.
+ * @param {?function} callback Callback to call when the report is shown.
+ */
+Blockly.WorkspaceSvg.prototype.reportValueCheckSize = function(id, value, size) {
+  size = size || value.length;
+  if (Blockly.DropDownDiv.DIV_) delete Blockly.DropDownDiv.DIV_.dataset.value;
+  if (size <= Blockly.WorkspaceSvg.VISUAL_REPORT_CHECK_SIZE) return this.reportValue(id, value);
+  return this.reportValueWithCallback(id, value.slice(0, Blockly.WorkspaceSvg.VISUAL_REPORT_CHECK_SIZE - 3) + '...', (DIV_) => {
+    DIV_.dataset.value = value;
+    DIV_.addEventListener('click', function clickFn() {
+      this.removeEventListener('click', clickFn);
+      this.querySelector('div').textContent = this.dataset.value;
+      delete this.dataset.value;
+      const ws = Blockly.getMainWorkspace();
+      Blockly.DropDownDiv.showPositionedByBlock(ws, ws.getBlockById(Blockly.DropDownDiv._blockId));
+    });
+  });
 };
 
 /**

@@ -79,7 +79,7 @@ Blockly.Highlight.highlight = function highlight(value, type) {
         let item = value[i];
         if (typeof item === 'string') item = `"${item.replaceAll('"', '\\"')}"`;
         node.appendChild(this.highlight(item, typeof item));
-        if (i < valueCountComma) node.appendChild(highlightSingle(',', 'text'));
+        if (i < valueCountComma) node.appendChild(this.highlightSingle(',', 'text'));
       }
       node.appendChild(this.highlightSingle(']', 'object.closeBracket'));
     } else {
