@@ -83,6 +83,7 @@ Blockly.DataCategory = function(workspace) {
     // Blockly.DataCategory.addDeleteAllOfList(xmlList, firstVariable);
     Blockly.DataCategory.addInsertAtList(xmlList, firstVariable);
     Blockly.DataCategory.addReplaceItemOfList(xmlList, firstVariable);
+    Blockly.DataCategory.addSetList(xmlList, firstVariable);
     Blockly.DataCategory.addSep(xmlList);
     Blockly.DataCategory.addItemOfList(xmlList, firstVariable);
     Blockly.DataCategory.addItemNumberOfList(xmlList, firstVariable);
@@ -311,6 +312,16 @@ Blockly.DataCategory.addReplaceItemOfList = function(xmlList, variable) {
 };
 
 /**
+ * Construct and add a data_setlist block to xmlList.
+ * @param {!Array.<!Element>} xmlList Array of XML block elements.
+ * @param {?Blockly.VariableModel} variable Variable to select in the field.
+ */
+Blockly.DataCategory.addSetList = function(xmlList, variable) {
+  Blockly.DataCategory.addBlock(xmlList, variable, 'data_setlist',
+      'LIST', 'ARRAY');
+};
+
+/**
  * Construct and add a data_itemoflist block to xmlList.
  * @param {!Array.<!Element>} xmlList Array of XML block elements.
  * @param {?Blockly.VariableModel} variable Variable to select in the field.
@@ -476,6 +487,9 @@ Blockly.DataCategory.addBlock = function(xmlList, variable, blockType,
  */
 Blockly.DataCategory.createValue = function(valueName, type, value) {
   var fieldName;
+  if (valueName === 'ARRAY') {
+    return '<value name="' + valueName + '"></value>';
+  }
   switch (valueName) {
     case 'ITEM':
       fieldName = 'TEXT';
