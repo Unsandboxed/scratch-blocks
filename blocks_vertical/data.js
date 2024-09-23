@@ -403,6 +403,33 @@ Blockly.Blocks['data_replaceitemoflist'] = {
   }
 };
 
+
+Blockly.Blocks['data_setlist'] = {
+  /**
+   * Block to insert item to list.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.DATA_SETLIST,
+      "args0": [
+        {
+          "type": "field_variable",
+          "name": "LIST",
+          "variableTypes": [Blockly.LIST_VARIABLE_TYPE]
+        },
+        {
+          "type": "input_value",
+          "name": "ARRAY",
+          "check": "Array"
+        }
+      ],
+      "category": Blockly.Categories.dataLists,
+      "extensions": ["colours_data_lists", "shape_statement"]
+    });
+  }
+};
+
 Blockly.Blocks['data_itemoflist'] = {
   /**
    * Block for reporting item of list.
