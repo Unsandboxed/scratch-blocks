@@ -420,7 +420,8 @@ Blockly.Blocks['data_setlist'] = {
         },
         {
           "type": "input_value",
-          "name": "ARRAY"
+          "name": "ARRAY",
+          "check": "array"
         }
       ],
       "category": Blockly.Categories.dataLists,
