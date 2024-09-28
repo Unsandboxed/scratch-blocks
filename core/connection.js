@@ -391,6 +391,11 @@ Blockly.Connection.prototype.canConnectToPrevious_ = function(candidate) {
   var isFirstStatementConnection = this == firstStatementConnection;
   var isNextConnection = this == this.sourceBlock_.nextConnection;
 
+  // Don't let C-shaped blocks surround a shadowed block.
+  if (isFirstStatementConnection && candidate.sourceBlock_.isShadow()) {
+    return false;
+  }
+
   // Scratch-specific behaviour: can connect to the first statement input of a
   // C-shaped or E-shaped block, or to the next connection of any statement
   // block, but not to the second statement input of an E-shaped block.
