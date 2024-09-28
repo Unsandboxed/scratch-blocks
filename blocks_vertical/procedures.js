@@ -172,17 +172,21 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
 
   if (!wasRendered && this.getReturn) {
     this.setInputsInline(true);
-    if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+
+    // due to limitations with blockly, all custom reporters with a branch
+    // must be rendererd with a square output shape.
+    if (this.hasStatementInput() && this.getReturn() !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+      this.setOutput(true, null);
+      this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
+    } else if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
+    } else if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_BOOLEAN) {
+      this.setOutput(true, null);
+      this.setOutputShape(Blockly.OUTPUT_SHAPE_HEXAGONAL);
     } else {
-      if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_BOOLEAN) {
-        this.setOutput(true, null);
-        this.setOutputShape(Blockly.OUTPUT_SHAPE_HEXAGONAL);
-      } else {
-        this.setOutput(true, Blockly.Procedures.ENFORCE_TYPES ? 'Number' : null);
-        this.setOutputShape(Blockly.OUTPUT_SHAPE_ROUND);
-      }
+      this.setOutput(true, Blockly.Procedures.ENFORCE_TYPES ? 'Number' : null);
+      this.setOutputShape(Blockly.OUTPUT_SHAPE_ROUND);
     }
   }
 
@@ -191,6 +195,20 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
     this.initSvg();
     this.render();
   }
+};
+
+/**
+ * Find if the procedure has a branch input or not.
+ * @returns {boolean} The type of the return block
+ */
+Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput = function() {
+  var inputList = this.inputList;
+  if (!inputList) return false;
+
+  for (var i = 0; i < inputList.length; i++) {
+    if (inputList[i].type === 3) return true;
+  }
+  return false;
 };
 
 /**
@@ -941,6 +959,7 @@ Blockly.Blocks['procedures_call'] = {
   deleteShadows_: Blockly.ScratchBlocks.ProcedureUtils.deleteShadows_,
   createAllInputs_: Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_,
   updateDisplay_: Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_,
+  hasStatementInput: Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput,
   getReturn: Blockly.ScratchBlocks.ProcedureUtils.getReturn,
 
   // Exist on all three blocks, but have different implementations.
@@ -979,6 +998,7 @@ Blockly.Blocks['procedures_prototype'] = {
   deleteShadows_: Blockly.ScratchBlocks.ProcedureUtils.deleteShadows_,
   createAllInputs_: Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_,
   updateDisplay_: Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_,
+  hasStatementInput: Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput,
 
   // Exist on all three blocks, but have different implementations.
   mutationToDom: Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom,
@@ -1014,6 +1034,7 @@ Blockly.Blocks['procedures_declaration'] = {
   deleteShadows_: Blockly.ScratchBlocks.ProcedureUtils.deleteShadows_,
   createAllInputs_: Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_,
   updateDisplay_: Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_,
+  hasStatementInput: Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput,
 
   // Exist on all three blocks, but have different implementations.
   mutationToDom: Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom,
