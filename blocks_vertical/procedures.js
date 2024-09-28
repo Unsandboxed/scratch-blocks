@@ -479,7 +479,6 @@ Blockly.ScratchBlocks.ProcedureUtils.populateArgumentOnCaller_ = function(type,
     }
     if (type != 'b' && type != 'f' && this.generateShadows_) {
       var shadowDom = oldShadow || this.buildShadowDom_(type);
-      console.log("setting shadow dom: " + shadowDom);
       input.connection.setShadowDom(shadowDom);
     }
   } else if (this.generateShadows_) {
@@ -714,7 +713,7 @@ Blockly.ScratchBlocks.ProcedureUtils.addLabelExternal = function() {
 };
 
 /**
- * Externally-visible function to add a boolean argument to the procedure
+ * Externally-visible function to add a statement argument to the procedure
  * declaration.
  * @public
  */
