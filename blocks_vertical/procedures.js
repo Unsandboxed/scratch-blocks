@@ -251,8 +251,8 @@ Blockly.ScratchBlocks.ProcedureUtils.removeAllInputs_ = function() {
  * @this Blockly.Block
  */
 Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_ = function(connectionMap) {
-  // Split the proc into components, by %n, %b, and %s (ignoring escaped).
-  var procComponents = this.procCode_.split(/(?=[^\\]%[nbs])/);
+  // Split the proc into components, by %n, %b, %f, and %s (ignoring escaped).
+  var procComponents = this.procCode_.split(/(?=[^\\]%[nbsf])/);
   procComponents = procComponents.map(function(c) {
     return c.trim(); // Strip whitespace.
   });
@@ -271,7 +271,7 @@ Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_ = function(connectionMap) 
 
       var id = this.argumentIds_[argumentCount];
 
-      if (argumentType !== 'f') {
+      if (argumentType != 'f') {
         var input = this.appendValueInput(id);
         if (argumentType == 'b') {
           input.setCheck("Boolean");
