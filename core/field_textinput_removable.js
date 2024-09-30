@@ -59,7 +59,10 @@ Blockly.FieldTextInputRemovable.prototype.init = function() {
     return;
   }
 
-  var notInShadow = !this.sourceBlock_.isShadow();
+  var notInShadow = !this.sourceBlock_.isShadow() || 
+  // todo: this is a hacky way to fix a rendering bug.
+  // find out what causes this rendering error.
+    this.sourceBlock_.type == "argument_editor_statement";
 
   if (notInShadow) {
     this.className_ += ' blocklyEditableLabel';

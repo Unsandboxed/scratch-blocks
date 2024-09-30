@@ -173,7 +173,7 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
   if (!wasRendered && this.getReturn) {
     this.setInputsInline(true);
 
-    // due to limitations with blockly, all custom reporters with a branch
+    // due to limitations with scratch-blocks, all custom reporters with a branch
     // must be rendererd with a square output shape.
     if (this.hasStatementInput() && this.getReturn() !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       this.setOutput(true, null);
@@ -1112,11 +1112,7 @@ Blockly.Blocks['argument_editor_statement'] = {
           "text": "foo"
         }
       ],
-      "colour": Blockly.Colours.textField,
-      "colourSecondary": Blockly.Colours.textField,
-      "colourTertiary": Blockly.Colours.textField,
-      "colourQuaternary": Blockly.Colours.textField,
-      "extensions": ["shape_statement"]
+      "extensions": ["colours_more", "shape_statement"]
     });
   },
   // Exist on declaration and arguments editors, with different implementations.
