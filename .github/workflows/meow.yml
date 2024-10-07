@@ -1,0 +1,44 @@
+# Versioning based on my (miyo / yuri-kiss) gallery and local program versions.
+name: Build and push
+on:
+  workflow_dispatch:
+concurrency:
+  group: "build"
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.0
+        with:
+          ref: 'develop'
+      - name: Install node.js
+        uses: actions/setup-node@26961cf329f22f6837d5f54c3efd76b480300ace #v4
+        with:
+          node-version: '20.13.1'
+          cache: npm
+      - name: Install python
+        uses: actions/setup-python@v5.2.0
+        with:
+          python-version: '3.11.2'
+      - name: Install java
+        uses: actions/setup-java@v4.4.0
+        with:
+          java-version: 17
+          distribution: adopt-hotspot
+          java-package: jre
+      - name: CI and prepublish
+        run: |
+          npm ci
+      - name: Push build
+        run: |
+          echo 'GRR GITHUB IS MEANI ONEE-CHAN HELP!!!!' > /dev/null
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Actions"
+          git add . -f
+          git stash
+          git switch develop-builds
+          git stash pop
+          git commit -m "The blocks of scratch!!!"
+          git push origin develop-builds

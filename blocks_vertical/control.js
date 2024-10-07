@@ -225,6 +225,54 @@ Blockly.Blocks['control_stop'] = {
   }
 };
 
+Blockly.Blocks['control_break'] = {
+  /**
+   * Block to break away from a loop.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "id": "control_break",
+      "message0": Blockly.Msg.CONTROL_BREAK,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "break.svg",
+          "width": 24,
+          "height": 24,
+          "flip_rtl": true
+        }
+      ],
+      "category": Blockly.Categories.control,
+      "extensions": ["colours_control", "shape_end"]
+    });
+  }
+};
+
+Blockly.Blocks['control_continue'] = {
+  /**
+   * Block to continue a loop onto the next iteration.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "id": "control_continue",
+      "message0": Blockly.Msg.CONTROL_CONTINUE,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "break.svg",
+          "width": 24,
+          "height": 24,
+          "flip_rtl": true
+        }
+      ],
+      "category": Blockly.Categories.control,
+      "extensions": ["colours_control", "shape_end"]
+    });
+  }
+};
+
 Blockly.Blocks['control_wait'] = {
   /**
    * Block to wait (pause) stack.
