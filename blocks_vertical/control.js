@@ -261,7 +261,7 @@ Blockly.Blocks['control_continue'] = {
       "args0": [
         {
           "type": "field_image",
-          "src": Blockly.mainWorkspace.options.pathToMedia + "break.svg",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "repeat.svg",
           "width": 24,
           "height": 24,
           "flip_rtl": true
