@@ -236,3 +236,78 @@ Blockly.Blocks['camera_yposition'] = {
     });
   }
 };
+
+Blockly.Blocks['camera_setzoom'] = {
+  /**
+   * Block to set the camera's zoom.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_SETZOOM,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "ZOOM"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_changezoom'] = {
+  /**
+   * Block to change the camera's zoom.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_CHANGEZOOM,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "ZOOM"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_zoom'] = {
+  /**
+   * Block to report camera's zoom.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_ZOOM,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_camera", "output_number"]
+    });
+  }
+};
