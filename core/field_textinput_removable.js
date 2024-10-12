@@ -53,6 +53,38 @@ Blockly.FieldTextInputRemovable = function(text, opt_validator, opt_restrictor) 
 };
 goog.inherits(Blockly.FieldTextInputRemovable, Blockly.FieldTextInput);
 
+Blockly.FieldTextInputRemovable.prototype.init = function() {
+  if (this.fieldGroup_) {
+    // Field has already been initialized once.
+    return;
+  }
+
+  var notInShadow = !this.sourceBlock_.isShadow() || 
+  // todo: this is a hacky way to fix a rendering bug.
+  // find out what causes this rendering error.
+    this.sourceBlock_.type == "argument_editor_statement";
+
+  if (notInShadow) {
+    this.className_ += ' blocklyEditableLabel';
+  }
+
+  Blockly.FieldTextInput.superClass_.init.call(this);
+
+  // If not in a shadow block, draw a box.
+  if (notInShadow) {
+    this.box_ = Blockly.utils.createSvgElement('rect',
+        {
+          'x': 0,
+          'y': 0,
+          'width': this.size_.width,
+          'height': this.size_.height,
+          'fill': this.sourceBlock_.getColourTertiary(),
+        }
+    );
+    this.fieldGroup_.insertBefore(this.box_, this.textElement_);
+  }
+};
+
 /**
  * Show the inline free-text editor on top of the text with the remove button.
  * @private

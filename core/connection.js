@@ -343,6 +343,10 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
   switch (this.canConnectWithReason_(target)) {
     case Blockly.Connection.CAN_CONNECT:
       break;
+    case Blockly.Connection.REASON_CUSTOM_PROCEDURE:
+      throw 'Trying to replace a shadow on a custom procedure definition.';
+    case Blockly.Connection.REASON_SHADOW_PARENT:
+      throw 'Connecting non-shadow to shadow block.';
     case Blockly.Connection.REASON_CHECKS_FAILED:
       // usb: We allow blocks to be connected into anything through an addon.
       break;
@@ -355,10 +359,6 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
       throw 'Attempt to connect incompatible types.';
     case Blockly.Connection.REASON_TARGET_NULL:
       throw 'Target connection is null.';
-    case Blockly.Connection.REASON_SHADOW_PARENT:
-      throw 'Connecting non-shadow to shadow block.';
-    case Blockly.Connection.REASON_CUSTOM_PROCEDURE:
-      throw 'Trying to replace a shadow on a custom procedure definition.';
     default:
       throw 'Unknown connection failure: this should never happen!';
   }
@@ -390,6 +390,11 @@ Blockly.Connection.prototype.canConnectToPrevious_ = function(candidate) {
   var isComplexStatement = firstStatementConnection != null;
   var isFirstStatementConnection = this == firstStatementConnection;
   var isNextConnection = this == this.sourceBlock_.nextConnection;
+
+  // Don't let C-shaped blocks surround a shadowed block.
+  if (isFirstStatementConnection && candidate.sourceBlock_.isShadow()) {
+    return false;
+  }
 
   // Scratch-specific behaviour: can connect to the first statement input of a
   // C-shaped or E-shaped block, or to the next connection of any statement

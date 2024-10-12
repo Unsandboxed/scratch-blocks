@@ -116,7 +116,10 @@ Blockly.FieldTextInput.prototype.init = function() {
     return;
   }
 
-  var notInShadow = !this.sourceBlock_.isShadow();
+  var notInShadow = !this.sourceBlock_.isShadow() || 
+  // todo: this is a hacky way to fix a rendering bug.
+  // find out what causes this rendering error.
+    this.sourceBlock_.type == "argument_editor_statement";
 
   if (notInShadow) {
     this.className_ += ' blocklyEditableLabel';
@@ -479,7 +482,7 @@ Blockly.FieldTextInput.prototype.resizeEditor_ = function() {
   var div = Blockly.WidgetDiv.DIV;
 
   var initialWidth;
-  if (this.sourceBlock_.isShadow()) {
+  if (this.sourceBlock_.isShadow() && this.sourceBlock_.type !== "argument_editor_statement") {
     initialWidth = this.sourceBlock_.getHeightWidth().width * scale;
   } else {
     initialWidth = this.size_.width * scale;
@@ -585,7 +588,7 @@ Blockly.FieldTextInput.prototype.widgetDispose_ = function() {
     div.style.boxShadow = '';
     // Resize to actual size of final source block.
     if (thisField.sourceBlock_) {
-      if (thisField.sourceBlock_.isShadow()) {
+      if (thisField.sourceBlock_.isShadow() && thisField.sourceBlock_.type !== "argument_editor_statement") {
         var size = thisField.sourceBlock_.getHeightWidth();
         div.style.width = (size.width + 1) + 'px';
         div.style.height = (size.height + 1) + 'px';
