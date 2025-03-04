@@ -155,7 +155,8 @@ Blockly.VerticalFlyout.prototype.init = function(targetWorkspace) {
  */
 Blockly.VerticalFlyout.prototype.tryUnclip_ = function() {
   if (!this.declipOnHover_) return false;
-  // We wanna let the blocks overflow on the X axis.
+  // We wanna let the blocks overflow.
+  this.svgGroup_.style.overflowX = 'visible';
   this.svgGroup_.style.overflowY = 'visible';
   return true;
 };
@@ -165,7 +166,8 @@ Blockly.VerticalFlyout.prototype.tryUnclip_ = function() {
 Blockly.VerticalFlyout.prototype.handleMouseLeave_ = function() {
   // We no longer want to let the blocks overflow.
   // This can just be reset. even if it did not change.
-  this.svgGroup_.style.overflowY = 'hidden';
+  this.svgGroup_.style.overflowX = 'inherit';
+  this.svgGroup_.style.overflowY = 'inherit';
 };
 
 /**
@@ -178,8 +180,9 @@ Blockly.VerticalFlyout.prototype.createDom = function(tagName) {
   // When the DOM is created make sure our overflow styles are the defaults.
   this.svgGroup_.style.overflow = 'visible';
   this.svgGroup_.style.overflowX = 'inherit';
-  this.svgGroup_.style.overflowY = 'hidden';
+  this.svgGroup_.style.overflowY = 'inherit';
   // Bind the enter and leave events. (simulates css `:hover` selector while letting us run our own code)
+  Blockly.bindEvent_(this.svgGroup_, 'mouseover', this, this.tryUnclip_);
   Blockly.bindEvent_(this.svgGroup_, 'mouseenter', this, this.tryUnclip_);
   Blockly.bindEvent_(this.svgGroup_, 'mouseleave', this, this.handleMouseLeave_);
 
@@ -338,7 +341,7 @@ Blockly.VerticalFlyout.prototype.setMetrics_ = function(xyRatio) {
   this.clipRect_.setAttribute('width', (
     // If we are declipping on hover then we need to be able to see all of the blocks.
     // Otherwise we can just set it to the flyout width and call it a day.
-    this.declipOnHover_ ? metrics.contentWidth : metrics.viewWidth
+    this.declipOnHover_ ? 1e301 : metrics.viewWidth
   ) + 'px');
 
   if (this.categoryScrollPositions) {
