@@ -5388,6 +5388,8 @@ Blockly.ScratchMsgs.locales["en"] =
     "SENSING_CURRENT_HOUR": "hour",
     "SENSING_CURRENT_MINUTE": "minute",
     "SENSING_CURRENT_SECOND": "second",
+    "SENSING_CURRENT_MILLISECOND": "millisecond",
+    "SENSING_CURRENT_TIMESTAMP": "timestamp",
     "SENSING_DAYSSINCE2000": "days since 2000",
     "SENSING_USERNAME": "username",
     "SENSING_USERID": "user id",
