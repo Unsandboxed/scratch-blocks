@@ -61,6 +61,7 @@ goog.require('Blockly.Touch');
 goog.require('Blockly.WidgetDiv');
 goog.require('Blockly.WorkspaceSvg');
 goog.require('Blockly.CustomShapes');
+goog.require('Blockly.Shpr');
 goog.require('Blockly.Highlight');
 goog.require('Blockly.constants');
 goog.require('Blockly.inject');
