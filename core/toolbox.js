@@ -98,6 +98,27 @@ Blockly.Toolbox.prototype.width = 310;
  */
 Blockly.Toolbox.prototype.height = 0;
 
+/**
+ * Current scroll Y of the toolbox.
+ * @type {number}
+ * @protected
+ */
+Blockly.Toolbox.prototype.scrollY_ = 0;
+
+/**
+ * Is the LMB down?
+ * @type {boolean}
+ * @protected
+ */
+Blockly.Toolbox.prototype.lmb_ = false;
+
+/**
+ * Last Y of the LMB when it was initally pushed down.
+ * @type {number}
+ * @protected
+ */
+Blockly.Toolbox.prototype.lmbY_ = 0;
+
 Blockly.Toolbox.prototype.selectedItem_ = null;
 
 /**
@@ -127,14 +148,49 @@ Blockly.Toolbox.prototype.init = function() {
         } else {
           // Just close popups.
           Blockly.hideChaff(true);
+          this.lmb_ = true;
+          this.lmbY_ = e.screenY;
         }
         Blockly.Touch.clearTouchIdentifier();  // Don't block future drags.
       }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
+
+  // Manual scrolling (because firefox stinks)
+  Blockly.bindEventWithChecks_(this.HtmlDiv, 'mouseup', this,
+      function(e) {
+        // Cancel any gestures in progress.
+        this.workspace_.cancelCurrentGesture();
+        if (!Blockly.utils.isRightButton(e) ) {
+          this.lmb_ = false;
+          this.lmbY_ = 0;
+        }
+        Blockly.Touch.clearTouchIdentifier();  // Don't block future drags.
+      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
+  Blockly.bindEventWithChecks(this.HtmlDiv, 'wheel', this,
+      function(e) {
+        this.updateScroll_(e.deltaY || 0);
+      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ false);
 
   this.createFlyout_();
   this.categoryMenu_ = new Blockly.Toolbox.CategoryMenu(this, this.HtmlDiv);
   this.populate_(workspace.options.languageTree);
   this.position();
+};
+
+/**
+ * Scroll fr.
+ * @param {number} dy Delta Y.
+ * @protected
+ *
+ * TOOD: Clamp the scroll and allow for dragging.
+ */
+Blockly.Toolbox.prototype.updateScroll_ = function(dy) {
+  if ((+(dy) || 0) != 0) {
+    this.scrollY_ = this.scrollY_ - ((+dy) || 0); // TODO: Reverse this to be `+` instead of `-` if it proves to be wrong (im going to fork rq)
+  }
+  // Even if the scrollY did not change we should still update this.
+  if (this.categoryMenu_) {
+    this.categoryMenu_.table.style.translate = this.categoryMenu_.getTranslate(this.scrollY_);
+  }
 };
 
 /**
@@ -582,6 +638,17 @@ Blockly.Toolbox.CategoryMenu = function(parent, parentHtml) {
   this.parentHtml_ = parentHtml;
   this.createDom();
   this.categories_ = [];
+};
+
+/**
+ * should i actually comment this?
+ * @param {number} oy offset y.
+ * @param {function?} [cb] magical hack to allow for easier monkey patching.
+ * @returns {string} final translation shtuff.
+ * @public
+ */
+Blockly.Toolbox.CategoryMenu.prototype.getTranslate = function(oy, cb) {
+  return (cb || (function(a) { return a }))('translateY(' + oy + 'px)');
 };
 
 /**
