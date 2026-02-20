@@ -232,7 +232,7 @@ Blockly.Msg.OPERATORS_MATHOP_10EXP = '10 ^';
 // String blocks
 Blockly.Msg.STRING_REVERSE = 'reverse %1'; // usb
 Blockly.Msg.STRING_REPEAT = 'repeat %1 %2 times'; // usb
-Blockly.Msg.STRING_REPLACE = 'replace %1 in %2 with %3'; // usb
+Blockly.Msg.STRING_REPLACE = 'replace %1 with %2 in %3'; // usb
 Blockly.Msg.STRING_ITEMSPLIT = 'item %1 of %2 split by %3'; // usb
 Blockly.Msg.STRING_TERNARY = 'if %1 then %2 else %3'; // usb
 Blockly.Msg.STRING_CONVERT = 'convert %1 to %2'; // usb
