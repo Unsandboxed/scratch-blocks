@@ -1080,6 +1080,22 @@ Blockly.WorkspaceSvg.prototype.glowStack = function(id, isGlowingStack) {
 };
 
 /**
+ * Sanitizes and replaces the contents of the value report box.
+ * @param {?string} value String value to visually report.
+ * @param {!HTMLDivElement} valueReportBox The value report box.
+ */
+Blockly.WorkspaceSvg.prototype.sanitizeReportValue = function(value, valueReportBox) {
+  // NOTE: This is just replaced by the GUI, so it doesnt have to be fancy.
+  var valueAsString;
+  if (value == 0 && (typeof value == 'number') && (1 / value) < 0) {
+    valueAsString = '-0';
+  } else {
+    valueAsString = '' + value;
+  }
+  valueReportBox.textContent = valueAsString;
+};
+
+/**
  * Visually report a value associated with a block.
  * In Scratch, appears as a pop-up next to the block when a reporter block is clicked.
  * @param {?string} id ID of block to report associated value.
@@ -1094,7 +1110,7 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value) {
   Blockly.DropDownDiv.clearContent();
   var contentDiv = Blockly.DropDownDiv.getContentDiv();
   var valueReportBox = goog.dom.createElement('div');
-  valueReportBox.textContent = value;
+  this.sanitizeReportValue(value, valueReportBox);
   contentDiv.appendChild(valueReportBox);
   Blockly.DropDownDiv.setColour(
       Blockly.Colours.valueReportBackground,
