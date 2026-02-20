@@ -41,7 +41,11 @@ Blockly.Highlight.Colours = {
 Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
   // @todo Pick better colours
   const node = goog.dom.createElement('span');
-  node.textContent = value;
+  if (value == 0 && (typeof value == 'number') && (1 / value) < 0) {
+    node.textContent = '-0';
+  } else {
+    node.textContent = value;
+  }
   node.style = `color: ${this.Colours[type || (typeof value)] || this.Colours['not.found']};`;
   return node;
 }
