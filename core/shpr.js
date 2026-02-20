@@ -12,7 +12,7 @@ Blockly.Shpr = {};
 
 Blockly.Shpr.Path = function Path(path) {
   'use strict';
-  this._path = (path instanceof this.constructor ? path.toArray() : Array.from((path ?? '').match(/-?(?:\d*\.)?\d+|[a-z]/gi)));
+  this._path = (path instanceof this.constructor ? path.toArray() : Array.from((path || '').match(/-?(?:\d*\.)?\d+|[a-z]/gi)));
   this.toString = function() {
     return this._path.join(' ');
   };
