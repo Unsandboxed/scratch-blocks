@@ -852,8 +852,11 @@ Blockly.Css.CONTENT = [
   '.blocklyToolboxDiv {',
     'background-color: $colour_toolbox;',
     'color: $colour_toolboxText;',
-    'overflow-x: visible;',
-    'overflow-y: auto;',
+    // Hide the scrollbar because we shall implement our own.
+    'overflow: hidden;', // Everything else.
+    '-ms-overflow-style: none;', // Edge and IE.
+    'scrollbar-width: none;', // FireFox.
+    // end scrollbar hack
     'position: absolute;',
     'font-family: "Helvetica Neue", Helvetica, sans-serif;',
     'z-index: 40;', /* so blocks go over toolbox when dragging */
