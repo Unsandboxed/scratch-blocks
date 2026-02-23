@@ -708,7 +708,7 @@ Blockly.Procedures.ENFORCE_TYPES = false;
 /**
  * If true, the user will have to manually change procedure hats to other types instead of doing it automatically.
  */
-Blockly.Procedures.USER_MANUAL_HAT_TYPE_CHANGE = false;
+Blockly.Procedures.USER_MANUAL_HAT_TYPE_CHANGE = true;
 
 Blockly.Procedures.setProcedureHatDefault = function(procCode, workspace, def) {
   var prototypeBlock = Blockly.Procedures.getPrototypeBlock(procCode, workspace);

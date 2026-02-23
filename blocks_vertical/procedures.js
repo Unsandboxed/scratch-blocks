@@ -61,7 +61,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('colour', this.colour_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
   if (this.return_ !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
-    if (this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT) { // Hats return booleans.
+    if (this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT) {
       container.setAttribute('return', Blockly.PROCEDURES_CALL_TYPE_HAT);
     } else {
       container.setAttribute('return', this.return_);
