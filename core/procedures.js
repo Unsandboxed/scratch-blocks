@@ -257,9 +257,7 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
     } else {
       returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
     }
-    if (returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
-      mutation.setAttribute('return', returnType);
-    }
+    mutation.setAttribute('return', returnType);
     mutation.setAttribute('hat', returnType === Blockly.PROCEDURES_CALL_TYPE_HAT);
     // <block type="procedures_call">
     //   <mutation ...></mutation>
@@ -353,10 +351,12 @@ Blockly.Procedures.mutateCallersAndPrototype = function(name, ws, mutation) {
       var oldMutationDom = caller.mutationToDom();
       var oldMutation = oldMutationDom && Blockly.Xml.domToText(oldMutationDom);
 
-      // Preserve the block's existing shape
       var mutationToReplaceWith = mutation.cloneNode(false);
-      mutationToReplaceWith.setAttribute('return', oldMutationDom.getAttribute('return'));
-      mutationToReplaceWith.setAttribute('hat', oldMutationDom.getAttribute('hat'));
+      if (caller !== prototypeBlock) {
+        // Preserve the block's existing shape
+        mutationToReplaceWith.setAttribute('return', oldMutationDom.getAttribute('return'));
+        mutationToReplaceWith.setAttribute('hat',    oldMutationDom.getAttribute('hat'));
+      }
       caller.domToMutation(mutationToReplaceWith);
 
       var newMutationDom = caller.mutationToDom();
@@ -420,7 +420,7 @@ Blockly.Procedures.newProcedureMutation = function() {
       ' argumentids="[]"' +
       ' argumentnames="[]"' +
       ' argumentdefaults="[]"' +
-      ' warp="false">' +
+      ' warp="false" hat="false" return="' + Blockly.PROCEDURES_CALL_TYPE_STATEMENT + '">' +
       '</mutation>' +
       '</xml>';
   return Blockly.Xml.textToDom(mutationText).firstChild;

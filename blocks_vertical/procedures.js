@@ -60,13 +60,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('warp', JSON.stringify(this.warp_));
   container.setAttribute('colour', this.colour_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
-  if (this.return_ !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
-    if (this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT) {
-      container.setAttribute('return', Blockly.PROCEDURES_CALL_TYPE_HAT);
-    } else {
-      container.setAttribute('return', this.return_);
-    }
-  }
+  container.setAttribute('return', this.return_);
   return container;
 };
 
@@ -86,9 +80,8 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
     this.colour_ = xmlElement.getAttribute('colour');
   }
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
-  if (this.return_ !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
-    this.workspace.enableProcedureReturns();
-  }
+  this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
+  this.workspace.enableProcedureReturns();
   this.updateDisplay_();
 };
 
@@ -114,7 +107,8 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
       JSON.stringify(this.argumentDefaults_));
   container.setAttribute('warp', JSON.stringify(this.warp_));
   container.setAttribute('colour', this.colour_);
-  container.setAttribute('hat', this.hat_);
+  container.setAttribute('return', this.return_);
+  container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
   return container;
 };
 
@@ -127,7 +121,8 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
 Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlElement) {
   this.procCode_ = xmlElement.getAttribute('proccode');
   this.warp_ = JSON.parse(xmlElement.getAttribute('warp'));
-  this.hat_ = JSON.parse(xmlElement.getAttribute('hat'));
+  this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
+  this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
   if (xmlElement.getAttribute('colour')) {
     this.colour_ = xmlElement.getAttribute('colour');
   }
@@ -489,7 +484,6 @@ Blockly.ScratchBlocks.ProcedureUtils.populateArgumentOnCaller_ = function(type,
     oldBlock.outputConnection.connect(input.connection);
     if (type != 'b' && this.generateShadows_) {
       var shadowDom = oldShadow || this.buildShadowDom_(type);
-      console.log("setting shadow dom: " + shadowDom);
       input.connection.setShadowDom(shadowDom);
     }
   } else if (this.generateShadows_) {
@@ -773,7 +767,7 @@ Blockly.ScratchBlocks.ProcedureUtils.getReturn = function() {
 };
 
 Blockly.ScratchBlocks.ProcedureUtils.getHatDefault = function() {
-  return this.hat_;
+  return this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
 };
 
 Blockly.ScratchBlocks.ProcedureUtils.setHatDefault = function(isHat) {
@@ -901,6 +895,8 @@ Blockly.Blocks['procedures_definition'] = {
       ],
       "extensions": ["colours_more", "shape_hat", "procedure_def_contextmenu"]
     });
+    this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
+    this.hat_ = false;
   }
 };
 
@@ -992,6 +988,7 @@ Blockly.Blocks['procedures_declaration'] = {
     this.argumentIds_ = [];
     this.argumentDefaults_ = [];
     this.warp_ = false;
+    this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
   },
   // Shared.
