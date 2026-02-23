@@ -196,6 +196,14 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
         }
       }
     }
+  } else if (this.type === 'procedures_declaration') {
+    if (this.hat_) {
+      this.setPreviousStatement(false, null);
+      this.setNextStatement(true, null);
+    } else {
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+    }
   }
 
   this.rendered = wasRendered;
@@ -768,9 +776,10 @@ Blockly.ScratchBlocks.ProcedureUtils.getHatDefault = function() {
   return this.hat_;
 };
 
-Blockly.ScratchBlocks.ProcedureUtils.setHatDefault = function(d) {
+Blockly.ScratchBlocks.ProcedureUtils.setHatDefault = function(isHat) {
   Blockly.WidgetDiv.hide(true);
-  this.hat_ = d;
+  this.hat_ = isHat;
+  this.return_ = isHat ? Blockly.PROCEDURES_CALL_TYPE_HAT : Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   this.updateDisplay_();
 };
 
