@@ -764,6 +764,19 @@ Blockly.ScratchBlocks.ProcedureUtils.getReturn = function() {
   return this.return_;
 };
 
+Blockly.ScratchBlocks.ProcedureUtils.getHatDefault = function() {
+  Blockly.WidgetDiv.hide(true);
+  this.hat_ = false;
+
+  this.updateDisplay_();
+};
+
+Blockly.ScratchBlocks.ProcedureUtils.setHatDefault = function(d) {
+  Blockly.WidgetDiv.hide(true);
+  this.hat_ = d;
+  this.updateDisplay_();
+};
+
 /**
  * Callback to remove a field, only for the declaration block.
  * @param {Blockly.Field} field The field being removed.
@@ -973,6 +986,7 @@ Blockly.Blocks['procedures_declaration'] = {
     this.argumentIds_ = [];
     this.argumentDefaults_ = [];
     this.warp_ = false;
+    this.hat_ = false;
   },
   // Shared.
   getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode,
@@ -996,6 +1010,8 @@ Blockly.Blocks['procedures_declaration'] = {
   focusLastEditor_: Blockly.ScratchBlocks.ProcedureUtils.focusLastEditor_,
   getWarp: Blockly.ScratchBlocks.ProcedureUtils.getWarp,
   setWarp: Blockly.ScratchBlocks.ProcedureUtils.setWarp,
+  getHatDefault: Blockly.ScratchBlocks.ProcedureUtils.getHatDefault,
+  setHatDefault: Blockly.ScratchBlocks.ProcedureUtils.setHatDefault,
   addLabelExternal: Blockly.ScratchBlocks.ProcedureUtils.addLabelExternal,
   addBooleanExternal: Blockly.ScratchBlocks.ProcedureUtils.addBooleanExternal,
   addStringExternal: Blockly.ScratchBlocks.ProcedureUtils.addStringExternal,
