@@ -765,10 +765,7 @@ Blockly.ScratchBlocks.ProcedureUtils.getReturn = function() {
 };
 
 Blockly.ScratchBlocks.ProcedureUtils.getHatDefault = function() {
-  Blockly.WidgetDiv.hide(true);
-  this.hat_ = false;
-
-  this.updateDisplay_();
+  return this.hat_;
 };
 
 Blockly.ScratchBlocks.ProcedureUtils.setHatDefault = function(d) {
