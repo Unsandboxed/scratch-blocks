@@ -250,10 +250,17 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
   for (var i = 0; i < mutations.length; i++) {
     var mutation = mutations[i].cloneNode(false);
     var procCode = mutation.getAttribute('proccode');
-    var returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
+    var returnType;
+    // If the hat mutation is true on the prototype then it should start as a hat.
+    if (mutation.getAttribute('hat') === 'true') {
+      returnType = Blockly.PROCEDURES_CALL_TYPE_HAT;
+    } else {
+      returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
+    }
     if (returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       mutation.setAttribute('return', returnType);
     }
+    mutation.setAttribute('hat', returnType === Blockly.PROCEDURES_CALL_TYPE_HAT);
     // <block type="procedures_call">
     //   <mutation ...></mutation>
     // </block>
@@ -349,6 +356,7 @@ Blockly.Procedures.mutateCallersAndPrototype = function(name, ws, mutation) {
       // Preserve the block's existing shape
       var mutationToReplaceWith = mutation.cloneNode(false);
       mutationToReplaceWith.setAttribute('return', oldMutationDom.getAttribute('return'));
+      mutationToReplaceWith.setAttribute('hat', oldMutationDom.getAttribute('hat'));
       caller.domToMutation(mutationToReplaceWith);
 
       var newMutationDom = caller.mutationToDom();
@@ -582,8 +590,24 @@ Blockly.Procedures.makeChangeTypeOption = function(block) {
   };
   return option;
 };
+Blockly.Procedures.makeChangeHatOption = function(block) {
+  var isStatement = block.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
+  var option = {
+    enabled: true,
+    text: isStatement ? Blockly.Msg.PROCEDURES_TO_HAT : Blockly.Msg.PROCEDURES_TO_STATEMENT,
+    callback: function() {
+      Blockly.Events.setGroup(true);
+      try {
+        Blockly.Procedures.changeHatState(block, isStatement);
+      } finally {
+        Blockly.Events.setGroup(false);
+      }
+    }
+  };
+  return option;
+};
 
-Blockly.Procedures.changeReturnType = function(block, returnType) {
+Blockly.Procedures.plugMutate = function(block, callback) {
   block.unplug(true);
   var workspace = block.workspace;
   var xml = Blockly.Xml.blockToDom(block);
@@ -591,10 +615,24 @@ Blockly.Procedures.changeReturnType = function(block, returnType) {
   block.dispose();
 
   var mutation = xml.querySelector('mutation');
-  mutation.setAttribute('return', returnType);
+  callback(mutation);
 
   var newBlock = Blockly.Xml.domToBlock(xml, workspace);
   newBlock.moveBy(xy.x, xy.y);
+};
+
+Blockly.Procedures.changeReturnType = function(block, returnType) {
+  Blockly.Procedures.plugMutate(block, function(mutation) {
+    block.hat_ = returnType === Blockly.PROCEDURES_CALL_TYPE_HAT;
+    mutation.setAttribute('return', returnType);
+    mutation.setAttribute('hat', block.hat_);
+  });
+};
+
+Blockly.Procedures.changeHatState = function(block, isHat) {
+  Blockly.Procedures.changeReturnType(block,
+    isHat ? Blockly.PROCEDURES_CALL_TYPE_HAT : Blockly.PROCEDURES_CALL_TYPE_STATEMENT
+  );
 };
 
 /**
@@ -668,6 +706,19 @@ Blockly.Procedures.USER_CAN_CHANGE_CALL_TYPE = true;
 Blockly.Procedures.ENFORCE_TYPES = false;
 
 /**
+ * If true, the user will have to manually change procedure hats to other types instead of doing it automatically.
+ */
+Blockly.Procedures.USER_MANUAL_HAT_TYPE_CHANGE = false;
+
+Blockly.Procedures.setProcedureHatDefault = function(procCode, workspace, def) {
+  var prototypeBlock = Blockly.Procedures.getPrototypeBlock(procCode, workspace);
+  if (prototypeBlock) {
+    prototypeBlock.hat_ = !!def;
+    workspace.refreshToolboxSelection_();
+  }
+};
+
+/**
  * @param {string} procCode The procedure code
  * @param {Blockly.Workspace} workspace The workspace
  * @returns {number} The type of the return block
@@ -677,7 +728,7 @@ Blockly.Procedures.getProcedureReturnType = function(procCode, workspace) {
   if (!defineBlock) {
     return Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   }
-  return Blockly.Procedures.getBlockReturnType(defineBlock);
+  return Blockly.Procedures.getBlockReturnType(defineBlock, workspace);
 };
 
 /**
@@ -694,7 +745,7 @@ Blockly.Procedures.getAllProcedureReturnTypes = function(workspace) {
       // To match behavior of getDefineBlock, if multiple instances of this procedure are
       // defined, only use the first one.
       if (!Object.prototype.hasOwnProperty.call(result, procCode)) {
-        result[procCode] = Blockly.Procedures.getBlockReturnType(block);
+        result[procCode] = Blockly.Procedures.getBlockReturnType(block, workspace);
       }
     }
   }
@@ -703,9 +754,23 @@ Blockly.Procedures.getAllProcedureReturnTypes = function(workspace) {
 
 /**
  * @param {Blockly.Block} block The block
+ * @param {Blockly.Workspace} workspace The workspace.
  * @returns {number} The type of the return block
  */
-Blockly.Procedures.getBlockReturnType = function(block) {
+Blockly.Procedures.getBlockReturnType = function(block, workspace) {
+  if (block.hat_) {
+    return Blockly.PROCEDURES_CALL_TYPE_HAT;
+  }
+
+  var prototypeBlock;
+  if (block.type !== Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) {
+    if (block.type === Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE) {
+      prototypeBlock = block.getInput('custom_block').connection.targetBlock();
+    } else {
+      prototypeBlock = Blockly.Procedures.getPrototypeBlock(block.procCode_, workspace);
+    }
+  }
+
   var hasSeenBooleanReturn = false;
   /** @type {Blockly.Block[]} */
   var descendants = block.getDescendants();
@@ -725,6 +790,11 @@ Blockly.Procedures.getBlockReturnType = function(block) {
   if (hasSeenBooleanReturn) {
     return Blockly.PROCEDURES_CALL_TYPE_BOOLEAN;
   } else {
+    // If we no longer have a return then check if the procedure defaults to a hat.
+    // If it does, then make it a hat instead of a statement.
+    if (prototypeBlock && prototypeBlock.hat_) {
+      return Blockly.PROCEDURES_CALL_TYPE_HAT;
+    }
     return Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   }
 };

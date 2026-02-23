@@ -754,6 +754,18 @@ Blockly.WorkspaceSvg.prototype.processProcedureReturnsChanged_ = function() {
       // shape has actually changed.
       (!Blockly.Procedures.USER_CAN_CHANGE_CALL_TYPE || initialTypes[procCode] !== actualReturnType)
     ) {
+      // Do not automatically update a procedure hat to another type if "manual hat type change mode" is enabled.
+      if (Blockly.Procedures.USER_MANUAL_HAT_TYPE_CHANGE) {
+        if (block.getReturn() === Blockly.PROCEDURES_CALL_TYPE_HAT) {
+          continue;
+        }
+      }
+
+      if (actualReturnType === Blockly.PROCEDURES_CALL_TYPE_HAT) {
+        Blockly.Procedures.changeHatState(block, true);
+        continue;
+      }
+
       Blockly.Procedures.changeReturnType(block, actualReturnType);
     }
   }
