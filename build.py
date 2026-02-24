@@ -230,8 +230,8 @@ class Gen_compressed(threading.Thread):
 
   def run(self):
     self.gen_core(True)
-    self.gen_core(False)
-    self.gen_blocks("horizontal")
+    # self.gen_core(False)
+    # self.gen_blocks("horizontal")
     self.gen_blocks("vertical")
     self.gen_blocks("common")
 
@@ -628,8 +628,8 @@ if __name__ == "__main__":
   threads = [
     # Vertical:
     Gen_uncompressed(search_paths_vertical, True, closure_env),
-    # Horizontal:
-    Gen_uncompressed(search_paths_horizontal, False, closure_env),
+    # # Horizontal:
+    # Gen_uncompressed(search_paths_horizontal, False, closure_env),
     # Compressed forms of vertical and horizontal.
     Gen_compressed(search_paths_vertical, search_paths_horizontal, closure_env),
 

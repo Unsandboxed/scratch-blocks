@@ -61,6 +61,7 @@ goog.require('Blockly.Touch');
 goog.require('Blockly.WidgetDiv');
 goog.require('Blockly.WorkspaceSvg');
 goog.require('Blockly.CustomShapes');
+goog.require('Blockly.Shpr');
 goog.require('Blockly.Highlight');
 goog.require('Blockly.constants');
 goog.require('Blockly.inject');
@@ -618,3 +619,4 @@ if (!goog.global['Blockly']) {
 }
 goog.global['Blockly']['getMainWorkspace'] = Blockly.getMainWorkspace;
 goog.global['Blockly']['goog'] = goog;
+Blockly.goog = goog;

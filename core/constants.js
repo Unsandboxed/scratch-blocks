@@ -401,6 +401,11 @@ Blockly.PROCEDURES_CALL_TYPE_REPORTER = 1;
 Blockly.PROCEDURES_CALL_TYPE_BOOLEAN = 2;
 
 /**
+ * Enum for procedure call hats.
+ */
+Blockly.PROCEDURES_CALL_TYPE_HAT = 3;
+
+/**
  * The type of all procedure return blocks.
  * @const {string}
  */
