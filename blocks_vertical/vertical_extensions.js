@@ -240,7 +240,16 @@ Blockly.ScratchBlocks.VerticalExtensions.PROCEDURE_CALL_CONTEXTMENU = {
   customContextMenu: function(menuOptions) {
     menuOptions.push(Blockly.Procedures.makeEditOption(this));
     if (!this.isInFlyout) {
-      menuOptions.push(Blockly.Procedures.makeChangeTypeOption(this));
+      // Hats can only change their types to statements.
+      if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_HAT) {
+        menuOptions.push(Blockly.Procedures.makeChangeHatOption(this));
+      } else {
+        menuOptions.push(Blockly.Procedures.makeChangeTypeOption(this));
+        // Statements can be made into hats.
+        if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+          menuOptions.push(Blockly.Procedures.makeChangeHatOption(this));
+        }
+      }
     }
   }
 };
