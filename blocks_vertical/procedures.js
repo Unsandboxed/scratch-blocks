@@ -47,6 +47,21 @@ Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation = function(xmlElement) 
   return Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
 };
 
+Blockly.ScratchBlocks.ProcedureUtils.parseColourMutation = function(colour) {
+  if (colour.startsWith("colours_")) {
+    var id = colour.replace("colours_", "");
+    var callback = Blockly.ScratchBlocks.VerticalExtensions.colourHelper(id);
+    callback.call(this);
+    return;
+  }
+  if (colour.startsWith("#")) {
+    this.setColour(colour);
+    return;
+  }
+  var callback = Blockly.ScratchBlocks.VerticalExtensions.colourHelper("more");
+  callback.call(this);
+};
+
 /**
  * Create XML to represent the (non-editable) name and arguments of a procedure
  * call block.
@@ -58,7 +73,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('proccode', this.procCode_);
   container.setAttribute('argumentids', JSON.stringify(this.argumentIds_));
   container.setAttribute('warp', JSON.stringify(this.warp_));
-  container.setAttribute('colour', this.colour_);
+  container.setAttribute('colour', this.customColour_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
   container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
   container.setAttribute('return', this.return_);
@@ -78,7 +93,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
   this.argumentIds_ = JSON.parse(xmlElement.getAttribute('argumentids'));
   this.warp_ = JSON.parse(xmlElement.getAttribute('warp'));
   if (xmlElement.getAttribute('colour')) {
-    this.colour_ = xmlElement.getAttribute('colour');
+    this.customColour_ = xmlElement.getAttribute('colour');
   }
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
@@ -108,7 +123,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
   container.setAttribute('argumentdefaults',
       JSON.stringify(this.argumentDefaults_));
   container.setAttribute('warp', JSON.stringify(this.warp_));
-  container.setAttribute('colour', this.colour_);
+  container.setAttribute('colour', this.customColour_);
   container.setAttribute('return', this.return_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
   container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
@@ -128,7 +143,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlEleme
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
   this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
   if (xmlElement.getAttribute('colour')) {
-    this.colour_ = xmlElement.getAttribute('colour');
+    this.customColour_ = xmlElement.getAttribute('colour');
   }
 
   var prevArgIds = this.argumentIds_;
@@ -183,7 +198,8 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
   this.createAllInputs_(connectionMap);
   this.deleteShadows_(connectionMap);
 
-  this.setColour(this.colour_);
+  Blockly.ScratchBlocks.ProcedureUtils.parseColourMutation.call(this, this.customColour_);
+
   if (!wasRendered && this.getReturn) {
     this.setInputsInline(true);
     var returnType = this.getReturn();
@@ -918,6 +934,7 @@ Blockly.Blocks['procedures_definition'] = {
     });
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
+    this.customColour_ = "colours_more";
   }
 };
 
@@ -935,6 +952,7 @@ Blockly.Blocks['procedures_call'] = {
     this.warp_ = false;
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
+    this.customColour_ = "colours_more";
   },
   // Shared.
   getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode,
@@ -975,6 +993,7 @@ Blockly.Blocks['procedures_prototype'] = {
     this.warp_ = false;
     this.hat_ = false; // Does this procedure default to a hat in the flyout?
     this.hatAlwaysActivated_ = true;
+    this.customColour_ = "colours_more";
   },
   // Shared.
   getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode,
@@ -1013,6 +1032,7 @@ Blockly.Blocks['procedures_declaration'] = {
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
     this.hatAlwaysActivated_ = true;
+    this.customColour_ = "colours_more";
   },
   // Shared.
   getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode,
