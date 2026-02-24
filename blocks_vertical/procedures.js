@@ -144,6 +144,15 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlEleme
   }
 };
 
+Blockly.ScratchBlocks.ProcedureUtils.argumentReporterMutationToDom = function() {
+ if (!this.rendered || this.isShadow_) return document.createElement('mutation');
+ return Blockly.ColourMutation.mutationToDom.call(this, Blockly.Colours.more);
+};
+Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation = function(node) {
+  if (this.isShadow_) return null;
+  return Blockly.ColourMutation.domToMutation.call(this, node);
+};
+
 // End of serialization and deserialization.
 
 // Shared by all three procedure blocks (procedures_declaration,
@@ -1050,7 +1059,9 @@ Blockly.Blocks['argument_reporter_boolean'] = {
       ],
       "extensions": ["colours_more", "output_boolean"]
     });
-  }
+  },
+  mutationToDom: Blockly.ScratchBlocks.ProcedureUtils.argumentReporterMutationToDom,
+  domToMutation: Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation
 };
 
 Blockly.Blocks['argument_reporter_string_number'] = {
@@ -1065,7 +1076,9 @@ Blockly.Blocks['argument_reporter_string_number'] = {
       ],
       "extensions": ["colours_more", "output_number", "output_string"]
     });
-  }
+  },
+  mutationToDom: Blockly.ScratchBlocks.ProcedureUtils.argumentReporterMutationToDom,
+  domToMutation: Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation
 };
 
 Blockly.Blocks['argument_editor_boolean'] = {
