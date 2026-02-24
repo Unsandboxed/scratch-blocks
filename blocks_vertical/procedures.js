@@ -60,6 +60,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('warp', JSON.stringify(this.warp_));
   container.setAttribute('colour', this.colour_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
+  container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
   container.setAttribute('return', this.return_);
   return container;
 };
@@ -81,6 +82,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
   }
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
+  this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
   this.workspace.enableProcedureReturns();
   this.updateDisplay_();
 };
@@ -109,6 +111,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
   container.setAttribute('colour', this.colour_);
   container.setAttribute('return', this.return_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
+  container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
   return container;
 };
 
@@ -123,6 +126,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlEleme
   this.warp_ = JSON.parse(xmlElement.getAttribute('warp'));
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
+  this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
   if (xmlElement.getAttribute('colour')) {
     this.colour_ = xmlElement.getAttribute('colour');
   }
@@ -777,6 +781,14 @@ Blockly.ScratchBlocks.ProcedureUtils.setHatDefault = function(isHat) {
   this.updateDisplay_();
 };
 
+Blockly.ScratchBlocks.ProcedureUtils.getHatAlwaysActivated = function() {
+  return this.hatAlwaysActivated_;
+};
+
+Blockly.ScratchBlocks.ProcedureUtils.setHatAlwaysActivated = function(alwaysActivated) {
+  this.hatAlwaysActivated_ = alwaysActivated;
+};
+
 /**
  * Callback to remove a field, only for the declaration block.
  * @param {Blockly.Field} field The field being removed.
@@ -953,6 +965,7 @@ Blockly.Blocks['procedures_prototype'] = {
     this.argumentDefaults_ = [];
     this.warp_ = false;
     this.hat_ = false; // Does this procedure default to a hat in the flyout?
+    this.hatAlwaysActivated_ = true;
   },
   // Shared.
   getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode,
@@ -990,6 +1003,7 @@ Blockly.Blocks['procedures_declaration'] = {
     this.warp_ = false;
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
+    this.hatAlwaysActivated_ = true;
   },
   // Shared.
   getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode,
@@ -1015,6 +1029,8 @@ Blockly.Blocks['procedures_declaration'] = {
   setWarp: Blockly.ScratchBlocks.ProcedureUtils.setWarp,
   getHatDefault: Blockly.ScratchBlocks.ProcedureUtils.getHatDefault,
   setHatDefault: Blockly.ScratchBlocks.ProcedureUtils.setHatDefault,
+  getHatAlwaysActivated: Blockly.ScratchBlocks.ProcedureUtils.getHatAlwaysActivated,
+  setHatAlwaysActivated: Blockly.ScratchBlocks.ProcedureUtils.setHatAlwaysActivated,
   addLabelExternal: Blockly.ScratchBlocks.ProcedureUtils.addLabelExternal,
   addBooleanExternal: Blockly.ScratchBlocks.ProcedureUtils.addBooleanExternal,
   addStringExternal: Blockly.ScratchBlocks.ProcedureUtils.addStringExternal,
