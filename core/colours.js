@@ -80,6 +80,7 @@ Blockly.Colours = {
     "tertiary": "#389438",
     "quaternary": "#389438"
   },
+  // usb
   "string": {
     "primary": "#419f86",
     "secondary": "#3b8f79",

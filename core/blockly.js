@@ -29,9 +29,11 @@
  * @namespace Blockly
  **/
 goog.provide('Blockly');
+goog.require('goog.polypatch');
 
 goog.require('Blockly.BlockSvg.render');
 goog.require('Blockly.DropDownDiv');
+goog.require('Blockly.ColourMutation');
 goog.require('Blockly.Events');
 goog.require('Blockly.FieldAngle');
 goog.require('Blockly.FieldCheckbox');
