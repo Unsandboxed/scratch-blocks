@@ -29,9 +29,11 @@
  * @namespace Blockly
  **/
 goog.provide('Blockly');
+goog.require('goog.polypatch');
 
 goog.require('Blockly.BlockSvg.render');
 goog.require('Blockly.DropDownDiv');
+goog.require('Blockly.ColourMutation');
 goog.require('Blockly.Events');
 goog.require('Blockly.FieldAngle');
 goog.require('Blockly.FieldCheckbox');
@@ -61,6 +63,7 @@ goog.require('Blockly.Touch');
 goog.require('Blockly.WidgetDiv');
 goog.require('Blockly.WorkspaceSvg');
 goog.require('Blockly.CustomShapes');
+goog.require('Blockly.Shpr');
 goog.require('Blockly.Highlight');
 goog.require('Blockly.constants');
 goog.require('Blockly.inject');
@@ -617,3 +620,5 @@ if (!goog.global['Blockly']) {
   goog.global['Blockly'] = {};
 }
 goog.global['Blockly']['getMainWorkspace'] = Blockly.getMainWorkspace;
+goog.global['Blockly']['goog'] = goog;
+Blockly.goog = goog;

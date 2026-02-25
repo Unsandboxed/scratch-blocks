@@ -98,6 +98,34 @@ Blockly.Toolbox.prototype.width = 310;
  */
 Blockly.Toolbox.prototype.height = 0;
 
+/**
+ * Current scroll Y of the toolbox.
+ * @type {number}
+ * @public hacky fr.
+ */
+Blockly.Toolbox.prototype.scrollY_ = 0;
+
+/**
+ * Is the LMB down?
+ * @type {boolean}
+ * @protected
+ */
+Blockly.Toolbox.prototype.lmb_ = false;
+
+/**
+ * Last scroll Y when LMB was initially pressed.
+ * @type {number}
+ * @protected
+ */
+Blockly.Toolbox.prototype.lmbScrollY_ = 0;
+
+/**
+ * Last pointer Y.
+ * @type {number}
+ * @protected
+ */
+Blockly.Toolbox.prototype.clientY_ = 0;
+
 Blockly.Toolbox.prototype.selectedItem_ = null;
 
 /**
@@ -127,14 +155,56 @@ Blockly.Toolbox.prototype.init = function() {
         } else {
           // Just close popups.
           Blockly.hideChaff(true);
+          this.lmb_ = true;
+          this.lmbScrollY_ = this.scrollY_;
+          this.clientY_ = e.clientY == null ? this.clientY_ : e.clientY;
         }
         Blockly.Touch.clearTouchIdentifier();  // Don't block future drags.
+      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
+
+  // Manual scrolling (because firefox stinks)
+  Blockly.bindEventWithChecks_(this.HtmlDiv, 'mouseup', this,
+      function(e) {
+        if (e.button == 0 && this.lmb_) {
+          this.lmb_ = false;
+        }
+      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
+  Blockly.bindEventWithChecks_(this.HtmlDiv, 'wheel', this,
+      function(e) {
+        if (!this.lmb_) {
+          this.updateScroll_(e.deltaY || 0);
+        }
+      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ false);
+
+  // Mobile requires us to use pointermove instead of mousemove.
+  Blockly.bindEventWithChecks_(this.HtmlDiv, 'pointermove', this,
+      function(e) {
+        var oy_ = this.clientY_ || 0;
+        this.clientY_ = e.clientY || 0;
+        if (this.lmb_) {
+          this.updateScroll_(oy_ - this.clientY_);
+        }
       }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
 
   this.createFlyout_();
   this.categoryMenu_ = new Blockly.Toolbox.CategoryMenu(this, this.HtmlDiv);
   this.populate_(workspace.options.languageTree);
   this.position();
+};
+
+/**
+ * Scroll fr.
+ * @param {number} dy Delta Y.
+ * @protected
+ */
+Blockly.Toolbox.prototype.updateScroll_ = function(dy) {
+  if ((+(dy) || 0) != 0) {
+    this.scrollY_ = this.scrollY_ + ((+dy) || 0);
+  }
+  // Even if the scrollY did not change we should still update this.
+  if (this.categoryMenu_) {
+    this.categoryMenu_.table.style.transform = this.categoryMenu_.getTranslate(this.scrollY_);
+  }
 };
 
 /**
@@ -562,8 +632,12 @@ Blockly.Toolbox.prototype.setSelectedItemFactory = function(item) {
   var selectedItem = item;
   return function() {
     if (!this.workspace_.isDragging()) {
-      this.setSelectedItem(selectedItem);
+      if (Math.abs(this.scrollY_ - this.lmbScrollY_) <= 48) {
+        this.setSelectedItem(selectedItem);
+      }
       Blockly.Touch.clearTouchIdentifier();
+
+      this.lmb_ = false;
     }
   };
 };
@@ -582,6 +656,27 @@ Blockly.Toolbox.CategoryMenu = function(parent, parentHtml) {
   this.parentHtml_ = parentHtml;
   this.createDom();
   this.categories_ = [];
+};
+
+/**
+ * should i actually comment this?
+ * @param {number} oy offset y.
+ * @param {function?} [cb] magical hack to allow for easier monkey patching.
+ * @returns {string} final translation shtuff.
+ * @public
+ */
+Blockly.Toolbox.CategoryMenu.prototype.getTranslate = function(oy, cb) {
+  var h1 = this.getHeight();
+  var h2 = this.parent_.getClientRect().height;
+  if (oy <= 0 || h1 <= h2) {
+    oy = 0;
+  } else {
+    if (oy >= h1 - 60) {
+      oy = h1 - 60;
+    }
+  }
+  this.parent_.scrollY_ = oy;
+  return (cb || (function(a) { return a; }))('translateY(' + -oy + 'px)');
 };
 
 /**

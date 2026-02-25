@@ -487,7 +487,8 @@ Blockly.Blocks['sensing_current'] = {
             [Blockly.Msg.SENSING_CURRENT_HOUR, 'HOUR'],
             [Blockly.Msg.SENSING_CURRENT_MINUTE, 'MINUTE'],
             [Blockly.Msg.SENSING_CURRENT_SECOND, 'SECOND'],
-            [Blockly.Msg.SENSING_CURRENT_MILLISECOND, 'MILLISECOND']
+            [Blockly.Msg.SENSING_CURRENT_MILLISECOND, 'MILLISECOND'],
+            [Blockly.Msg.SENSING_CURRENT_TIMESTAMP, 'TIMESTAMP']
           ]
         }
       ],
@@ -540,6 +541,18 @@ Blockly.Blocks['sensing_userid'] = {
       "message0": Blockly.Msg.SENSING_USERID,
       "category": Blockly.Categories.sensing,
       "extensions": ["colours_sensing", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['sensing_online'] = {
+  init: function() {
+    this.jsonInit({
+      // TODO: we need infrastructure to translate new blockly strings
+      "message0": "online?",
+      "category": Blockly.Categories.sensing,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_sensing", "output_boolean"]
     });
   }
 };
