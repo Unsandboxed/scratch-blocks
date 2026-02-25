@@ -76,6 +76,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('colour', this.customColour_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
   container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
+  container.setAttribute('global', this.global_);
   container.setAttribute('return', this.return_);
   return container;
 };
@@ -92,6 +93,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
       JSON.parse(xmlElement.getAttribute('generateshadows'));
   this.argumentIds_ = JSON.parse(xmlElement.getAttribute('argumentids'));
   this.warp_ = JSON.parse(xmlElement.getAttribute('warp'));
+  this.global_ = JSON.parse(xmlElement.getAttribute('global'));
   if (xmlElement.getAttribute('colour')) {
     this.customColour_ = xmlElement.getAttribute('colour');
   }
@@ -124,9 +126,10 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
       JSON.stringify(this.argumentDefaults_));
   container.setAttribute('warp', JSON.stringify(this.warp_));
   container.setAttribute('colour', this.customColour_);
-  container.setAttribute('return', this.return_);
   container.setAttribute('hat', this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT);
   container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
+  container.setAttribute('global', this.global_);
+  container.setAttribute('return', this.return_);
   return container;
 };
 
@@ -139,6 +142,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
 Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlElement) {
   this.procCode_ = xmlElement.getAttribute('proccode');
   this.warp_ = JSON.parse(xmlElement.getAttribute('warp'));
+  this.global_ = JSON.parse(xmlElement.getAttribute('global'));
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
   this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
@@ -788,6 +792,24 @@ Blockly.ScratchBlocks.ProcedureUtils.setWarp = function(warp) {
 };
 
 /**
+ * Externally-visible function to get the global state on procedure declaration.
+ * @return {boolean} The value of the global_ property.
+ * @public
+ */
+Blockly.ScratchBlocks.ProcedureUtils.getGlobal = function() {
+  return this.global_;
+};
+
+/**
+ * Externally-visible function to set the global state on procedure declaration.
+ * @param {boolean} warp The value of the global_ property.
+ * @public
+ */
+Blockly.ScratchBlocks.ProcedureUtils.setGlobal = function(global) {
+  this.global_ = global;
+};
+
+/**
  * @this {BlockSvg}
  * @returns {number} Value of the return_ property. See enum in constants.js
  */
@@ -950,6 +972,7 @@ Blockly.Blocks['procedures_call'] = {
     this.procCode_ = '';
     this.argumentIds_ = [];
     this.warp_ = false;
+    this.global_ = false;
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
     this.customColour_ = "colours_more";
@@ -991,6 +1014,7 @@ Blockly.Blocks['procedures_prototype'] = {
     this.argumentIds_ = [];
     this.argumentDefaults_ = [];
     this.warp_ = false;
+    this.global_ = false;
     this.hat_ = false; // Does this procedure default to a hat in the flyout?
     this.hatAlwaysActivated_ = true;
     this.customColour_ = "colours_more";
@@ -1029,6 +1053,7 @@ Blockly.Blocks['procedures_declaration'] = {
     this.argumentIds_ = [];
     this.argumentDefaults_ = [];
     this.warp_ = false;
+    this.global_ = false;
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
     this.hatAlwaysActivated_ = true;
@@ -1056,6 +1081,8 @@ Blockly.Blocks['procedures_declaration'] = {
   focusLastEditor_: Blockly.ScratchBlocks.ProcedureUtils.focusLastEditor_,
   getWarp: Blockly.ScratchBlocks.ProcedureUtils.getWarp,
   setWarp: Blockly.ScratchBlocks.ProcedureUtils.setWarp,
+  getGlobal: Blockly.ScratchBlocks.ProcedureUtils.getGlobal,
+  setGlobal: Blockly.ScratchBlocks.ProcedureUtils.setGlobal,
   getHatDefault: Blockly.ScratchBlocks.ProcedureUtils.getHatDefault,
   setHatDefault: Blockly.ScratchBlocks.ProcedureUtils.setHatDefault,
   getHatAlwaysActivated: Blockly.ScratchBlocks.ProcedureUtils.getHatAlwaysActivated,
