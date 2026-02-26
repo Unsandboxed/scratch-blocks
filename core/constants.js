@@ -406,6 +406,12 @@ Blockly.PROCEDURES_CALL_TYPE_BOOLEAN = 2;
 Blockly.PROCEDURES_CALL_TYPE_HAT = 3;
 
 /**
+ * The type of all procedure set parameter blocks.
+ * @const {string}
+ */
+Blockly.PROCEDURES_SET_PARAMETER_BLOCK_TYPE = 'procedures_set_parameter';
+
+/**
  * The type of all procedure return blocks.
  * @const {string}
  */
