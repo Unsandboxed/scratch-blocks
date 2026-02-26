@@ -227,7 +227,7 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
   setParameterBlock.setAttribute('type', Blockly.PROCEDURES_SET_PARAMETER_BLOCK_TYPE);
   setParameterBlock.setAttribute('gap', 12);
   var setParameterBlockValue = goog.dom.createDom('value');
-  setParameterBlockValue.setAttribute('name', 'TO');
+  setParameterBlockValue.setAttribute('name', 'VALUE');
   var setParameterBlockShadow = goog.dom.createDom('shadow');
   setParameterBlockShadow.setAttribute('type', 'text');
   var setParameterBlockField = goog.dom.createDom('field');
