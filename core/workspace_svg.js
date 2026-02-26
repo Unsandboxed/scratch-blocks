@@ -779,6 +779,19 @@ Blockly.WorkspaceSvg.prototype.processProcedureReturnsChanged_ = function() {
       Blockly.Procedures.changeReturnType(block, actualReturnType, this);
     }
   }
+
+  var blocks = Object.values(this.blockDB_);
+  for (var i = 0, block; i < blocks.length; i++) {
+    block = blocks[i];
+    if (block.type !== Blockly.PROCEDURES_CALL_BLOCK_TYPE) continue;
+    if (block.getOutputShape() === Blockly.OUTPUT_SHAPE_SQUARE) {
+      if (block.hasStatementInput()) continue;
+      block.updateDisplay_(true);
+      continue;
+    }
+    if (!block.hasStatementInput()) continue;
+    block.updateDisplay_(true);
+  }
   Blockly.Events.setGroup(false);
 
   // Toolbox refresh can be slow, so only do when needed.

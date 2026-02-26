@@ -192,7 +192,7 @@ Blockly.ScratchBlocks.ProcedureUtils.getProcCode = function() {
  * @private
  * @this Blockly.Block
  */
-Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
+Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate) {
   var wasRendered = this.rendered;
   this.rendered = false;
 
@@ -206,7 +206,7 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
 
   // TODO: There is a lot of repeat checks in here.
   // This should ideally be tidied up.
-  if (!wasRendered && this.getReturn) {
+  if ((!wasRendered || forceReturnUpdate) && this.getReturn) {
     this.setInputsInline(true);
 
     var returnType = this.getReturn();
