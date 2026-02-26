@@ -299,6 +299,7 @@ Blockly.BlockDragger.prototype.endBlockDrag = function(e, currentDragDeltaXY) {
         ws.undo();
         return; // There can only be one define deletion at a time.
       }
+      ws.deleteGlobalProcedureMutationByProccode(procCodeBeingDeleted);
       // The proc deletion was valid, update the toolbox.
       ws.refreshToolboxSelection_();
     });

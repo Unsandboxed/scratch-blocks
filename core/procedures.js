@@ -500,6 +500,7 @@ Blockly.Procedures.createProcedureCallbackFactory_ = function(workspace) {
 Blockly.Procedures.editProcedureCallback_ = function(block) {
   // Edit can come from one of three block types (call, define, prototype)
   // Normalize by setting the block to the prototype block for the procedure.
+  var procCode;
   if (block.type == Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE) {
     var input = block.getInput('custom_block');
     if (!input) {
@@ -518,17 +519,22 @@ Blockly.Procedures.editProcedureCallback_ = function(block) {
       return;
     }
     block = innerBlock;
+    procCode = block.getProcCode();
   } else if (block.type == Blockly.PROCEDURES_CALL_BLOCK_TYPE) {
     // This is a call block, find the prototype corresponding to the procCode.
     // Make sure to search the correct workspace, call block can be in flyout.
     var workspaceToSearch = block.workspace.isFlyout ?
         block.workspace.targetWorkspace : block.workspace;
+    procCode = block.getProcCode();
     block = Blockly.Procedures.getPrototypeBlock(
         block.getProcCode(), workspaceToSearch);
   }
+  if (!block || !block.mutationToDom) {
+    console.warn(procCode, 'block', block, 'does not have mutationToDom');
+  }
   // Block now refers to the procedure prototype block, it is safe to proceed.
   Blockly.Procedures.externalProcedureDefCallback(
-      block.mutationToDom(),
+      block ? block.mutationToDom() : null,
       Blockly.Procedures.editProcedureCallbackFactory_(block)
   );
 };
@@ -737,7 +743,7 @@ Blockly.Procedures.deleteProcedureDefCallback = function(procCode,
   definitionRoot.dispose();
   Blockly.Events.setGroup(false);
 
-  definitionRoot.workspace.deleteGlobalProcedureMutationByProccode(procCode);
+  workspace.deleteGlobalProcedureMutationByProccode(procCode);
 
   // TODO (#1354) Update this function when '_' is removed
   // Refresh toolbox, so caller doesn't appear there anymore
