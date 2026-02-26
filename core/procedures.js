@@ -767,6 +767,9 @@ Blockly.Procedures.getProcedureReturnType = function(procCode, workspace, fromFl
     if (fromFlyout) {
       var globalMutation = workspace.getGlobalProcedureMutationByProccode(procCode);
       if (globalMutation) {
+        if (globalMutation.hat === 'true') {
+          return Blockly.PROCEDURES_CALL_TYPE_HAT;
+        }
         return Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(globalMutation);
       }
     }
@@ -812,6 +815,12 @@ Blockly.Procedures.getBlockReturnType = function(block, workspace) {
       prototypeBlock = block.getInput('custom_block').connection.targetBlock();
     } else {
       prototypeBlock = Blockly.Procedures.getPrototypeBlock(block.procCode_, workspace);
+    }
+  }
+
+  if (block.type === Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE || block.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) {
+    if (prototypeBlock.hat_) {
+      return Blockly.PROCEDURES_CALL_TYPE_HAT;
     }
   }
 
