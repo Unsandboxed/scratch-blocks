@@ -454,6 +454,10 @@ Blockly.Workspace.prototype.createGlobalProcedure = function(mutation) {
   this.globalProcedureMap_.createProcedureMutation(mutation);
 };
 
+Blockly.Workspace.prototype.deleteGlobalProcedureMutationByProccode = function(proccode) {
+  this.globalProcedureMap_.deleteProcedureMutationByProccode(proccode);
+};
+
 Blockly.Workspace.prototype.getAllGlobalProcedureMutations = function() {
   return this.globalProcedureMap_.getAllProcedureMutations();
 };

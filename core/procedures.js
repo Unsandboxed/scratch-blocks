@@ -259,7 +259,7 @@ Blockly.Procedures.flyoutCategory = function(workspace) {
     if (mutation.getAttribute('hat') === 'true') {
       returnType = Blockly.PROCEDURES_CALL_TYPE_HAT;
     } else {
-      returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
+      returnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace, true);
     }
     mutation.setAttribute('return', returnType);
     mutation.setAttribute('hat', returnType === Blockly.PROCEDURES_CALL_TYPE_HAT);
@@ -351,12 +351,18 @@ Blockly.Procedures.mutateCallersAndPrototype = function(name, ws, mutation) {
         defineBlock.workspace, defineBlock, true /* allowRecursive */);
     callers.push(prototypeBlock);
     Blockly.Events.setGroup(true);
+
     for (var i = 0, caller; caller = callers[i]; i++) {
       var oldMutationDom = caller.mutationToDom();
       var oldMutation = oldMutationDom && Blockly.Xml.domToText(oldMutationDom);
 
       var mutationToReplaceWith = mutation.cloneNode(false);
-      if (caller !== prototypeBlock) {
+      if (caller === prototypeBlock) {
+        if (oldMutationDom.getAttribute('global') === 'true') {
+          ws.deleteGlobalProcedureMutationByProccode(oldMutationDom.getAttribute('proccode'));
+          ws.createGlobalProcedure(mutationToReplaceWith);
+        }
+      } else {
         // Preserve the block's existing shape
         mutationToReplaceWith.setAttribute('return', oldMutationDom.getAttribute('return'));
         mutationToReplaceWith.setAttribute('hat',    oldMutationDom.getAttribute('hat'));
@@ -569,9 +575,9 @@ Blockly.Procedures.makeChangeTypeOption = function(block) {
     text: isStatement ? Blockly.Msg.PROCEDURES_TO_REPORTER : Blockly.Msg.PROCEDURES_TO_STATEMENT,
     callback: function() {
       var newType;
+      var workspace = block.workspace;
       if (isStatement) {
         var procCode = block.getProcCode();
-        var workspace = block.workspace;
         var actualReturnType = Blockly.Procedures.getProcedureReturnType(procCode, workspace);
         // If the definition is boolean-shaped, then the reporter should be boolean-shaped,
         // otherwise normal reporter shaped.
@@ -586,7 +592,7 @@ Blockly.Procedures.makeChangeTypeOption = function(block) {
 
       Blockly.Events.setGroup(true);
       try {
-        Blockly.Procedures.changeReturnType(block, newType);
+        Blockly.Procedures.changeReturnType(block, newType, workspace);
       } finally {
         Blockly.Events.setGroup(false);
       }
@@ -602,7 +608,7 @@ Blockly.Procedures.makeChangeHatOption = function(block) {
     callback: function() {
       Blockly.Events.setGroup(true);
       try {
-        Blockly.Procedures.changeHatState(block, isStatement);
+        Blockly.Procedures.changeHatState(block, isStatement, block.workspace);
       } finally {
         Blockly.Events.setGroup(false);
       }
@@ -611,31 +617,59 @@ Blockly.Procedures.makeChangeHatOption = function(block) {
   return option;
 };
 
-Blockly.Procedures.plugMutate = function(block, callback) {
-  block.unplug(true);
-  var workspace = block.workspace;
+Blockly.Procedures.plugMutate = function(block, callback, workspace) {
+  if (!workspace) {
+    workspace = block.workspace;
+  }
+  if (!workspace) {
+    console.warn('plugMutate expected a workspace but didnt get one, attempting to use the current workspace.');
+    workspace = Blockly.mainWorkspace || null;
+  }
+  workspace = workspace || null;
+  if (block.type !== Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) {
+    block.unplug(true);
+  }
+
   var xml = Blockly.Xml.blockToDom(block);
-  var xy = block.getRelativeToSurfaceXY();
-  block.dispose();
-
   var mutation = xml.querySelector('mutation');
-  callback(mutation);
 
-  var newBlock = Blockly.Xml.domToBlock(xml, workspace);
-  newBlock.moveBy(xy.x, xy.y);
+  if (block.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) {
+    var oldMutation = mutation.cloneNode(false);
+    callback(mutation);
+
+    Blockly.Events.fire(new Blockly.Events.BlockChange(block, 'mutation', null,
+        Blockly.Xml.domToText(oldMutation),
+        Blockly.Xml.domToText(mutation)
+    ));
+
+    if (mutation.getAttribute('global') === 'true') {
+      // Sorta misleading name because it also updates the procedure mutation.
+      workspace.createGlobalProcedure(mutation);
+    }
+  } else {
+    var xy = block.getRelativeToSurfaceXY();
+    block.dispose();
+
+    callback(mutation);
+
+    var newBlock = Blockly.Xml.domToBlock(xml, workspace);
+    newBlock.moveBy(xy.x, xy.y);
+  }
 };
 
-Blockly.Procedures.changeReturnType = function(block, returnType) {
+Blockly.Procedures.changeReturnType = function(block, returnType, workspace) {
   Blockly.Procedures.plugMutate(block, function(mutation) {
     block.hat_ = returnType === Blockly.PROCEDURES_CALL_TYPE_HAT;
     mutation.setAttribute('return', returnType);
     mutation.setAttribute('hat', block.hat_);
-  });
+  }, workspace);
 };
 
-Blockly.Procedures.changeHatState = function(block, isHat) {
-  Blockly.Procedures.changeReturnType(block,
-    isHat ? Blockly.PROCEDURES_CALL_TYPE_HAT : Blockly.PROCEDURES_CALL_TYPE_STATEMENT
+Blockly.Procedures.changeHatState = function(block, isHat, workspace) {
+  Blockly.Procedures.changeReturnType(
+      block,
+      (isHat ? Blockly.PROCEDURES_CALL_TYPE_HAT : Blockly.PROCEDURES_CALL_TYPE_STATEMENT),
+      workspace
   );
 };
 
@@ -727,9 +761,15 @@ Blockly.Procedures.setProcedureHatDefault = function(procCode, workspace, def) {
  * @param {Blockly.Workspace} workspace The workspace
  * @returns {number} The type of the return block
  */
-Blockly.Procedures.getProcedureReturnType = function(procCode, workspace) {
+Blockly.Procedures.getProcedureReturnType = function(procCode, workspace, fromFlyout) {
   var defineBlock = Blockly.Procedures.getDefineBlock(procCode, workspace);
   if (!defineBlock) {
+    if (fromFlyout) {
+      var globalMutation = workspace.getGlobalProcedureMutationByProccode(procCode);
+      if (globalMutation) {
+        return Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(globalMutation);
+      }
+    }
     return Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   }
   return Blockly.Procedures.getBlockReturnType(defineBlock, workspace);

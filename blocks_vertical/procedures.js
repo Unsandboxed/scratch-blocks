@@ -208,8 +208,8 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
   // This should ideally be tidied up.
   if (!wasRendered && this.getReturn) {
     this.setInputsInline(true);
-    var returnType = this.getReturn();
 
+    var returnType = this.getReturn();
     // due to limitations with scratch-blocks, all custom reporters with a branch
     // must be rendererd with a square output shape.
     if (this.hasStatementInput() && returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {

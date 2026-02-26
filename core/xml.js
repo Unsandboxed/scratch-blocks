@@ -662,6 +662,8 @@ Blockly.Xml.domToProcedures = function(xmlProcedures, workspace) {
   for (var i = 0, xmlChild; xmlChild = xmlProcedures.children[i]; i++) {
     if (xmlChild.getAttribute('global') == 'true') {
       workspace.createGlobalProcedure(xmlChild);
+    } else {
+      workspace.deleteGlobalProcedureMutationByProccode(xmlChild.getAttribute('proccode'));
     }
   }
 };
