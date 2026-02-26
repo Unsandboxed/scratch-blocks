@@ -37,6 +37,11 @@ goog.require('Blockly.Field');
 goog.require('Blockly.Names');
 goog.require('Blockly.Workspace');
 
+Blockly.Procedures.vmCanDeleteDefinitionCallback_ = function(_procCode, _skipGlobalExistsCheck) {
+  // Overridden elsewhere, most times in the VM.
+  return true;
+};
+
 
 /**
  * Constant to separate procedure names from variables and generated functions
@@ -721,6 +726,9 @@ Blockly.Procedures.deleteProcedureDefCallback = function(procCode,
   if (callers.length > 0) {
     return false;
   }
+  if (!Blockly.Procedures.vmCanDeleteDefinitionCallback_(procCode)) {
+    return false;
+  }
 
   var workspace = definitionRoot.workspace;
 
@@ -728,6 +736,8 @@ Blockly.Procedures.deleteProcedureDefCallback = function(procCode,
   Blockly.Events.setGroup(true);
   definitionRoot.dispose();
   Blockly.Events.setGroup(false);
+
+  definitionRoot.workspace.deleteGlobalProcedureMutationByProccode(procCode);
 
   // TODO (#1354) Update this function when '_' is removed
   // Refresh toolbox, so caller doesn't appear there anymore
