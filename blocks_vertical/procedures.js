@@ -1323,3 +1323,26 @@ Blockly.Blocks['procedures_return'] = {
     this.workspace.enableProcedureReturns();
   }
 };
+
+Blockly.Blocks['procedures_set_parameter'] = {
+  /**
+   * Point towards drop-down menu.
+   * @this Blockly.Block
+  */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.PROCEDURES_SET_PARAMETER,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "PARAM"
+        },
+        {
+          "type": "input_value",
+          "name": "VALUE"
+        }
+      ],
+      "extensions": ["colours_more", "shape_statement"]
+    });
+  }
+};
