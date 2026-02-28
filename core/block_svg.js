@@ -702,7 +702,7 @@ Blockly.BlockSvg.prototype.showHelp_ = function() {
  * @param {!Event} e Mouse event.
  * @private
  */
-Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
+Blockly.BlockSvg.prototype.showContextMenu_ = function(e, originalBlock) {
   if (this.workspace.options.readOnly || !this.contextMenu) {
     return;
   }
@@ -717,13 +717,13 @@ Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
     }
     menuOptions.push(Blockly.ContextMenu.blockDeleteOption(block));
   } else if (this.parentBlock_ && this.isShadow_) {
-    this.parentBlock_.showContextMenu_(e);
+    this.parentBlock_.showContextMenu_(e, originalBlock);
     return;
   }
 
   // Allow the block to add or modify menuOptions.
   if (this.customContextMenu) {
-    this.customContextMenu(menuOptions);
+    this.customContextMenu(menuOptions, originalBlock);
   }
   Blockly.ContextMenu.show(e, menuOptions, this.RTL);
   Blockly.ContextMenu.currentBlock = this;

@@ -41,7 +41,7 @@ Blockly.Blocks['operator_length'] = {
    * Block for string length operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_LENGTH,
       "args0": [
@@ -61,7 +61,7 @@ Blockly.Blocks['operator_join'] = {
    * Block for string join operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_JOIN,
       "args0": [
@@ -80,12 +80,55 @@ Blockly.Blocks['operator_join'] = {
   }
 };
 
+Blockly.Blocks['string_join_extends'] = { // usb
+  /**
+   * Block for extendable string join operator.
+   * @this Blockly.Block
+   */
+  init: function () {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_JOIN_ADVANCED,
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_string", "output_string"]
+    });
+    this.argumentIds_ = [];
+    this.plusminus_ = new Blockly.FieldExtender(
+      this.handlePlus_.bind(this),
+      this.handleMinus_.bind(this),
+      true,
+      false
+    );
+    this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+  },
+  // callback functions
+  handlePlus_: function () {
+    this.insertInputWithIndex_(this.argumentIds_.length + 1);
+  },
+  handleMinus_: function () {
+    this.removeInputWithIndex_(this.argumentIds_.length);
+  },
+
+  mutationToDom: Blockly.ExtenderMutation.mutationToDom,
+  domToMutation: Blockly.ExtenderMutation.domToMutation,
+  updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
+
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
+  findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+
+  insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
+  disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
+  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
+  createAllInputs_: Blockly.ExtenderMutation.createAllInputs_,
+  deleteShadows_: Blockly.ExtenderMutation.deleteShadows_,
+};
+
 Blockly.Blocks['string_reverse'] = { // usb
   /**
    * Block for string reverse operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_REVERSE,
       "args0": [
@@ -105,7 +148,7 @@ Blockly.Blocks['string_repeat'] = { // usb
    * Block for string repeat operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_REPEAT,
       "args0": [
@@ -129,7 +172,7 @@ Blockly.Blocks['string_replace'] = { // usb
    * Block for string replace operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_REPLACE,
       "args0": [
@@ -157,7 +200,7 @@ Blockly.Blocks['operator_letter_of'] = {
    * Block for "letter _ of _" operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_LETTEROF,
       "args0": [
@@ -176,12 +219,12 @@ Blockly.Blocks['operator_letter_of'] = {
   }
 };
 
-Blockly.Blocks['operator_letters_of'] = {
+Blockly.Blocks['operator_letters_of'] = { // usb
   /**
    * Block for "letter _ to _ of _" operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_LETTERSOF,
       "args0": [
@@ -209,7 +252,7 @@ Blockly.Blocks['string_item_split'] = { // usb
    * Block for string split operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_ITEMSPLIT,
       "args0": [
@@ -237,7 +280,7 @@ Blockly.Blocks['string_ternary'] = { // usb
    * Block for string ternary operator.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_TERNARY,
       "args0": [
@@ -268,7 +311,7 @@ Blockly.Blocks['string_convert'] = { // usb
    * Block for making a string upper or lowercase.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_CONVERT,
       "args0": [
@@ -296,7 +339,7 @@ Blockly.Blocks['string_index_of'] = { // usb
    * Block for getting the index of a value in a string.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_INDEXOF,
       "args0": [
@@ -324,7 +367,7 @@ Blockly.Blocks['operator_contains'] = {
    * Block for _ contains _ operator
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.OPERATORS_CONTAINS,
       "args0": [
@@ -348,7 +391,7 @@ Blockly.Blocks['string_exactly'] = {
    * Block for _ === _ operator
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_EXACTLY,
       "args0": [
@@ -372,7 +415,7 @@ Blockly.Blocks['string_is'] = {
    * Block to get whether a string is uppercase or lowercase.
    * @this Blockly.Block
    */
-  init: function() {
+  init: function () {
     this.jsonInit({
       "message0": Blockly.Msg.STRING_IS,
       "args0": [
