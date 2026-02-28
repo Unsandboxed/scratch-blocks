@@ -272,7 +272,7 @@ Blockly.Input.prototype.disposeOfConnection = function(deleteBlockIfItExists) {
 /**
  * Sever all links to this input.
  */
-Blockly.Input.prototype.dispose = function(deleteBlockIfExists) {
+Blockly.Input.prototype.dispose = function(deleteBlockIfItExists) {
   if (this.outlinePath) {
     goog.dom.removeNode(this.outlinePath);
   }
