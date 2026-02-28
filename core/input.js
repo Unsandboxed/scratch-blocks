@@ -246,24 +246,33 @@ Blockly.Input.prototype.init = function() {
 };
 
 /**
- * Disposes of this inputs connection.
+ * Disposes of this inputs shadow dom and its connected block.
  */
-Blockly.Input.prototype.disposeOfConnection = function(deleteBlockIfItExists) {
+Blockly.Input.prototype.disposeOfBlockAndShadow = function() {
   if (!this.connection) return;
   var src = this.connection.getSourceBlock();
   var tgt = null;
   if (this.connection.targetConnection) {
     tgt = this.connection.targetConnection.getSourceBlock();
   }
-  if (src && tgt) {
-    this.connection.setShadowDom(null);
-    this.connection.disconnect();
-    try {
-      if (!tgt.isShadow()) {
-        tgt.unplug();
-      }
-    } catch(_error) {}
-    tgt.dispose(true);
+  if (!(src && tgt)) return;
+  Blockly.Events.setGroup(true);
+  this.connection.setShadowDom(null);
+  if (tgt.isShadow()) {
+    tgt.setShadow(false);
+  }
+  tgt.unplug(false);
+  tgt.dispose(false, false);
+  Blockly.Events.setGroup(false);
+};
+
+/**
+ * Disposes of this inputs connection.
+ */
+Blockly.Input.prototype.disposeOfConnection = function(deleteBlockIfItExists) {
+  if (!this.connection) return;
+  if (deleteBlockIfItExists) {
+    this.disposeOfBlockAndShadow();
   }
   this.connection.dispose();
 };
