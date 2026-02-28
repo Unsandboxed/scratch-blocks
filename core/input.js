@@ -246,9 +246,33 @@ Blockly.Input.prototype.init = function() {
 };
 
 /**
+ * Disposes of this inputs connection.
+ */
+Blockly.Input.prototype.disposeOfConnection = function(deleteBlockIfItExists) {
+  if (!this.connection) return;
+  var src = this.connection.getSourceBlock();
+  var tgt = null;
+  if (this.connection.targetConnection) {
+    tgt = this.connection.targetConnection.getSourceBlock();
+  }
+  if (src && tgt) {
+    this.connection.disconnectInternal_(src, tgt);
+  }
+  if (deleteBlockIfItExists && tgt) {
+    try {
+      if (!tgt.isShadow()) {
+        tgt.unplug();
+      }
+    } catch(_error) {}
+    tgt.dispose(true);
+  }
+  this.connection.dispose();
+};
+
+/**
  * Sever all links to this input.
  */
-Blockly.Input.prototype.dispose = function() {
+Blockly.Input.prototype.dispose = function(deleteBlockIfExists) {
   if (this.outlinePath) {
     goog.dom.removeNode(this.outlinePath);
   }
@@ -260,7 +284,7 @@ Blockly.Input.prototype.dispose = function() {
     field.dispose();
   }
   if (this.connection) {
-    this.connection.dispose();
+    this.disposeOfConnection(deleteBlockIfItExists);
   }
   this.sourceBlock_ = null;
 };
