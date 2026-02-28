@@ -256,9 +256,8 @@ Blockly.Input.prototype.disposeOfConnection = function(deleteBlockIfItExists) {
     tgt = this.connection.targetConnection.getSourceBlock();
   }
   if (src && tgt) {
-    this.connection.disconnectInternal_(src, tgt);
-  }
-  if (deleteBlockIfItExists && tgt) {
+    this.connection.setShadowDom(null);
+    this.connection.disconnect();
     try {
       if (!tgt.isShadow()) {
         tgt.unplug();
