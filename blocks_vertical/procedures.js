@@ -78,6 +78,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerMutationToDom = function() {
   container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
   container.setAttribute('global', this.global_);
   container.setAttribute('return', this.return_);
+  container.setAttribute('pollutelocals', this.pollutelocals_ || false);
   return container;
 };
 
@@ -100,6 +101,7 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
   this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
+  this.pollutelocals_ = !!JSON.parse(xmlElement.getAttribute('pollutelocals') || 'false');
   this.workspace.enableProcedureReturns();
   this.updateDisplay_();
 };
@@ -130,6 +132,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom = function(
   container.setAttribute('hatAlwaysActivated', this.hatAlwaysActivated_);
   container.setAttribute('global', this.global_);
   container.setAttribute('return', this.return_);
+  container.setAttribute('pollutelocals', this.pollutelocals_);
   return container;
 };
 
@@ -146,6 +149,7 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlEleme
   this.return_ = Blockly.ScratchBlocks.ProcedureUtils.parseReturnMutation(xmlElement);
   this.hat_ = this.return_ === Blockly.PROCEDURES_CALL_TYPE_HAT;
   this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
+  this.pollutelocals_ = !!JSON.parse(xmlElement.getAttribute('pollutelocals') || 'false');
   if (xmlElement.getAttribute('colour')) {
     this.customColour_ = xmlElement.getAttribute('colour');
   }
@@ -912,6 +916,14 @@ Blockly.ScratchBlocks.ProcedureUtils.setHatAlwaysActivated = function(alwaysActi
   this.hatAlwaysActivated_ = alwaysActivated;
 };
 
+Blockly.ScratchBlocks.ProcedureUtils.getPollutesLocals = function() {
+  return this.pollutelocals_;
+};
+Blockly.ScratchBlocks.ProcedureUtils.setPollutesLocals = function(pollutesLocals) {
+  this.pollutelocals_ = pollutesLocals;
+};
+
+
 /**
  * Callback to remove a field, only for the declaration block.
  * @param {Blockly.Field} field The field being removed.
@@ -1167,6 +1179,8 @@ Blockly.Blocks['procedures_declaration'] = {
   setHatDefault: Blockly.ScratchBlocks.ProcedureUtils.setHatDefault,
   getHatAlwaysActivated: Blockly.ScratchBlocks.ProcedureUtils.getHatAlwaysActivated,
   setHatAlwaysActivated: Blockly.ScratchBlocks.ProcedureUtils.setHatAlwaysActivated,
+  getPollutesLocals: Blockly.ScratchBlocks.ProcedureUtils.getPollutesLocals,
+  setPollutesLocals: Blockly.ScratchBlocks.ProcedureUtils.setPollutesLocals,
   addLabelExternal: Blockly.ScratchBlocks.ProcedureUtils.addLabelExternal,
   addStatementExternal: Blockly.ScratchBlocks.ProcedureUtils.addStatementExternal,
   addBooleanExternal: Blockly.ScratchBlocks.ProcedureUtils.addBooleanExternal,
