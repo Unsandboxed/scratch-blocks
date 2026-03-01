@@ -69,23 +69,34 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, name) {
   if (!name) name = Blockly.utils.genUid();
   this.argumentIds_.splice(index - 1, 0, name);
   var input = this.insertValueInput(index, name);
-  Blockly.Events.disable();
-  var newBlock = this.workspace.newBlock('text');
-  newBlock.setFieldValue('', 'TEXT');
-  newBlock.setShadow(true);
-  if (!this.isInsertionMarker()) {
-    newBlock.initSvg();
-    newBlock.render(false);
+
+  if (this.extendInput_.check) {
+    input.setCheck(this.extendInput_.check);
   }
-  Blockly.Events.enable();
-  if (Blockly.Events.isEnabled()) {
-    Blockly.Events.fire(new Blockly.Events.BlockCreate(newBlock));
+
+  if (this.extendInput_.type) {
+    Blockly.Events.disable();
+    var newBlock = this.workspace.newBlock(this.extendInput_.type);
+    newBlock.setFieldValue('', this.extendInput_.name);
+    newBlock.setShadow(true);
+    
+    if (!this.isInsertionMarker()) {
+      newBlock.initSvg();
+      newBlock.render(false);
+    }
+
+    Blockly.Events.enable();
+    if (Blockly.Events.isEnabled()) {
+      Blockly.Events.fire(new Blockly.Events.BlockCreate(newBlock));
+    }
+    newBlock.outputConnection.connect(input.connection);
   }
-  newBlock.outputConnection.connect(input.connection);
 
   var newMutation = Blockly.Xml.domToText(this.mutationToDom());
   Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
   Blockly.Events.setGroup(false);
+
+  return input;
 };
 
 Blockly.ExtenderMutation.removeInputWithIndex_ = function(index) {
@@ -122,8 +133,6 @@ Blockly.ExtenderMutation.updateDisplay_ = function() {
 
   this.createAllInputs_(connectionMap);
   this.deleteShadows_(connectionMap);
-
-  this.deleteShadows_();
 
   this.rendered = wasRendered;
   if (wasRendered && !this.isInsertionMarker()) {
@@ -198,7 +207,16 @@ Blockly.ExtenderMutation.createAllInputs_ = function(connectionMap) {
   // create inputs
   for (var i = 0; i < this.argumentIds_.length; ++i) {
     var id = this.argumentIds_[i];
-    var input = this.insertValueInput(i + 1, id);
+    var input = this.insertValueInput((this.hasFirstLabel_) ? i + 1 : i, id);
+
+    if (this.extendLabel_ && i > 0) {
+      var label = new Blockly.FieldLabel(this.extendLabel_);
+      input.appendField(label);
+    }
+
+    if (this.extendInput_.check) {
+      input.setCheck(this.extendInput_.check);
+    }
 
     // populate args
     var oldBlock = null;
@@ -216,17 +234,17 @@ Blockly.ExtenderMutation.createAllInputs_ = function(connectionMap) {
       if (!oldShadow) {
         // create shadow dom
         oldShadow = goog.dom.createDom('shadow');
-        oldShadow.setAttribute('type', 'text');
+        oldShadow.setAttribute('type', this.extendInput_.type);
         var fieldDom = goog.dom.createDom('field', null, '');
-        fieldDom.setAttribute('name', 'TEXT');
+        fieldDom.setAttribute('name', this.extendInput_.name);
         oldShadow.appendChild(fieldDom);
       }
       input.connection.setShadowDom(oldShadow);
-    } else {
+    } else if (this.extendInput_.type) {
       // attach shadow
       Blockly.Events.disable();
-      var newBlock = this.workspace.newBlock('text');
-      newBlock.setFieldValue('', 'TEXT');
+      var newBlock = this.workspace.newBlock(this.extendInput_.type);
+      newBlock.setFieldValue('', this.extendInput_.name);
       newBlock.setShadow(true);
       if (!this.isInsertionMarker()) {
         newBlock.initSvg();

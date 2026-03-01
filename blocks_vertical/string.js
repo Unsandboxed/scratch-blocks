@@ -87,11 +87,16 @@ Blockly.Blocks['string_join_extends'] = { // usb
    */
   init: function () {
     this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_JOIN_ADVANCED,
-      "category": Blockly.Categories.operators,
+      "message0": Blockly.Msg.STRING_JOIN_EXTENDS,
+      "category": Blockly.Categories.string,
       "extensions": ["colours_string", "output_string"]
     });
     this.argumentIds_ = [];
+    this.extendInput_ = {
+      type: "text",
+      name: "TEXT"
+    };
+    this.hasFirstLabel_ = true;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
