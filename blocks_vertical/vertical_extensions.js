@@ -238,11 +238,15 @@ Blockly.ScratchBlocks.VerticalExtensions.PROCEDURE_CALL_CONTEXTMENU = {
    * @this Blockly.Block
    */
   customContextMenu: function(menuOptions) {
-    var procedureMap = this.workspace_.globalProcedureMap_.procedureMap_;
-    // Don't allow editing procedures outside of this workspace.
-    if (!procedureMap[this.getProcCode()]) {
-      menuOptions.push(Blockly.Procedures.makeEditOption(this));
+    // Don't allow editing procedures that don't exist.
+    var definition = this.workspace.getDefineBlock();
+    if (!definition) {
+      definition = this.workspace.targetWorkspace.getDefineBlock();
     }
+    if (definition) {
+      menuOptions.push(Blockly.Procedures.makeEditOption(this))
+    }
+
     if (!this.isInFlyout) {
       // Hats can only change their types to statements.
       if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_HAT) {
