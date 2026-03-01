@@ -64,23 +64,39 @@ Blockly.FieldExtender.prototype.init = function() {
   }
   /** @type {SVGElement} */
   this.fieldGroup_ = Blockly.utils.createSvgElement('g', {}, null);
-  this.btnPlus_ = Blockly.utils.createSvgElement('g',
-      {
-        'class': 'blocklyExtender',
-        'display': this.enablePlus_ ? '' : 'none'
-      },
-      this.fieldGroup_
-  );
   this.btnMinus_ = Blockly.utils.createSvgElement('g',
       {
         'class': 'blocklyExtender',
-        'transform': this.enablePlus_ ? 'translate(25)' : 'translate(0)',
         'display': this.enableMinus_ ? '' : 'none'
       },
       this.fieldGroup_
   );
+  this.btnPlus_ = Blockly.utils.createSvgElement('g',
+      {
+        'class': 'blocklyExtender',
+        'transform': this.enableMinus_ ? 'translate(25)' : 'translate(0)',
+        'display': this.enablePlus_ ? '' : 'none'
+      },
+      this.fieldGroup_
+  );
+  this.rectMinus_ = Blockly.utils.createSvgElement('rect',
+      {
+        'cursor': 'pointer',
+        'class': 'blocklyBlockBackground blocklyExtenderRect',
+        'width': 20,
+        'height': 20,
+        'rx': Blockly.BlockSvg.CORNER_RADIUS,
+        'ry': Blockly.BlockSvg.CORNER_RADIUS,
+        'stroke': this.sourceBlock_.getColourTertiary(),
+        'fill': this.sourceBlock_.getColour(),
+        'fill-opacity': 1,
+        'transition-duration': '0.3s'
+      },
+      this.btnMinus_
+  );
   this.rectPlus_ = Blockly.utils.createSvgElement('rect',
       {
+        'cursor': 'pointer',
         'class': 'blocklyBlockBackground blocklyExtenderRect',
         'width': 20,
         'height': 20,
@@ -90,27 +106,8 @@ Blockly.FieldExtender.prototype.init = function() {
         'ry': Blockly.BlockSvg.CORNER_RADIUS,
         'stroke': this.sourceBlock_.getColourTertiary(),
         'fill': this.sourceBlock_.getColour(),
-        'fill-opacity': 1
-      },
-      this.btnPlus_
-  );
-  this.rectMinus_ = Blockly.utils.createSvgElement('rect',
-      {
-        'class': 'blocklyBlockBackground blocklyExtenderRect',
-        'width': 20,
-        'height': 20,
-        'rx': Blockly.BlockSvg.CORNER_RADIUS,
-        'ry': Blockly.BlockSvg.CORNER_RADIUS,
-        'stroke': this.sourceBlock_.getColourTertiary(),
-        'fill': this.sourceBlock_.getColour(),
-        'fill-opacity': 1
-      },
-      this.btnMinus_
-  );
-  this.imgPlus_ = Blockly.utils.createSvgElement('image',
-      {
-        'width': 20,
-        'height': 20
+        'fill-opacity': 1,
+        'transition-duration': '0.3s'
       },
       this.btnPlus_
   );
@@ -121,10 +118,17 @@ Blockly.FieldExtender.prototype.init = function() {
       },
       this.btnMinus_
   );
-  this.imgPlus_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
-      Blockly.mainWorkspace.options.pathToMedia + 'plus.svg');
+  this.imgPlus_ = Blockly.utils.createSvgElement('image',
+      {
+        'width': 20,
+        'height': 20
+      },
+      this.btnPlus_
+  );
   this.imgMinus_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
-      Blockly.mainWorkspace.options.pathToMedia + 'minus.svg');
+      Blockly.mainWorkspace.options.pathToMedia + 'left.svg');
+  this.imgPlus_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
+      Blockly.mainWorkspace.options.pathToMedia + 'right.svg');
   this.sourceBlock_.getSvgRoot().appendChild(this.fieldGroup_);
 
   this.calcSize_();
@@ -233,10 +237,8 @@ Blockly.FieldExtender.prototype.setEnablePlus = function(enable) {
   if (!this.fieldGroup_) return;
   if (this.enablePlus_) {
     this.btnPlus_.setAttribute('display', '');
-    this.btnMinus_.setAttribute('transform', 'translate(25)');
   } else {
     this.btnPlus_.setAttribute('display', 'none');
-    this.btnMinus_.setAttribute('transform', 'translate(0)');
   }
   this.render_();
 };
@@ -251,19 +253,12 @@ Blockly.FieldExtender.prototype.setEnableMinus = function(enable) {
   if (!this.fieldGroup_) return;
   if (this.enableMinus_) {
     this.btnMinus_.setAttribute('display', '');
+    this.btnPlus_.setAttribute('transform', 'translate(25)');
   } else {
     this.btnMinus_.setAttribute('display', 'none');
+    this.btnPlus_.setAttribute('transform', 'translate(0)');
   }
   this.render_();
 };
-
-Blockly.FieldExtender.CSS = [
-  '.blocklyExtender {',
-  '  cursor: default;',
-  '}',
-  '.blocklyExtenderRect {',
-  '  transition-duration: 0.3s',
-  '}'
-];
 
 Blockly.Field.register('field_plus_minus', Blockly.FieldExtender);
