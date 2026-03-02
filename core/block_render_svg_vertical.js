@@ -1477,6 +1477,10 @@ Blockly.BlockSvg.prototype.renderInputShape_ = function(input, x, y) {
   // Input shapes are only visibly rendered on non-connected slots.
   if (input.connection.targetConnection) {
     inputShape.setAttribute('style', 'visibility: hidden');
+
+    if (inputShape.booleanCheckbox) {
+      inputShape.booleanCheckbox.setAttribute('style', 'visibility: hidden');
+    }
   } else {
     var inputShapeX = 0, inputShapeY = 0;
     var inputShapeInfo =
@@ -1492,6 +1496,28 @@ Blockly.BlockSvg.prototype.renderInputShape_ = function(input, x, y) {
         'translate(' + inputShapeX + ',' + inputShapeY + ')');
     inputShape.setAttribute('data-argument-type', inputShapeInfo.argType);
     inputShape.setAttribute('style', 'visibility: visible');
+    if (inputShapeInfo.argType == 'boolean') {
+      // Allow a custom cursor for the field to use as a "quick callback".
+      if (!input.booleanCheckbox) {
+        input.booleanCheckbox = Blockly.utils.createSvgElement('path', {
+          'class': 'blocklyText blocklyBooleanCheckbox',
+          'opacity': '0.5',
+          'd': Blockly.FieldCheckbox.CROSS
+        });
+        inputShape.after(input.booleanCheckbox);
+      }
+
+      input.booleanCheckbox.setAttribute(
+          'transform', 'translate(' + (
+            inputShapeX + 24
+          ) + ',' + (
+            inputShapeY + 16
+          ) + ') scale(1.5)'
+      );
+
+      input.booleanCheckbox.setAttribute('style', 'visibility: visible');
+      inputShape.style.cursor = Blockly.FieldCheckbox.prototype.CURSOR;
+    }
   }
 };
 

@@ -27,6 +27,7 @@
 goog.provide('Blockly.Input');
 
 goog.require('Blockly.Connection');
+goog.require('Blockly.FieldCheckbox');
 goog.require('Blockly.FieldLabel');
 goog.require('goog.asserts');
 
@@ -245,17 +246,53 @@ Blockly.Input.prototype.init = function() {
 };
 
 /**
+ * Disposes of this inputs shadow dom and its connected block.
+ */
+Blockly.Input.prototype.disposeOfBlockAndShadow = function() {
+  if (!this.connection) return;
+  var src = this.connection.getSourceBlock();
+  var tgt = null;
+  if (this.connection.targetConnection) {
+    tgt = this.connection.targetConnection.getSourceBlock();
+  }
+  if (!(src && tgt)) return;
+  Blockly.Events.setGroup(true);
+  this.connection.setShadowDom(null);
+  if (tgt.isShadow()) {
+    tgt.setShadow(false);
+  }
+  tgt.unplug(false);
+  tgt.dispose(false, false);
+  Blockly.Events.setGroup(false);
+};
+
+/**
+ * Disposes of this inputs connection.
+ */
+Blockly.Input.prototype.disposeOfConnection = function(deleteBlockIfItExists) {
+  if (!this.connection) return;
+  if (deleteBlockIfItExists) {
+    this.disposeOfBlockAndShadow();
+  }
+  this.connection.dispose();
+};
+
+/**
  * Sever all links to this input.
  */
-Blockly.Input.prototype.dispose = function() {
+Blockly.Input.prototype.dispose = function(deleteBlockIfItExists) {
   if (this.outlinePath) {
     goog.dom.removeNode(this.outlinePath);
+  }
+  if (this.mouseDownWrapper_) {
+    Blockly.unbindEvent_(this.mouseDownWrapper_);
+    this.mouseDownWrapper_ = null;
   }
   for (var i = 0, field; field = this.fieldRow[i]; i++) {
     field.dispose();
   }
   if (this.connection) {
-    this.connection.dispose();
+    this.disposeOfConnection(deleteBlockIfItExists);
   }
   this.sourceBlock_ = null;
 };
@@ -272,14 +309,53 @@ Blockly.Input.prototype.initOutlinePath = function(svgRoot) {
   if (this.outlinePath) {
     return;
   }
-  if (this.type == Blockly.INPUT_VALUE) {
-    this.outlinePath = Blockly.utils.createSvgElement(
-        'path',
-        {
-          'class': 'blocklyPath',
-          'style': 'visibility: hidden', // Hide by default - shown when not connected.
-          'd': ''  // IE doesn't like paths without the data definition, set an empty default
-        },
-        svgRoot);
+  if (this.type !== Blockly.INPUT_VALUE) {
+    return;
+  }
+  this.outlinePath = Blockly.utils.createSvgElement(
+      'path',
+      {
+        'class': 'blocklyPath blocklyInputOutline',
+        'style': 'visibility: hidden', // Hide by default - shown when not connected.
+        'd': ''  // IE doesn't like paths without the data definition, set an empty default
+      },
+      svgRoot);
+  this.mouseDownWrapper_ = Blockly.bindEventWithChecks_(
+      this.outlinePath, 'mousedown', this, this.onMouseDown_);
+};
+
+/**
+ * Handle a mouse down event on an input.
+ * @param {!Event} e Mouse down event.
+ * @private
+ */
+Blockly.Input.prototype.onMouseDown_ = function(e) {
+  if (!this.sourceBlock_ || !this.sourceBlock_.workspace) {
+    return;
+  }
+  if (this.sourceBlock_.workspace.isDragging()) {
+    return;
+  }
+  var gesture = this.sourceBlock_.workspace.getGesture(e);
+  if (gesture) {
+    gesture.setStartInput(this);
+  }
+};
+
+Blockly.Input.prototype.isClickable = function() {
+  if (!this.isVisible() || !this.sourceBlock_) return false;
+  if (this.connection.isConnected()) return false;
+
+  var check = this.connection.check_ || [];
+
+  if (check.indexOf('Boolean') !== -1) return true;
+  return false;
+};
+
+Blockly.Input.prototype.onClick = function() {
+  var check = this.connection.check_ || [];
+
+  if (check.indexOf('Boolean') !== -1) {
+    Blockly.FieldCheckbox.connectBoolean(this);
   }
 };

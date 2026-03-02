@@ -27,6 +27,7 @@
 goog.provide('Blockly.Workspace');
 
 goog.require('Blockly.VariableMap');
+goog.require('Blockly.ProcedureMap');
 goog.require('Blockly.WorkspaceComment');
 goog.require('goog.array');
 goog.require('goog.math');
@@ -101,6 +102,8 @@ Blockly.Workspace = function(opt_options) {
    * @private
    */
   this.variableMap_ = new Blockly.VariableMap(this);
+
+  this.globalProcedureMap_ = new Blockly.ProcedureMap(this);
 
   /**
    * Blocks in the flyout can refer to variables that don't exist in the main
@@ -445,6 +448,23 @@ Blockly.Workspace.prototype.getAllVariables = function() {
 };
 
 /* End functions that are just pass-throughs to the variable map. */
+
+Blockly.Workspace.prototype.createGlobalProcedure = function(mutation) {
+  mutation.setAttribute('generateshadows', true);
+  this.globalProcedureMap_.createProcedureMutation(mutation);
+};
+
+Blockly.Workspace.prototype.deleteGlobalProcedureMutationByProccode = function(proccode) {
+  this.globalProcedureMap_.deleteProcedureMutationByProccode(proccode);
+};
+
+Blockly.Workspace.prototype.getAllGlobalProcedureMutations = function() {
+  return this.globalProcedureMap_.getAllProcedureMutations();
+};
+
+Blockly.Workspace.prototype.getGlobalProcedureMutationByProccode = function(proccode) {
+  return this.globalProcedureMap_.getProcedureMutationByProccode(proccode);
+};
 
 /**
  * Returns the horizontal offset of the workspace.

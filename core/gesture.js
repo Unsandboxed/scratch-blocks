@@ -90,6 +90,14 @@ Blockly.Gesture = function(e, creatorWorkspace) {
   this.startField_ = null;
 
   /**
+   * The input that the gesture started on, or null if it did not start on an
+   * input.
+   * @type {Blockly.Input}
+   * @private
+   */
+  this.startInput_ = null;
+
+  /**
    * The block that the gesture started on, or null if it did not start on a
    * block.
    * @type {Blockly.BlockSvg}
@@ -257,6 +265,7 @@ Blockly.Gesture.prototype.dispose = function() {
 
 
   this.startField_ = null;
+  this.startInput_ = null;
   this.startBlock_ = null;
   this.targetBlock_ = null;
   this.startWorkspace_ = null;
@@ -590,6 +599,8 @@ Blockly.Gesture.prototype.handleUp = function(e) {
     this.doBubbleClick_();
   } else if (this.isFieldClick_()) {
     this.doFieldClick_();
+  } else if (this.isInputClick_()) {
+    this.doInputClick_();
   } else if (this.isBlockClick_()) {
     this.doBlockClick_();
   } else if (this.isWorkspaceClick_()) {
@@ -733,6 +744,15 @@ Blockly.Gesture.prototype.doFieldClick_ = function() {
 };
 
 /**
+ * Execute an input click.
+ * @private
+ */
+Blockly.Gesture.prototype.doInputClick_ = function() {
+  this.startInput_.onClick();
+  this.bringBlockToFront_();
+};
+
+/**
  * Execute a block click.
  * @private
  */
@@ -803,6 +823,20 @@ Blockly.Gesture.prototype.setStartField = function(field) {
       'started.');
   if (!this.startField_) {
     this.startField_ = field;
+  }
+};
+
+/**
+ * Record the input that a gesture started on.
+ * @param {Blockly.Input} input The input the gesture started on.
+ * @package
+ */
+Blockly.Gesture.prototype.setStartInput = function(input) {
+  goog.asserts.assert(!this.hasStarted_,
+      'Tried to call gesture.setStartInput, but the gesture had already been ' +
+      'started.');
+  if (!this.startInput_) {
+    this.startInput_ = input;
   }
 };
 
@@ -914,6 +948,19 @@ Blockly.Gesture.prototype.isFieldClick_ = function() {
   var fieldEditable = this.startField_ ?
       this.startField_.isCurrentlyEditable() : false;
   return fieldEditable && !this.hasExceededDragRadius_;
+};
+
+/**
+
+ * Whether this gesture is a click on an input.  This should only be called
+ * when ending a gesture (mouse up, touch end).
+ * @return {boolean} whether this gesture was a click on an input.
+ * @private
+ */
+Blockly.Gesture.prototype.isInputClick_ = function() {
+  var inputClickable = this.startInput_ ?
+      this.startInput_.isClickable() : false;
+  return inputClickable && !this.hasExceededDragRadius_;
 };
 
 /**

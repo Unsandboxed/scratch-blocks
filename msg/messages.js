@@ -255,6 +255,7 @@ Blockly.Msg.PROCEDURES_DEFINITION = 'define %1';
 
 // TW Procedures blocks
 Blockly.Msg.PROCEDURES_RETURN = 'return %1';
+Blockly.Msg.PROCEDURES_SET_PARAMETER = 'set %1 to %2';
 Blockly.Msg.PROCEDURES_TO_REPORTER = 'Change To Reporter';
 Blockly.Msg.PROCEDURES_TO_STATEMENT = 'Change To Stacked Block';
 Blockly.Msg.PROCEDURES_TO_HAT = 'Change To Hat Block';
