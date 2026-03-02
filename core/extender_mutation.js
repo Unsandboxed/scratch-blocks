@@ -157,7 +157,7 @@ Blockly.ExtenderMutation.disconnectOldBlocks_ = function() {
   var connectionMap = {};
 
   // Disconnect old blocks, except the first and last ones.
-  for (var i = 1; i < this.inputList.length - 1; ++i) {
+  for (var i = (this.hasFirstLabel_) ? 1 : 0; i < this.inputList.length - 1; ++i) {
     var input = this.inputList[i];
     if (input.connection) {
       var target = input.connection.targetBlock();
@@ -189,10 +189,10 @@ Blockly.ExtenderMutation.disconnectOldBlocks_ = function() {
 Blockly.ExtenderMutation.removeAllInputs_ = function() {
   // Delete inputs directly instead of with block.removeInput to avoid splicing
   // out of the input list at every index.
-  for (var i = 1; i < this.inputList.length - 1; ++i) {
+  for (var i = (this.hasFirstLabel_) ? 1 : 0; i < this.inputList.length - 1; ++i) {
     this.inputList[i].dispose();
   }
-  this.inputList.splice(1, this.inputList.length - 2);
+  this.inputList.splice((this.hasFirstLabel_) ? 1 : 0, this.inputList.length - 2);
 }
 
 /**

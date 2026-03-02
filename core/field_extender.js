@@ -66,22 +66,25 @@ Blockly.FieldExtender.prototype.init = function() {
   this.fieldGroup_ = Blockly.utils.createSvgElement('g', {}, null);
   this.btnMinus_ = Blockly.utils.createSvgElement('g',
       {
+        'cursor': 'pointer',
         'class': 'blocklyExtender',
-        'display': this.enableMinus_ ? '' : 'none'
+        'display': this.enableMinus_ ? '' : 'none',
+        'transition-duration': '0.3s'
       },
       this.fieldGroup_
   );
   this.btnPlus_ = Blockly.utils.createSvgElement('g',
       {
+        'cursor': 'pointer',
         'class': 'blocklyExtender',
         'transform': this.enableMinus_ ? 'translate(25)' : 'translate(0)',
-        'display': this.enablePlus_ ? '' : 'none'
+        'display': this.enablePlus_ ? '' : 'none',
+        'transition-duration': '0.3s'
       },
       this.fieldGroup_
   );
   this.rectMinus_ = Blockly.utils.createSvgElement('rect',
       {
-        'cursor': 'pointer',
         'class': 'blocklyBlockBackground blocklyExtenderRect',
         'width': 20,
         'height': 20,
@@ -90,13 +93,11 @@ Blockly.FieldExtender.prototype.init = function() {
         'stroke': this.sourceBlock_.getColourTertiary(),
         'fill': this.sourceBlock_.getColour(),
         'fill-opacity': 1,
-        'transition-duration': '0.3s'
       },
       this.btnMinus_
   );
   this.rectPlus_ = Blockly.utils.createSvgElement('rect',
       {
-        'cursor': 'pointer',
         'class': 'blocklyBlockBackground blocklyExtenderRect',
         'width': 20,
         'height': 20,
@@ -107,7 +108,6 @@ Blockly.FieldExtender.prototype.init = function() {
         'stroke': this.sourceBlock_.getColourTertiary(),
         'fill': this.sourceBlock_.getColour(),
         'fill-opacity': 1,
-        'transition-duration': '0.3s'
       },
       this.btnPlus_
   );
