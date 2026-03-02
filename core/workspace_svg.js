@@ -729,16 +729,26 @@ Blockly.WorkspaceSvg.prototype.processProcedureReturnsChanged_ = function() {
 
   Blockly.Events.setGroup(true);
   var topBlocks = this.getTopBlocks(false);
+
+  // Prototype blocks need their return type updated so that the mutation reflects the right return value;
+  // They are added last because they may be used during the type change checks.
+  var allProcCodes = Object.keys(finalTypes);
+  for (var i = 0, prototypeBlock; i < allProcCodes.length; i++) {
+    prototypeBlock = Blockly.Procedures.getPrototypeBlock(allProcCodes[i], this);
+    if (!prototypeBlock) continue;
+    topBlocks.push(prototypeBlock);
+  }
+
   for (var i = 0; i < topBlocks.length; i++) {
     var block = topBlocks[i];
-    if (block.type !== Blockly.PROCEDURES_CALL_BLOCK_TYPE) continue;
+    if (block.type !== Blockly.PROCEDURES_CALL_BLOCK_TYPE && block.type !== Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) continue;
 
     // After a gesture, we are called early enough that there could still be insertion markers.
     if (block.isInsertionMarker()) continue;
 
     // Because this block is a top block, it by definition won't have a parent, but if another
     // block is connected below, we should leave it unchanged instead of unplugging.
-    if (block.getNextBlock()) continue;
+    if (block.getNextBlock() && block.type !== Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) continue;
 
     var procCode = block.getProcCode();
     // If the procedure doesn't exist or is new, ignore it.
@@ -749,25 +759,38 @@ Blockly.WorkspaceSvg.prototype.processProcedureReturnsChanged_ = function() {
 
     var actualReturnType = finalTypes[procCode];
     if (
-      block.getReturn() !== actualReturnType &&
+      (!block.getReturn || (block.getReturn() !== actualReturnType)) &&
       // If user is allowed to override call block shape, only update the shape if the definition's
       // shape has actually changed.
       (!Blockly.Procedures.USER_CAN_CHANGE_CALL_TYPE || initialTypes[procCode] !== actualReturnType)
     ) {
       // Do not automatically update a procedure hat to another type if "manual hat type change mode" is enabled.
-      if (Blockly.Procedures.USER_MANUAL_HAT_TYPE_CHANGE) {
+      if (Blockly.Procedures.USER_MANUAL_HAT_TYPE_CHANGE && block.getReturn) {
         if (block.getReturn() === Blockly.PROCEDURES_CALL_TYPE_HAT) {
           continue;
         }
       }
 
       if (actualReturnType === Blockly.PROCEDURES_CALL_TYPE_HAT) {
-        Blockly.Procedures.changeHatState(block, true);
+        Blockly.Procedures.changeHatState(block, true, this);
         continue;
       }
 
-      Blockly.Procedures.changeReturnType(block, actualReturnType);
+      Blockly.Procedures.changeReturnType(block, actualReturnType, this);
     }
+  }
+
+  var blocks = Object.values(this.blockDB_);
+  for (var i = 0, block; i < blocks.length; i++) {
+    block = blocks[i];
+    if (block.type !== Blockly.PROCEDURES_CALL_BLOCK_TYPE) continue;
+    if (block.getOutputShape() === Blockly.OUTPUT_SHAPE_SQUARE) {
+      if (block.hasStatementInput()) continue;
+      block.updateDisplay_(true);
+      continue;
+    }
+    if (!block.hasStatementInput()) continue;
+    block.updateDisplay_(true);
   }
   Blockly.Events.setGroup(false);
 
