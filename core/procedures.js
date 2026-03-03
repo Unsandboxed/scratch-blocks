@@ -507,13 +507,9 @@ Blockly.Procedures.createProcedureCallbackFactory_ = function(workspace) {
 };
 
 /**
- * Callback to open the modal for editing custom procedures.
- * @param {!Blockly.Block} block The block that was right-clicked.
- * @private
+ * Gets the proccode from a block of an unknown type.
  */
-Blockly.Procedures.editProcedureCallback_ = function(block) {
-  // Edit can come from one of three block types (call, define, prototype)
-  // Normalize by setting the block to the prototype block for the procedure.
+Blockly.Procedures.getProcCodeOf = function(block) {
   var procCode;
   if (block.type == Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE) {
     var input = block.getInput('custom_block');
@@ -543,8 +539,32 @@ Blockly.Procedures.editProcedureCallback_ = function(block) {
     block = Blockly.Procedures.getPrototypeBlock(
         block.getProcCode(), workspaceToSearch);
   }
+  return [block, procCode];
+};
+
+/**
+ * Checks if a procedure (by procCode) can be edited.
+ */
+Blockly.Procedures.isEditableProcedure = function(ws, procCode) {
+  return !!Blockly.Procedures.getDefineBlock(procCode, ws);
+};
+
+/**
+ * Callback to open the modal for editing custom procedures.
+ * @param {!Blockly.Block} block The block that was right-clicked.
+ * @private
+ */
+Blockly.Procedures.editProcedureCallback_ = function(block) {
+  // Edit can come from one of three block types (call, define, prototype)
+  // Normalize by setting the block to the prototype block for the procedure.
+  var _t = Blockly.Procedures.getProcCodeOf(block);
+  var block = _t[0], procCode = _t[1];
   if (!block || !block.mutationToDom) {
     console.warn(procCode, 'block', block, 'does not have mutationToDom');
+  }
+  if (!Blockly.Procedures.isEditableProcedure(block.workspace, procCode)) {
+    console.warn('Attempted to edit a procedure that cannot be edited:', procCode);
+    return;
   }
   // Block now refers to the procedure prototype block, it is safe to proceed.
   Blockly.Procedures.externalProcedureDefCallback(
@@ -587,7 +607,7 @@ Blockly.Procedures.externalProcedureDefCallback = function(/** mutator, callback
  */
 Blockly.Procedures.makeEditOption = function(block) {
   var editOption = {
-    enabled: true,
+    enabled: Blockly.Procedures.isEditableProcedure(block.workspace, Blockly.Procedures.getProcCodeOf(block)[1]),
     text: Blockly.Msg.EDIT_PROCEDURE,
     callback: function() {
       Blockly.Procedures.editProcedureCallback_(block);

@@ -238,14 +238,7 @@ Blockly.ScratchBlocks.VerticalExtensions.PROCEDURE_CALL_CONTEXTMENU = {
    * @this Blockly.Block
    */
   customContextMenu: function(menuOptions) {
-    // Don't allow editing procedures that don't exist.
-    var definition = this.workspace.getDefineBlock();
-    if (!definition) {
-      definition = this.workspace.targetWorkspace.getDefineBlock();
-    }
-    if (definition) {
-      menuOptions.push(Blockly.Procedures.makeEditOption(this))
-    }
+    menuOptions.push(Blockly.Procedures.makeEditOption(this));
 
     if (!this.isInFlyout) {
       // Hats can only change their types to statements.
