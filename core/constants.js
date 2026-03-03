@@ -406,6 +406,16 @@ Blockly.PROCEDURES_CALL_TYPE_BOOLEAN = 2;
 Blockly.PROCEDURES_CALL_TYPE_HAT = 3;
 
 /**
+ * Enum for procedure call arrays.
+ */
+Blockly.PROCEDURES_CALL_TYPE_ARRAY = 4;
+
+/**
+ * Enum for procedure call objects.
+ */
+Blockly.PROCEDURES_CALL_TYPE_OBJECT = 5;
+
+/**
  * The type of all procedure set parameter blocks.
  * @const {string}
  */

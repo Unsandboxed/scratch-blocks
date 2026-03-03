@@ -241,14 +241,31 @@ Blockly.ScratchBlocks.VerticalExtensions.PROCEDURE_CALL_CONTEXTMENU = {
     menuOptions.push(Blockly.Procedures.makeEditOption(this));
 
     if (!this.isInFlyout) {
+      var returnType = this.getReturn && this.getReturn();
       // Hats can only change their types to statements.
-      if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_HAT) {
+      if (returnType === Blockly.PROCEDURES_CALL_TYPE_HAT) {
         menuOptions.push(Blockly.Procedures.makeChangeHatOption(this));
       } else {
-        menuOptions.push(Blockly.Procedures.makeChangeTypeOption(this));
-        // Statements can be made into hats.
-        if (this.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+        if (returnType === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+          // Statements can be made into hats.
           menuOptions.push(Blockly.Procedures.makeChangeHatOption(this));
+          menuOptions.push(Blockly.Procedures.makeChangeTypeOption(
+              this,
+              Blockly.PROCEDURES_CALL_TYPE_REPORTER,
+              Blockly.PROCEDURES_TO_REPORTER
+          ));
+        } else {
+          var messages = [
+            [Blockly.PROCEDURES_CALL_TYPE_STATEMENT, Blockly.Msg.PROCEDURES_TO_STATEMENT],
+            [Blockly.PROCEDURES_CALL_TYPE_REPORTER,  Blockly.Msg.PROCEDURES_TO_REPORTER],
+            [Blockly.PROCEDURES_CALL_TYPE_BOOLEAN,   Blockly.Msg.PROCEDURES_TO_BOOLEAN],
+            [Blockly.PROCEDURES_CALL_TYPE_ARRAY,     Blockly.Msg.PROCEDURES_TO_ARRAY],
+            [Blockly.PROCEDURES_CALL_TYPE_OBJECT,    Blockly.Msg.PROCEDURES_TO_OBJECT],
+          ].filter(function(o) { return o[0] !== returnType; });
+
+          menuOptions.push.apply(menuOptions, messages.map((function(m) {
+            return Blockly.Procedures.makeChangeTypeOption(this, m[0], m[1]);
+          }).bind(this)));
         }
       }
     }

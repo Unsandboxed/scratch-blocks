@@ -616,11 +616,11 @@ Blockly.Procedures.makeEditOption = function(block) {
   return editOption;
 };
 
-Blockly.Procedures.makeChangeTypeOption = function(block) {
+Blockly.Procedures.makeChangeTypeOption = function(block, oNewType, oMsg) {
   var isStatement = block.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   var option = {
     enabled: true,
-    text: isStatement ? Blockly.Msg.PROCEDURES_TO_REPORTER : Blockly.Msg.PROCEDURES_TO_STATEMENT,
+    text: isStatement ? Blockly.Msg.PROCEDURES_TO_REPORTER : oMsg,
     callback: function() {
       var newType;
       var workspace = block.workspace;
@@ -630,12 +630,13 @@ Blockly.Procedures.makeChangeTypeOption = function(block) {
         // If the definition is boolean-shaped, then the reporter should be boolean-shaped,
         // otherwise normal reporter shaped.
         newType = (
-          actualReturnType === Blockly.PROCEDURES_CALL_TYPE_BOOLEAN ?
-          actualReturnType :
-          Blockly.PROCEDURES_CALL_TYPE_REPORTER
+          (actualReturnType === Blockly.PROCEDURES_CALL_TYPE_HAT ||
+            actualReturnType === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) ?
+            Blockly.PROCEDURES_CALL_TYPE_REPORTER :
+            oNewType
         );
       } else {
-        newType = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
+        newType = oNewType;
       }
 
       Blockly.Events.setGroup(true);
@@ -877,24 +878,30 @@ Blockly.Procedures.getBlockReturnType = function(block, workspace) {
     }
   }
 
-  var hasSeenBooleanReturn = false;
+  /** @type {Record<number, boolean>} */
+  var hasSeenReturns = {};
   /** @type {Blockly.Block[]} */
   var descendants = block.getDescendants();
   for (var i = 0; i < descendants.length; i++) {
     if (descendants[i].type === Blockly.PROCEDURES_RETURN_BLOCK_TYPE) {
       // The block at i + 1 should be the block inside of the return block.
-      // Even if the return block is missing its input, this will still be fine, because the
-      // next block should a stacked block which won't be hexagon-shaped.
-      if (i + 1 < descendants.length && descendants[i + 1].outputShape_ === Blockly.OUTPUT_SHAPE_HEXAGONAL) {
-        // keep searching, because there may be other, non-boolean returns in this function definition.
-        hasSeenBooleanReturn = true;
+      if (i + 1 < descendants.length && descendants[i + 1].outputShape_ !== Blockly.OUTPUT_SHAPE_ROUND) {
+        // keep searching, because there may be other, round shaped returns in this function definition.
+        if (!descendants[i + 1].outputConnection) {
+          return Blockly.PROCEDURES_CALL_TYPE_REPORTER;
+        }
+        hasSeenReturns[descendants[i + 1].outputShape_] = true;
       } else {
         return Blockly.PROCEDURES_CALL_TYPE_REPORTER;
       }
     }
   }
-  if (hasSeenBooleanReturn) {
+  if (hasSeenReturns[Blockly.OUTPUT_SHAPE_HEXAGONAL]) {
     return Blockly.PROCEDURES_CALL_TYPE_BOOLEAN;
+  } else if (hasSeenReturns[Blockly.OUTPUT_SHAPE_SQUARE]) {
+    return Blockly.PROCEDURES_CALL_TYPE_ARRAY;
+  } else if (hasSeenReturns[Blockly.OUTPUT_SHAPE_OBJECT]) {
+    return Blockly.PROCEDURES_CALL_TYPE_OBJECT;
   } else {
     // If we no longer have a return then check if the procedure defaults to a hat.
     // If it does, then make it a hat instead of a statement.
