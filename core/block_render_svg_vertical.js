@@ -1207,7 +1207,7 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
   // Should the top left corners be rounded or square?
   // Currently, it is squared only if it's a hat.
   this.squareTopLeftCorner_ = false;
-  if (!this.outputConnection && !this.previousConnection) {
+  if ((!this.outputConnection && !this.previousConnection) || this.susCapBoi_) {
     // No output or previous connection.
     this.squareTopLeftCorner_ = true;
     this.startHat_ = true;
@@ -1331,9 +1331,12 @@ Blockly.BlockSvg.prototype.renderDrawTop_ = function(steps, rightEdge) {
 
     // Top edge.
     if (this.previousConnection) {
-      // Space before the notch
-      steps.push('H', Blockly.BlockSvg.NOTCH_START_PADDING);
-      steps.push(Blockly.BlockSvg.NOTCH_PATH_LEFT);
+      // Only do this if notch drops an apple
+      if (!this.startHat_) {
+        // Space before the notch
+        steps.push('H', Blockly.BlockSvg.NOTCH_START_PADDING);
+        steps.push(Blockly.BlockSvg.NOTCH_PATH_LEFT);
+      }
       // Create previous block connection.
       var connectionX = (this.RTL ?
           -Blockly.BlockSvg.NOTCH_WIDTH : Blockly.BlockSvg.NOTCH_WIDTH);
@@ -1420,9 +1423,22 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
       var fieldX = cursorX;
       // Align fields vertically within the row.
       // In renderFields_, the field is further centered by its own height.
+      var offsetCursorY_ = 0;
       var fieldY = cursorY;
       fieldY += Blockly.BlockSvg.MIN_STATEMENT_INPUT_HEIGHT;
-      this.renderFields_(input.fieldRow, fieldX, fieldY);
+
+      var targetBlock = input.connection && input.connection.targetBlock();
+      if (
+        this.type === Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE &&
+        targetBlock && (
+          targetBlock.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE &&
+          targetBlock.startHat_
+        )
+      ) {
+        offsetCursorY_ += Blockly.BlockSvg.START_HAT_HEIGHT / 2;
+      }
+
+      this.renderFields_(input.fieldRow, fieldX, fieldY + offsetCursorY_);
       // Move to the start of the notch.
       cursorX = inputRows.statementEdge + Blockly.BlockSvg.NOTCH_WIDTH;
 
@@ -1435,7 +1451,7 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
 
       // Create statement connection.
       connectionX = this.RTL ? -cursorX : cursorX;
-      input.connection.setOffsetInBlock(connectionX, cursorY);
+      input.connection.setOffsetInBlock(connectionX, cursorY + offsetCursorY_);
       if (input.connection.isConnected()) {
         this.width = Math.max(this.width, inputRows.statementEdge +
           input.connection.targetBlock().getHeightWidth().width);
@@ -1528,7 +1544,7 @@ Blockly.BlockSvg.prototype.renderInputShape_ = function(input, x, y) {
  * @private
  */
 Blockly.BlockSvg.prototype.renderDrawBottom_ = function(steps, cursorY) {
-  this.height = cursorY;
+  this.height = cursorY + this.cursorYoffset_;
   if (!this.edgeShape_) {
     steps.push(Blockly.BlockSvg.BOTTOM_RIGHT_CORNER);
   }
@@ -1744,9 +1760,10 @@ Blockly.BlockSvg.prototype.renderDefineBlock_ = function(steps, inputRows,
 
   // Figure out where the right side of the block is.
   var rightSide = inputRows.rightEdge;
-  if (input.connection && input.connection.targetBlock()) {
+  var targetBlock = input.connection && input.connection.targetBlock();
+  if (targetBlock) {
     rightSide = inputRows.statementEdge +
-        input.connection.targetBlock().getHeightWidth().width +
+        targetBlock.getHeightWidth().width +
         Blockly.BlockSvg.DEFINE_BLOCK_PADDING_RIGHT;
   } else {
     // Handles the case where block is being rendered as an insertion marker
@@ -1777,7 +1794,6 @@ Blockly.BlockSvg.prototype.renderDefineBlock_ = function(steps, inputRows,
   steps.push('v', row.height);
   // row.height will be used to update the cursor in the calling function.
   row.height += Blockly.BlockSvg.GRID_UNIT;
-
 };
 
 /**

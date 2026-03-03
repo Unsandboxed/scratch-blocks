@@ -208,12 +208,14 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate
 
   Blockly.ScratchBlocks.ProcedureUtils.parseColourMutation.call(this, this.customColour_);
 
+  var returnType = this.return_;
+
   // TODO: There is a lot of repeat checks in here.
   // This should ideally be tidied up.
   if ((!wasRendered || forceReturnUpdate) && this.getReturn) {
     this.setInputsInline(true);
 
-    var returnType = this.getReturn();
+    returnType = this.getReturn();
     // due to limitations with scratch-blocks, all custom reporters with a branch
     // must be rendererd with a square output shape.
     if (this.hasStatementInput() && returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
@@ -254,10 +256,22 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate
     }
   }
 
+  var wasCap_ = this.startHat_ || this.susCapBoi_;
+
+  this.susCapBoi_ = (
+    returnType === Blockly.PROCEDURES_CALL_TYPE_HAT &&
+    this.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE
+  );
+  this.cursorYoffset_ = this.susCapBoi_ ? Blockly.BlockSvg.START_HAT_HEIGHT / 2 : 0;
+
   this.rendered = wasRendered;
   if (wasRendered && !this.isInsertionMarker()) {
     this.initSvg();
     this.render();
+
+    if (this.susCapBoi_ !== wasCap_ && this.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE && this.parentBlock_) {
+      this.parentBlock_.render();
+    }
   }
 };
 
