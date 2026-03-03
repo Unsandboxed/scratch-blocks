@@ -168,11 +168,12 @@ Blockly.ScratchBlocks.ProcedureUtils.definitionDomToMutation = function(xmlEleme
 };
 
 Blockly.ScratchBlocks.ProcedureUtils.argumentReporterMutationToDom = function() {
- if (!this.rendered || this.isShadow_) return document.createElement('mutation');
- return Blockly.ColourMutation.mutationToDom.call(this, Blockly.Colours.more);
+  if (!this.rendered || this.isShadow()) return document.createElement('mutation');
+  return Blockly.ColourMutation.mutationToDom.call(this, Blockly.Colours.more);
 };
 Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation = function(node) {
-  if (this.isShadow_) return null;
+  // NOTE: Insertion markers shouldnt get their colour applied because statement arguments exist.
+  if (this.isShadow() || this.isInsertionMarker()) return null;
   return Blockly.ColourMutation.domToMutation.call(this, node);
 };
 
@@ -206,7 +207,10 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate
   this.createAllInputs_(connectionMap);
   this.deleteShadows_(connectionMap);
 
-  Blockly.ScratchBlocks.ProcedureUtils.parseColourMutation.call(this, this.customColour_);
+  // Insertion markers should keep their white colour.
+  if (!this.isInsertionMarker()) {
+    Blockly.ScratchBlocks.ProcedureUtils.parseColourMutation.call(this, this.customColour_);
+  }
 
   var returnType = this.return_;
 
