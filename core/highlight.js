@@ -29,9 +29,15 @@ Blockly.Highlight.Colours = {
   'number': '#9966ff',
   'string': '#5cb1d6',
   'boolean': '#ff8c1a',
-  // @todo Check if this is even needed smh
   'undefined': '#898196',
+  'ctype.open': '#29beb8',
+  'ctype.close': '#29beb8',
+  'ctype.data': '#29beb8',
 };
+
+Blockly.Highlight.getCustomHighlightFor = function(value) {
+  return null;
+}; // Overridden by the GUI.
 
 /**
  * Highlight a single value
@@ -39,8 +45,13 @@ Blockly.Highlight.Colours = {
  * @param {?type} The type of the value
  */
 Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
+  var h = this.getCustomHighlightFor(value);
+  if (h) {
+    return h(this, value, goog);
+  }
+
   // @todo Pick better colours
-  const node = goog.dom.createElement('span');
+  var node = goog.dom.createElement('span');
   if (value == 0 && (typeof value == 'number') && (1 / value) < 0) {
     node.textContent = '-0';
   } else {
@@ -87,6 +98,7 @@ Blockly.Highlight.highlight = function highlight(value, type) {
       }
       node.appendChild(this.highlightSingle(']', 'object.closeBracket'));
     } else {
+      if (this.getCustomHighlightFor(value)) return this.highlightSingle(value);
       node.appendChild(this.highlightSingle('{', 'object.openParenth'));
       const entrys = Object.entries(value), entryCount = entrys.length, entryCountComma = entryCount - 1;
       for (let i = 0; i < entryCount; i++) {
