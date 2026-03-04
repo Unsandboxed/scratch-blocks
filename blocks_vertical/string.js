@@ -91,12 +91,32 @@ Blockly.Blocks['string_join_extends'] = { // usb
       "category": Blockly.Categories.string,
       "extensions": ["colours_string", "output_string"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendInput_ = {
-      type: "text",
-      name: "TEXT"
-    };
-    this.hasFirstLabel_ = true;
+    this.extendDefinitions_ = {
+       // for things like if/else or switch-case-default
+      collapse: false,
+       // inputs and labels to always put at the start of a block
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          "label", // special case for labels
+          "join" // label text
+        )
+      ],
+      // inputs and labels that extend and retract
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          "input_value", // input type
+          "text", // shadow type, if applicable
+          null // "check" for the input
+        )
+      ],
+      // inputs and labels that are always at the end.
+      // if collapsed is true, it'll be collapsed every other extension.
+      ends: [
+        // nothing, this is a join block
+      ]
+    }
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),

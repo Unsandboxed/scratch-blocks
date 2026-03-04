@@ -851,7 +851,7 @@ Blockly.Blocks['operator_and_extends'] = {
   // callback functions
   handlePlus_: function () {
     var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
+    var input = this.insertInputWithIndex_(this.argumentIds_.length + 1);
 
     if (this.argumentIds_.length > 1) {
       input.appendField(label);

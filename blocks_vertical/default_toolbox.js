@@ -531,6 +531,9 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
   '</category>' +
   '<category name="Extensions" id="extensions" colour="#FF6680" secondaryColour="#FF4D6A" ' +
     'iconURI="../media/extensions/wedo2-block-icon.svg" showStatusButton="true">' +
+    '<block type="operator_and_extends"/>'+
+    '<block type="operator_add_extends"/>'+
+    '<block type="string_join_extends"/>'+
     '<block type="extension_checkbox_test">' + // enabled
       '<value name="CHECKBOX">' +
         '<shadow type="checkbox"></shadow>' +
