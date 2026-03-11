@@ -93,7 +93,7 @@ Blockly.FieldLabel.prototype.init = function() {
   // Build the DOM.
   this.textElement_ = Blockly.utils.createSvgElement('text',
       {
-        'class': 'blocklyText',
+        'class': this.className_,
         'y': Blockly.BlockSvg.FIELD_TOP_PADDING,
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',
