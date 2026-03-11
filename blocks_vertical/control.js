@@ -264,6 +264,7 @@ Blockly.Blocks['control_continue'] = {
           "src": Blockly.mainWorkspace.options.pathToMedia + "repeat.svg",
           "width": 24,
           "height": 24,
+          "alt": "*",
           "flip_rtl": true
         }
       ],
