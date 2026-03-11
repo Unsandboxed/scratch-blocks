@@ -61,6 +61,13 @@ Blockly.FieldLabel.fromJson = function(options) {
 };
 
 /**
+ * CSS class name for the text element.
+ * @type {string}
+ * @package
+ */
+Blockly.FieldLabel.prototype.className_ = 'blocklyText';
+
+/**
  * Editable fields usually show some sort of UI for the user to change them.
  * @type {boolean}
  * @public
