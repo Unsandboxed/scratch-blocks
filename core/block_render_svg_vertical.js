@@ -124,6 +124,12 @@ Blockly.BlockSvg.NOTCH_HEIGHT = 2 * Blockly.BlockSvg.GRID_UNIT;
 Blockly.BlockSvg.CORNER_RADIUS = 1 * Blockly.BlockSvg.GRID_UNIT;
 
 /**
+ * Rounder corner radius.
+ * @const
+ */
+Blockly.BlockSvg.CORNER_RADIUS_4 = 4 * Blockly.BlockSvg.CORNER_RADIUS;
+
+/**
  * Minimum width of statement input edge on the left, in px.
  * @const
  */
@@ -188,12 +194,26 @@ Blockly.BlockSvg.NOTCH_PATH_RIGHT = (
  */
 Blockly.BlockSvg.NOTCH_START_PADDING = 3 * Blockly.BlockSvg.GRID_UNIT;
 
+// var withCornerRadius = function(radius, fn) {
+//   var oldRadius = Blockly.BlockSvg.CORNER_RADIUS;
+//   Blockly.BlockSvg.CORNER_RADIUS = radius;
+//   fn();
+//   Blockly.BlockSvg.CORNER_RADIUS = oldRadius;
+// };
+
 /**
  * SVG start point for drawing the top-left corner.
  * @const
  */
 Blockly.BlockSvg.TOP_LEFT_CORNER_START =
     'm 0,' + Blockly.BlockSvg.CORNER_RADIUS;
+
+/**
+ * SVG start point for drawing the rounder top-left corner.
+ * @const
+ */
+Blockly.BlockSvg.TOP_LEFT_CORNER_START_4 =
+    'm 0,' + Blockly.BlockSvg.CORNER_RADIUS_4;
 
 /**
  * SVG path for drawing the rounded top-left corner.
@@ -203,6 +223,15 @@ Blockly.BlockSvg.TOP_LEFT_CORNER =
     'A ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 ' +
     Blockly.BlockSvg.CORNER_RADIUS + ',0';
+
+/**
+ * SVG path for drawing the rounder top-left corner.
+ * @const
+ */
+Blockly.BlockSvg.TOP_LEFT_CORNER_4 =
+    'A ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,1 ' +
+    Blockly.BlockSvg.CORNER_RADIUS_4 + ',0';
 
 /**
  * SVG path for drawing the rounded top-right corner.
@@ -235,6 +264,16 @@ Blockly.BlockSvg.BOTTOM_LEFT_CORNER =
      Blockly.BlockSvg.CORNER_RADIUS;
 
 /**
+ * SVG path for drawing the rounder bottom-left corner.
+ * @const
+ */
+Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4 =
+    'a ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
+     Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,1 -' +
+     Blockly.BlockSvg.CORNER_RADIUS_4 + ',-' +
+     Blockly.BlockSvg.CORNER_RADIUS_4;
+
+/**
  * SVG path for drawing the top-left corner of a statement input.
  * @const
  */
@@ -243,6 +282,16 @@ Blockly.BlockSvg.INNER_TOP_LEFT_CORNER =
     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 -' +
     Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS;
+
+/**
+ * SVG path for drawing the rounder top-left corner of a statement input.
+ * @const
+ */
+Blockly.BlockSvg.INNER_TOP_LEFT_CORNER_4 =
+    ' a ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,0 -' +
+    Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS_4;
 
 /**
  * SVG path for drawing the bottom-left corner of a statement input.
@@ -254,6 +303,17 @@ Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER =
     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 ' +
     Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS;
+
+/**
+ * SVG path for drawing the bottom-left corner of a statement input.
+ * Includes the rounder inside corner.
+ * @const
+ */
+Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER_4 =
+    'a ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,0 ' +
+    Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS_4;
 
 /**
  * SVG path for an empty hexagonal input shape.
@@ -691,6 +751,10 @@ Blockly.BlockSvg.prototype.getHeightWidth = function() {
   return {height: height, width: width};
 };
 
+// These are set below in "render", use that as a reference on how to use them till I write documentation.
+Blockly.BlockSvg.prototype.leftCorner_ = null;
+Blockly.BlockSvg.prototype.leftCornerRadius_ = null;
+
 /**
  * Render the block.
  * Lays out and reflows a block based on its contents and settings.
@@ -700,6 +764,21 @@ Blockly.BlockSvg.prototype.getHeightWidth = function() {
 Blockly.BlockSvg.prototype.render = function(opt_bubble) {
   Blockly.Field.startCache();
   this.rendered = true;
+
+  if (!this.leftCorner_) {
+    this.leftCorner_ = [
+      Blockly.BlockSvg.TOP_LEFT_CORNER,
+      Blockly.BlockSvg.BOTTOM_LEFT_CORNER,
+      Blockly.BlockSvg.TOP_LEFT_CORNER_START,
+      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
+      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
+    ];
+    this.leftCorner_rendererDefined = true;
+  }
+  if (this.leftCornerRadius_ == null) {
+    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS;
+    this.leftCornerRadius_rendererDefined = true;
+  }
 
   var cursorX = Blockly.BlockSvg.SEP_SPACE_X;
   if (this.RTL) {
@@ -729,6 +808,25 @@ Blockly.BlockSvg.prototype.render = function(opt_bubble) {
   }
 
   var inputRows = this.renderCompute_(cursorX);
+
+  // Make inline blocks slightly bigger and more round on the left
+  if (this.outputConnection && inputRows.hasStatement) {
+    if (this.leftCorner_rendererDefined) {
+      this.leftCorner_ = [
+        Blockly.BlockSvg.TOP_LEFT_CORNER_4,
+        Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4,
+        Blockly.BlockSvg.TOP_LEFT_CORNER_START_4,
+        Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
+        Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
+      ];
+    }
+    if (this.leftCornerRadius_rendererDefined) {
+      this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_4;
+    }
+
+    inputRows.statementEdge = inputRows.statementEdge * 2;
+  }
+
   this.renderDraw_(cursorX, inputRows);
   this.renderMoveConnections_();
 
@@ -839,6 +937,9 @@ Blockly.BlockSvg.prototype.renderFields_ = function(fieldList, cursorX,
   return this.RTL ? -cursorX : cursorX;
 };
 
+// This is set below by "renderCompute_" reference that till I write documentation.
+Blockly.BlockSvg.prototype.statementInputEdgeWidth_ = null;
+
 /**
  * Computes the height and widths for each row and field.
  * @param {number} iconWidth Offset of first row due to icons.
@@ -847,6 +948,10 @@ Blockly.BlockSvg.prototype.renderFields_ = function(fieldList, cursorX,
  * @private
  */
 Blockly.BlockSvg.prototype.renderCompute_ = function(iconWidth) {
+  if (this.statementInputEdgeWidth_ == null) {
+    this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH;
+  }
+
   var inputList = this.inputList;
   var inputRows = [];
   // Block will be drawn from 0 (left edge) to rightEdge, in px.
@@ -968,7 +1073,7 @@ Blockly.BlockSvg.prototype.renderCompute_ = function(iconWidth) {
   this.computeOutputPadding_(inputRows);
   // Compute the statement edge.
   // This is the width of a block where statements are nested.
-  inputRows.statementEdge = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH +
+  inputRows.statementEdge = this.statementInputEdgeWidth_ +
       fieldStatementWidth;
 
   // Compute the preferred right edge.
@@ -1214,11 +1319,13 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
     inputRows.rightEdge = Math.max(inputRows.rightEdge, 100);
   }
 
+  var sawStatement = inputRows.hasStatement;
+
   // Amount of space to skip drawing the top and bottom,
   // to make room for the left and right to draw shapes (curves or angles).
   this.edgeShapeWidth_ = 0;
   this.edgeShape_ = null;
-  if (this.outputConnection) {
+  if (this.outputConnection && !sawStatement) {
     // Width of the curve/pointy-curve
     var shape = this.getOutputShape();
     if (shape !== Blockly.OUTPUT_SHAPE_SQUARE) {
@@ -1324,9 +1431,9 @@ Blockly.BlockSvg.prototype.renderDrawTop_ = function(steps, rightEdge) {
         steps.push('m ' + this.edgeShapeWidth_ + ',0');
       }
     } else {
-      steps.push(Blockly.BlockSvg.TOP_LEFT_CORNER_START);
+      steps.push(this.leftCorner_[2]); // Top left corner start
       // Top-left rounded corner.
-      steps.push(Blockly.BlockSvg.TOP_LEFT_CORNER);
+      steps.push(this.leftCorner_[0]); // Top left corner
     }
 
     // Top edge.
@@ -1415,7 +1522,7 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
       // Subtract CORNER_RADIUS * 2 to account for the top right corner
       // and also the bottom right corner. Only move vertically the non-corner length.
       if (!this.edgeShape_) {
-        steps.push('v', row.height - Blockly.BlockSvg.CORNER_RADIUS * 2);
+        steps.push('v', row.height - Blockly.BlockSvg.CORNER_RADIUS * 2); // marker
       }
     } else if (row.type == Blockly.NEXT_STATEMENT) {
       // Nested statement.
@@ -1445,7 +1552,7 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
       if (this.type == Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE) {
         this.renderDefineBlock_(steps, inputRows, input, row, cursorY);
       } else {
-        Blockly.BlockSvg.drawStatementInputFromTopRight_(steps, cursorX,
+        Blockly.BlockSvg.drawStatementInputFromTopRight_.call(this, steps, cursorX,
             inputRows.rightEdge, row);
       }
 
@@ -1462,7 +1569,7 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
         // If the final input is a statement stack, add a small row underneath.
         // Consecutive statement stacks are also separated by a small divider.
         steps.push(Blockly.BlockSvg.TOP_RIGHT_CORNER);
-        steps.push('v', Blockly.BlockSvg.EXTRA_STATEMENT_ROW_Y - 2 * Blockly.BlockSvg.CORNER_RADIUS);
+        steps.push('v', Blockly.BlockSvg.EXTRA_STATEMENT_ROW_Y - 2 * Blockly.BlockSvg.CORNER_RADIUS); // marker
         cursorY += Blockly.BlockSvg.EXTRA_STATEMENT_ROW_Y;
       }
     }
@@ -1553,7 +1660,8 @@ Blockly.BlockSvg.prototype.renderDrawBottom_ = function(steps, cursorY) {
     var notchStart = (
       Blockly.BlockSvg.NOTCH_WIDTH +
       Blockly.BlockSvg.NOTCH_START_PADDING +
-      Blockly.BlockSvg.CORNER_RADIUS
+      Blockly.BlockSvg.CORNER_RADIUS // marker
+      // this.leftCornerRadius_
     );
     steps.push('H', notchStart, ' ');
     steps.push(Blockly.BlockSvg.NOTCH_PATH_RIGHT);
@@ -1566,9 +1674,9 @@ Blockly.BlockSvg.prototype.renderDrawBottom_ = function(steps, cursorY) {
   }
   // Bottom horizontal line
   if (!this.edgeShape_) {
-    steps.push('H', Blockly.BlockSvg.CORNER_RADIUS);
+    steps.push('H', this.leftCornerRadius_);
     // Bottom left corner
-    steps.push(Blockly.BlockSvg.BOTTOM_LEFT_CORNER);
+    steps.push(this.leftCorner_[1]); // Bottom left corner
   } else {
     steps.push('H', this.edgeShapeWidth_);
   }
@@ -1694,9 +1802,10 @@ Blockly.BlockSvg.prototype.positionNewBlock = function(newBlock, newConnection,
  */
 Blockly.BlockSvg.drawStatementInputFromTopRight_ = function(steps, cursorX,
     rightEdge, row) {
-  Blockly.BlockSvg.drawStatementInputTop_(steps, cursorX);
-  steps.push('v', row.height - 2 * Blockly.BlockSvg.CORNER_RADIUS);
-  Blockly.BlockSvg.drawStatementInputBottom_(steps, rightEdge, row);
+  Blockly.BlockSvg.drawStatementInputTop_.call(this, steps, cursorX);
+  // steps.push('v', row.height - (this.leftCornerRadius_ + Blockly.BlockSvg.CORNER_RADIUS)); // marker
+  steps.push('v', row.height - Blockly.BlockSvg.CORNER_RADIUS * 2);
+  Blockly.BlockSvg.drawStatementInputBottom_.call(this, steps, rightEdge, row);
 };
 
 /**
@@ -1710,10 +1819,10 @@ Blockly.BlockSvg.drawStatementInputFromTopRight_ = function(steps, cursorX,
 Blockly.BlockSvg.drawStatementInputTop_ = function(steps, cursorX) {
   steps.push(Blockly.BlockSvg.BOTTOM_RIGHT_CORNER);
   steps.push('H', cursorX + Blockly.BlockSvg.STATEMENT_INPUT_INNER_SPACE +
-    2 * Blockly.BlockSvg.CORNER_RADIUS);
+    (/*this.leftCornerRadius_ +*/2 * Blockly.BlockSvg.CORNER_RADIUS)); // marker
   steps.push(Blockly.BlockSvg.NOTCH_PATH_RIGHT);
   steps.push('h', '-' + Blockly.BlockSvg.STATEMENT_INPUT_INNER_SPACE);
-  steps.push(Blockly.BlockSvg.INNER_TOP_LEFT_CORNER);
+  steps.push(this.leftCorner_[3]); // Inner top left corner
 };
 
 /**
@@ -1728,12 +1837,12 @@ Blockly.BlockSvg.drawStatementInputTop_ = function(steps, cursorX) {
  * @private
  */
 Blockly.BlockSvg.drawStatementInputBottom_ = function(steps, rightEdge, row) {
-  steps.push(Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER);
+  steps.push(this.leftCorner_[4]); // Inner bottom left corner
   if (row.statementNotchAtBottom) {
     steps.push('h ', Blockly.BlockSvg.STATEMENT_INPUT_INNER_SPACE);
     steps.push(Blockly.BlockSvg.NOTCH_PATH_LEFT);
   }
-  steps.push('H', rightEdge - Blockly.BlockSvg.CORNER_RADIUS);
+  steps.push('H', rightEdge - /*this.leftCornerRadius_*/Blockly.BlockSvg.CORNER_RADIUS);
 };
 
 /**
