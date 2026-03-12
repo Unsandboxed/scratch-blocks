@@ -784,7 +784,7 @@ Blockly.WorkspaceSvg.prototype.processProcedureReturnsChanged_ = function() {
   for (var i = 0, block; i < blocks.length; i++) {
     block = blocks[i];
     if (block.type !== Blockly.PROCEDURES_CALL_BLOCK_TYPE) continue;
-    if (block.getOutputShape() === Blockly.OUTPUT_SHAPE_SQUARE) {
+    if (block.getOutputShape() === Blockly.OUTPUT_SHAPE_ROUND) {
       if (block.hasStatementInput()) continue;
       block.updateDisplay_(true);
       continue;
