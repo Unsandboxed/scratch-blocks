@@ -199,6 +199,7 @@ Blockly.ScratchBlocks.ProcedureUtils.getProcCode = function() {
 /**
  * Update the block's structure and appearance to match the internally stored
  * mutation.
+ * @param {boolean} forceReturnUpdate Force an update if the block has a return type.
  * @private
  * @this Blockly.Block
  */
@@ -749,6 +750,8 @@ Blockly.ScratchBlocks.ProcedureUtils.createArgumentEditor_ = function(
     var blockType;
     switch(argumentType) {
       case 'n':
+        blockType = 'argument_editor_number';
+        break;
       case 's':
         blockType = 'argument_editor_string_number';
         break;
@@ -981,7 +984,7 @@ Blockly.ScratchBlocks.ProcedureUtils.getGlobal = function() {
 
 /**
  * Externally-visible function to set the global state on procedure declaration.
- * @param {boolean} warp The value of the global_ property.
+ * @param {boolean} global The value of the global_ property.
  * @public
  */
 Blockly.ScratchBlocks.ProcedureUtils.setGlobal = function(global) {
