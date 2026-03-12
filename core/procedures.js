@@ -500,8 +500,6 @@ Blockly.Procedures.createProcedureCallbackFactory_ = function(workspace) {
       block.moveBy(posX / scale, (-workspace.scrollY + 30) / scale);
       block.scheduleSnapAndBump();
       Blockly.Events.setGroup(false);
-
-      workspace.procedureReturnsWillChange();
     }
   };
 };
@@ -585,7 +583,6 @@ Blockly.Procedures.editProcedureCallbackFactory_ = function(block) {
       Blockly.Procedures.mutateCallersAndPrototype(block.getProcCode(),
           block.workspace, mutation);
     }
-    block.workspace.procedureReturnsWillChange();
   };
 };
 
@@ -885,7 +882,10 @@ Blockly.Procedures.getBlockReturnType = function(block, workspace) {
   for (var i = 0; i < descendants.length; i++) {
     if (descendants[i].type === Blockly.PROCEDURES_RETURN_BLOCK_TYPE) {
       // The block at i + 1 should be the block inside of the return block.
-      if (i + 1 < descendants.length && descendants[i + 1].outputShape_ !== Blockly.OUTPUT_SHAPE_ROUND) {
+      if (i + 1 < descendants.length && 
+        descendants[i + 1].outputShape_ !== Blockly.OUTPUT_SHAPE_ROUND &&
+        !descendants[i + 1].isShadow_
+      ) {
         // keep searching, because there may be other, round shaped returns in this function definition.
         if (!descendants[i + 1].outputConnection) {
           return Blockly.PROCEDURES_CALL_TYPE_REPORTER;
