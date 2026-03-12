@@ -95,6 +95,41 @@ Blockly.Blocks['extension_inlineblock_test_rounder'] = {
   }
 };
 
+
+Blockly.Blocks['extension_inlineblock_test_evenrounder'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "inline block test (8 * CNR)",
+      "message1": "%1",
+      "args0": [],
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "SUBSTACK"
+        }
+      ],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more", "output_string"]
+    });
+    this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
+
+    this.leftCorner_ = [
+      Blockly.BlockSvg.TOP_LEFT_CORNER_8,
+      Blockly.BlockSvg.BOTTOM_LEFT_CORNER_8,
+      Blockly.BlockSvg.TOP_LEFT_CORNER_START_8,
+      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
+      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
+    ];
+    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_8;
+
+    // Counteract the renderer doubling the edge width for this test
+    this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
+  }
+};
+
 Blockly.Blocks['extension_inlineblock_test_reporter'] = {
   /**
    * @this Blockly.Block

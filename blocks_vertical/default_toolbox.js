@@ -591,6 +591,7 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
     '</block>' +
     '<block type="extension_inlineblock_test_normal" id="extension_inlineblock_test_normal"></block>' +
     '<block type="extension_inlineblock_test_rounder" id="extension_inlineblock_test_rounder"></block>' +
+    '<block type="extension_inlineblock_test_evenrounder" id="extension_inlineblock_test_evenrounder"></block>' +
     '<block type="extension_inlineblock_test_reporter" id="extension_inlineblock_test_reporter"></block>' +
   '</category>' +
   '</xml>';

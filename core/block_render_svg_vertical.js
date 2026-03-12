@@ -130,6 +130,12 @@ Blockly.BlockSvg.CORNER_RADIUS = 1 * Blockly.BlockSvg.GRID_UNIT;
 Blockly.BlockSvg.CORNER_RADIUS_4 = 4 * Blockly.BlockSvg.CORNER_RADIUS;
 
 /**
+ * EVEN Rounder corner radius.
+ * @const
+ */
+Blockly.BlockSvg.CORNER_RADIUS_8 = 8 * Blockly.BlockSvg.CORNER_RADIUS;
+
+/**
  * Minimum width of statement input edge on the left, in px.
  * @const
  */
@@ -194,44 +200,60 @@ Blockly.BlockSvg.NOTCH_PATH_RIGHT = (
  */
 Blockly.BlockSvg.NOTCH_START_PADDING = 3 * Blockly.BlockSvg.GRID_UNIT;
 
-// var withCornerRadius = function(radius, fn) {
-//   var oldRadius = Blockly.BlockSvg.CORNER_RADIUS;
-//   Blockly.BlockSvg.CORNER_RADIUS = radius;
-//   fn();
-//   Blockly.BlockSvg.CORNER_RADIUS = oldRadius;
-// };
+var withCornerRadius_ = function(radius, fn) {
+  var oldRadius = Blockly.BlockSvg.CORNER_RADIUS;
+  Blockly.BlockSvg.CORNER_RADIUS = radius;
+  var res = fn();
+  Blockly.BlockSvg.CORNER_RADIUS = oldRadius;
+  return res;
+};
+
+function makeTopLeftCornerStart_() {
+  return 'm 0,' + Blockly.BlockSvg.CORNER_RADIUS;
+}
 
 /**
  * SVG start point for drawing the top-left corner.
  * @const
  */
-Blockly.BlockSvg.TOP_LEFT_CORNER_START =
-    'm 0,' + Blockly.BlockSvg.CORNER_RADIUS;
+Blockly.BlockSvg.TOP_LEFT_CORNER_START = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeTopLeftCornerStart_);
+
 
 /**
  * SVG start point for drawing the rounder top-left corner.
  * @const
  */
-Blockly.BlockSvg.TOP_LEFT_CORNER_START_4 =
-    'm 0,' + Blockly.BlockSvg.CORNER_RADIUS_4;
+Blockly.BlockSvg.TOP_LEFT_CORNER_START_4 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeTopLeftCornerStart_);
+
+/**
+ * SVG start point for drawing the EVEN rounder top-left corner.
+ * @const
+ */
+Blockly.BlockSvg.TOP_LEFT_CORNER_START_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeTopLeftCornerStart_);
+
+function makeTopLeftCorner_() {
+  return 'A ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 ' +
+    Blockly.BlockSvg.CORNER_RADIUS + ',0';
+}
 
 /**
  * SVG path for drawing the rounded top-left corner.
  * @const
  */
-Blockly.BlockSvg.TOP_LEFT_CORNER =
-    'A ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 ' +
-    Blockly.BlockSvg.CORNER_RADIUS + ',0';
+Blockly.BlockSvg.TOP_LEFT_CORNER = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeTopLeftCorner_);
 
 /**
  * SVG path for drawing the rounder top-left corner.
  * @const
  */
-Blockly.BlockSvg.TOP_LEFT_CORNER_4 =
-    'A ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,1 ' +
-    Blockly.BlockSvg.CORNER_RADIUS_4 + ',0';
+Blockly.BlockSvg.TOP_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeTopLeftCorner_);
+
+/**
+ * SVG path for drawing the EVEN rounder top-left corner.
+ * @const
+ */
+Blockly.BlockSvg.TOP_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeTopLeftCorner_);
 
 /**
  * SVG path for drawing the rounded top-right corner.
@@ -253,67 +275,86 @@ Blockly.BlockSvg.BOTTOM_RIGHT_CORNER =
     Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS;
 
+function makeBottomLeftCorner_() {
+  return 'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
+     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 -' +
+     Blockly.BlockSvg.CORNER_RADIUS + ',-' +
+     Blockly.BlockSvg.CORNER_RADIUS;
+}
+
 /**
  * SVG path for drawing the rounded bottom-left corner.
  * @const
  */
-Blockly.BlockSvg.BOTTOM_LEFT_CORNER =
-    'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
-     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 -' +
-     Blockly.BlockSvg.CORNER_RADIUS + ',-' +
-     Blockly.BlockSvg.CORNER_RADIUS;
+Blockly.BlockSvg.BOTTOM_LEFT_CORNER = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeBottomLeftCorner_);
+
 
 /**
  * SVG path for drawing the rounder bottom-left corner.
  * @const
  */
-Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4 =
-    'a ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
-     Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,1 -' +
-     Blockly.BlockSvg.CORNER_RADIUS_4 + ',-' +
-     Blockly.BlockSvg.CORNER_RADIUS_4;
+Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeBottomLeftCorner_);
+
+/**
+ * SVG path for drawing the EVEN rounder bottom-left corner.
+ * @const
+ */
+Blockly.BlockSvg.BOTTOM_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeBottomLeftCorner_);
+
+function makeInnerTopLeftCorner_() {
+  return ' a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 -' +
+    Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS;
+}
 
 /**
  * SVG path for drawing the top-left corner of a statement input.
  * @const
  */
-Blockly.BlockSvg.INNER_TOP_LEFT_CORNER =
-    ' a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 -' +
-    Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS;
+Blockly.BlockSvg.INNER_TOP_LEFT_CORNER = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeInnerTopLeftCorner_);
+
 
 /**
  * SVG path for drawing the rounder top-left corner of a statement input.
  * @const
  */
-Blockly.BlockSvg.INNER_TOP_LEFT_CORNER_4 =
-    ' a ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,0 -' +
-    Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS_4;
+Blockly.BlockSvg.INNER_TOP_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeInnerTopLeftCorner_);
+
+/**
+ * SVG path for drawing the EVEN rounder top-left corner of a statement input.
+ * @const
+ */
+Blockly.BlockSvg.INNER_TOP_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeInnerTopLeftCorner_);
+
+function makeInnerBottomLeftCorner_() {
+  return 'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 ' +
+    Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS;
+}
 
 /**
  * SVG path for drawing the bottom-left corner of a statement input.
  * Includes the rounded inside corner.
  * @const
  */
-Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER =
-    'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 ' +
-    Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS;
+Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeInnerBottomLeftCorner_);
 
 /**
  * SVG path for drawing the bottom-left corner of a statement input.
  * Includes the rounder inside corner.
  * @const
  */
-Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER_4 =
-    'a ' + Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS_4 + ' 0 0,0 ' +
-    Blockly.BlockSvg.CORNER_RADIUS_4 + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS_4;
+Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeInnerBottomLeftCorner_);
+
+
+/**
+ * SVG path for drawing the bottom-left corner of a statement input.
+ * Includes the EVEN rounder inside corner.
+ * @const
+ */
+Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeInnerBottomLeftCorner_);
 
 /**
  * SVG path for an empty hexagonal input shape.
@@ -813,15 +854,15 @@ Blockly.BlockSvg.prototype.render = function(opt_bubble) {
   if (this.outputConnection && inputRows.hasStatement) {
     if (this.leftCorner_rendererDefined) {
       this.leftCorner_ = [
-        Blockly.BlockSvg.TOP_LEFT_CORNER_4,
-        Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4,
-        Blockly.BlockSvg.TOP_LEFT_CORNER_START_4,
+        Blockly.BlockSvg.TOP_LEFT_CORNER_8,
+        Blockly.BlockSvg.BOTTOM_LEFT_CORNER_8,
+        Blockly.BlockSvg.TOP_LEFT_CORNER_START_8,
         Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
         Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
       ];
     }
     if (this.leftCornerRadius_rendererDefined) {
-      this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_4;
+      this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_8;
     }
 
     inputRows.statementEdge = inputRows.statementEdge * 2;
