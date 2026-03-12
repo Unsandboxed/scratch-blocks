@@ -105,7 +105,10 @@ Blockly.ScratchBlocks.ProcedureUtils.callerDomToMutation = function(xmlElement) 
   this.hatAlwaysActivated_ = !!JSON.parse(xmlElement.getAttribute('hatAlwaysActivated') || 'true');
   this.pollutelocals_ = !!JSON.parse(xmlElement.getAttribute('pollutelocals') || 'false');
   this.workspace.enableProcedureReturns();
-  this.updateDisplay_();
+
+  // TODO: we force a return update to ensure branch blocks go back to a generic shape.
+  // Implement some checks so that we're not unnecessarily re-checking returns.
+  this.updateDisplay_(true);
 };
 
 /**
@@ -199,7 +202,7 @@ Blockly.ScratchBlocks.ProcedureUtils.getProcCode = function() {
  * @private
  * @this Blockly.Block
  */
-Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
+Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate) {
   var wasRendered = this.rendered;
   this.rendered = false;
 
@@ -218,19 +221,17 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function() {
 
   // TODO: There is a lot of repeat checks in here.
   // This should ideally be tidied up.
-  if (!wasRendered && this.getReturn) {
+  if ((!wasRendered || forceReturnUpdate) && this.getReturn) {
     this.setInputsInline(true);
 
     returnType = this.getReturn();
-    // due to limitations with scratch-blocks, all custom reporters with a branch
-    // must be rendererd with a square output shape.
+
     if (this.hasStatementInput() && returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       if (returnType === Blockly.PROCEDURES_CALL_TYPE_HAT) {
         this.setPreviousStatement(false, null);
         this.setNextStatement(true, null);
       } else {
         this.setOutput(true, null);
-        this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
       }
     } else if (returnType === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       this.setPreviousStatement(true, null);
