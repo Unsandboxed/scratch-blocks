@@ -500,8 +500,6 @@ Blockly.Procedures.createProcedureCallbackFactory_ = function(workspace) {
       block.moveBy(posX / scale, (-workspace.scrollY + 30) / scale);
       block.scheduleSnapAndBump();
       Blockly.Events.setGroup(false);
-
-      workspace.procedureReturnsWillChange();
     }
   };
 };
@@ -585,7 +583,6 @@ Blockly.Procedures.editProcedureCallbackFactory_ = function(block) {
       Blockly.Procedures.mutateCallersAndPrototype(block.getProcCode(),
           block.workspace, mutation);
     }
-    block.workspace.procedureReturnsWillChange();
   };
 };
 
