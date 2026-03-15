@@ -235,12 +235,12 @@ Blockly.Msg.STRING_REPEAT = 'repeat %1 %2 times'; // usb
 Blockly.Msg.STRING_REPLACE = 'replace %1 with %2 in %3'; // usb
 Blockly.Msg.STRING_ITEMSPLIT = 'item %1 of %2 split by %3'; // usb
 Blockly.Msg.STRING_TERNARY = 'if %1 then %2 else %3'; // usb
-Blockly.Msg.STRING_CONVERT = 'convert %1 to %2'; // usb
+Blockly.Msg.STRING_CONVERT = 'make %1 %2'; // usb
 Blockly.Msg.STRING_CONVERT_UPPERCASE = 'uppercase'; // usb
 Blockly.Msg.STRING_CONVERT_LOWERCASE = 'lowercase'; // usb
 Blockly.Msg.STRING_INDEXOF = 'index %1 of %2 in %3'; // usb
-Blockly.Msg.STRING_EXACTLY = 'is %1 exactly %2?'; // usb
-Blockly.Msg.STRING_IS = 'is %1 %2?'; // usb
+Blockly.Msg.STRING_EXACTLY = '%1 is exactly %2?'; // usb
+Blockly.Msg.STRING_IS = '%1 is %2?'; // usb
 /* Legacy: use old "operators" prefix */
 Blockly.Msg.OPERATORS_JOIN = 'join %1 %2';
 Blockly.Msg.OPERATORS_JOIN_APPLE = 'apple';
@@ -255,7 +255,11 @@ Blockly.Msg.PROCEDURES_DEFINITION = 'define %1';
 
 // TW Procedures blocks
 Blockly.Msg.PROCEDURES_RETURN = 'return %1';
+Blockly.Msg.PROCEDURES_SET_PARAMETER = 'set %1 to %2';
 Blockly.Msg.PROCEDURES_TO_REPORTER = 'Change To Reporter';
+Blockly.Msg.PROCEDURES_TO_BOOLEAN = 'Change To Boolean';
+Blockly.Msg.PROCEDURES_TO_ARRAY = 'Change To Array';
+Blockly.Msg.PROCEDURES_TO_OBJECT = 'Change To Object';
 Blockly.Msg.PROCEDURES_TO_STATEMENT = 'Change To Stacked Block';
 Blockly.Msg.PROCEDURES_TO_HAT = 'Change To Hat Block';
 Blockly.Msg.PROCEDURES_DOCS = 'How to use return';

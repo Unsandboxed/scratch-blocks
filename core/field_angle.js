@@ -189,6 +189,7 @@ Blockly.FieldAngle.prototype.showEditor_ = function() {
   var div = Blockly.DropDownDiv.getContentDiv();
   // Build the SVG DOM.
   var parentBlock = this.sourceBlock_.parentBlock_;
+  if (!parentBlock) parentBlock = this.sourceBlock_;
   var svg = Blockly.utils.createSvgElement('svg', {
     'xmlns': 'http://www.w3.org/2000/svg',
     'xmlns:html': 'http://www.w3.org/1999/xhtml',

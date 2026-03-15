@@ -145,6 +145,17 @@ Blockly.FieldTextDropdown.prototype.showEditor_ = function() {
 };
 
 /**
+ * Set the text in this field and fire a change event.
+ * @param {*} newText New text.
+ */
+Blockly.FieldTextDropdown.prototype.setText = function(newText) {
+  Blockly.FieldTextDropdown.superClass_.setText.call(this, newText);
+  if (!this.dropDownOpen_) {
+    this.setValue(newText);
+  }
+};
+
+/**
  * Callback when the drop-down menu is hidden.
  */
 Blockly.FieldTextDropdown.prototype.onHide = Blockly.FieldDropdown.prototype.onHide;

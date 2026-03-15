@@ -61,6 +61,13 @@ Blockly.FieldLabel.fromJson = function(options) {
 };
 
 /**
+ * CSS class name for the text element.
+ * @type {string}
+ * @package
+ */
+Blockly.FieldLabel.prototype.className_ = 'blocklyText';
+
+/**
  * Editable fields usually show some sort of UI for the user to change them.
  * @type {boolean}
  * @public
@@ -86,7 +93,7 @@ Blockly.FieldLabel.prototype.init = function() {
   // Build the DOM.
   this.textElement_ = Blockly.utils.createSvgElement('text',
       {
-        'class': 'blocklyText',
+        'class': this.className_,
         'y': Blockly.BlockSvg.FIELD_TOP_PADDING,
         'text-anchor': 'middle',
         'dominant-baseline': 'middle',

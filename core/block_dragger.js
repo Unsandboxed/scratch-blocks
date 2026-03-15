@@ -294,6 +294,12 @@ Blockly.BlockDragger.prototype.endBlockDrag = function(e, currentDragDeltaXY) {
           }
         }
       }
+      if (!Blockly.Procedures.vmCanDeleteDefinitionCallback_(procCodeBeingDeleted, true)) {
+        alert(Blockly.Msg.PROCEDURE_USED);
+        ws.undo();
+        return; // There can only be one define deletion at a time.
+      }
+      ws.deleteGlobalProcedureMutationByProccode(procCodeBeingDeleted);
       // The proc deletion was valid, update the toolbox.
       ws.refreshToolboxSelection_();
     });

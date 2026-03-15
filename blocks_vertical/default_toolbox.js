@@ -531,6 +531,28 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
   '</category>' +
   '<category name="Extensions" id="extensions" colour="#FF6680" secondaryColour="#FF4D6A" ' +
     'iconURI="../media/extensions/wedo2-block-icon.svg" showStatusButton="true">' +
+    '<block type="extension_checkbox_test">' + // enabled
+      '<value name="CHECKBOX">' +
+        '<shadow type="checkbox"></shadow>' +
+      '</value>' +
+    '</block>' +
+    '<block type="extension_checkbox_test">' + // disabled
+    '</block>' +
+    '<block type="extension_checkbox_test_legacy">' + // enabled legacy
+      '<value name="CHECKBOX">' +
+        '<shadow type="checkbox">' +
+          '<field name="CHECKBOX">TRUE</field>' +
+        '</shadow>' +
+      '</value>' +
+    '</block>' +
+    '<block type="extension_checkbox_test_legacy">' + // disabled legacy
+      '<value name="CHECKBOX">' +
+        '<shadow type="checkbox">' +
+          '<field name="CHECKBOX">FALSE</field>' + // this should instantly turn off
+        '</shadow>' +
+      '</value>' +
+    '</block>' +
+    '<sep gap="36"></sep>' +
     '<block type="extension_pen_down" id="extension_pen_down"></block>' +
     '<block type="extension_music_drum" id="extension_music_drum">' +
       '<value name="NUMBER">' +
@@ -567,5 +589,9 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
         '</shadow>' +
       '</value>' +
     '</block>' +
+    '<block type="extension_inlineblock_test_normal" id="extension_inlineblock_test_normal"></block>' +
+    '<block type="extension_inlineblock_test_rounder" id="extension_inlineblock_test_rounder"></block>' +
+    '<block type="extension_inlineblock_test_evenrounder" id="extension_inlineblock_test_evenrounder"></block>' +
+    '<block type="extension_inlineblock_test_reporter" id="extension_inlineblock_test_reporter"></block>' +
   '</category>' +
   '</xml>';
