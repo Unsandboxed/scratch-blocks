@@ -529,15 +529,17 @@ Blockly.Procedures.getProcCodeOf = function(block) {
       return;
     }
     block = innerBlock;
-    procCode = block.getProcCode();
+    procCode = block.procCode_;
   } else if (block.type == Blockly.PROCEDURES_CALL_BLOCK_TYPE) {
     // This is a call block, find the prototype corresponding to the procCode.
     // Make sure to search the correct workspace, call block can be in flyout.
     var workspaceToSearch = block.workspace.isFlyout ?
         block.workspace.targetWorkspace : block.workspace;
-    procCode = block.getProcCode();
+    procCode = block.procCode_;
     block = Blockly.Procedures.getPrototypeBlock(
-        block.getProcCode(), workspaceToSearch);
+        block.procCode_, workspaceToSearch);
+  } else if (block.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) {
+    procCode = block.procCode_;
   }
   return [block, procCode];
 };

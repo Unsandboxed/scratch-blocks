@@ -186,6 +186,7 @@ Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation = function(no
 
 // Shared by all three procedure blocks (procedures_declaration,
 // procedures_call, and procedures_prototype).
+// TODO: Update any calls to the old way of getting a procCode to use this instead
 /**
  * Returns the name of the procedure this block calls, or the empty string if
  * it has not yet been set.
@@ -193,7 +194,9 @@ Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation = function(no
  * @this Blockly.Block
  */
 Blockly.ScratchBlocks.ProcedureUtils.getProcCode = function() {
-  return this.procCode_;
+  var procCode_ = Blockly.Procedures.getProcCodeOf(this)[1];
+
+  return procCode_;
 };
 
 /**
@@ -1150,7 +1153,8 @@ Blockly.Blocks['procedures_definition'] = {
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
     this.customColour_ = "colours_more";
-  }
+  },
+  getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode
 };
 
 Blockly.Blocks['procedures_call'] = {
