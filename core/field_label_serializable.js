@@ -60,6 +60,13 @@ Blockly.FieldLabelSerializable.fromJson = function(options) {
 };
 
 /**
+ * CSS class name for the text element.
+ * @type {string}
+ * @package
+ */
+Blockly.FieldLabelSerializable.prototype.className_ = 'blocklyText';
+
+/**
  * Editable fields usually show some sort of UI for the user to change them.
  * This field should be serialized, but only edited programmatically.
  * @type {boolean}

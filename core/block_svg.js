@@ -104,6 +104,18 @@ Blockly.BlockSvg.prototype.height = 0;
 Blockly.BlockSvg.prototype.width = 0;
 
 /**
+ * Should this block render a hat cap even if its not supposed too?
+ * NOTE: this is handled manually and is not updated by any render functions.
+ */
+Blockly.BlockSvg.prototype.susCapBoi_ = false;
+
+/**
+ * Cursor Y offset for when renderDrawBottom_ is called.
+ * NOTE: this is handled manually and is not updated by any render functions.
+ */
+Blockly.BlockSvg.prototype.cursorYoffset_ = 0;
+
+/**
  * Minimum width of block if insertion marker; comes from inserting block.
  * @type {number}
  */

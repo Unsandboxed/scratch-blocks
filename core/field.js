@@ -136,7 +136,7 @@ Blockly.Field.prototype.name = undefined;
  * @type {string}
  * @package
  */
-Blockly.Field.prototype.className_ = 'blocklyText';
+Blockly.Field.prototype.className_ = 'blocklyTextField';
 
 /**
  * Visible text to display.

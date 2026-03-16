@@ -507,13 +507,9 @@ Blockly.Procedures.createProcedureCallbackFactory_ = function(workspace) {
 };
 
 /**
- * Callback to open the modal for editing custom procedures.
- * @param {!Blockly.Block} block The block that was right-clicked.
- * @private
+ * Gets the proccode from a block of an unknown type.
  */
-Blockly.Procedures.editProcedureCallback_ = function(block) {
-  // Edit can come from one of three block types (call, define, prototype)
-  // Normalize by setting the block to the prototype block for the procedure.
+Blockly.Procedures.getProcCodeOf = function(block) {
   var procCode;
   if (block.type == Blockly.PROCEDURES_DEFINITION_BLOCK_TYPE) {
     var input = block.getInput('custom_block');
@@ -533,18 +529,44 @@ Blockly.Procedures.editProcedureCallback_ = function(block) {
       return;
     }
     block = innerBlock;
-    procCode = block.getProcCode();
+    procCode = block.procCode_;
   } else if (block.type == Blockly.PROCEDURES_CALL_BLOCK_TYPE) {
     // This is a call block, find the prototype corresponding to the procCode.
     // Make sure to search the correct workspace, call block can be in flyout.
     var workspaceToSearch = block.workspace.isFlyout ?
         block.workspace.targetWorkspace : block.workspace;
-    procCode = block.getProcCode();
+    procCode = block.procCode_;
     block = Blockly.Procedures.getPrototypeBlock(
-        block.getProcCode(), workspaceToSearch);
+        block.procCode_, workspaceToSearch);
+  } else if (block.type === Blockly.PROCEDURES_PROTOTYPE_BLOCK_TYPE) {
+    procCode = block.procCode_;
   }
+  return [block, procCode];
+};
+
+/**
+ * Checks if a procedure (by procCode) can be edited.
+ */
+Blockly.Procedures.isEditableProcedure = function(ws, procCode) {
+  return !!Blockly.Procedures.getDefineBlock(procCode, ws);
+};
+
+/**
+ * Callback to open the modal for editing custom procedures.
+ * @param {!Blockly.Block} block The block that was right-clicked.
+ * @private
+ */
+Blockly.Procedures.editProcedureCallback_ = function(block) {
+  // Edit can come from one of three block types (call, define, prototype)
+  // Normalize by setting the block to the prototype block for the procedure.
+  var _t = Blockly.Procedures.getProcCodeOf(block);
+  var block = _t[0], procCode = _t[1];
   if (!block || !block.mutationToDom) {
     console.warn(procCode, 'block', block, 'does not have mutationToDom');
+  }
+  if (!Blockly.Procedures.isEditableProcedure(block.workspace, procCode)) {
+    console.warn('Attempted to edit a procedure that cannot be edited:', procCode);
+    return;
   }
   // Block now refers to the procedure prototype block, it is safe to proceed.
   Blockly.Procedures.externalProcedureDefCallback(
@@ -565,6 +587,7 @@ Blockly.Procedures.editProcedureCallbackFactory_ = function(block) {
       Blockly.Procedures.mutateCallersAndPrototype(block.getProcCode(),
           block.workspace, mutation);
     }
+
     block.workspace.procedureReturnsWillChange();
   };
 };
@@ -587,7 +610,7 @@ Blockly.Procedures.externalProcedureDefCallback = function(/** mutator, callback
  */
 Blockly.Procedures.makeEditOption = function(block) {
   var editOption = {
-    enabled: true,
+    enabled: Blockly.Procedures.isEditableProcedure(block.workspace, Blockly.Procedures.getProcCodeOf(block)[1]),
     text: Blockly.Msg.EDIT_PROCEDURE,
     callback: function() {
       Blockly.Procedures.editProcedureCallback_(block);
@@ -596,11 +619,11 @@ Blockly.Procedures.makeEditOption = function(block) {
   return editOption;
 };
 
-Blockly.Procedures.makeChangeTypeOption = function(block) {
+Blockly.Procedures.makeChangeTypeOption = function(block, oNewType, oMsg) {
   var isStatement = block.getReturn() === Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
   var option = {
     enabled: true,
-    text: isStatement ? Blockly.Msg.PROCEDURES_TO_REPORTER : Blockly.Msg.PROCEDURES_TO_STATEMENT,
+    text: isStatement ? Blockly.Msg.PROCEDURES_TO_REPORTER : oMsg,
     callback: function() {
       var newType;
       var workspace = block.workspace;
@@ -610,12 +633,13 @@ Blockly.Procedures.makeChangeTypeOption = function(block) {
         // If the definition is boolean-shaped, then the reporter should be boolean-shaped,
         // otherwise normal reporter shaped.
         newType = (
-          actualReturnType === Blockly.PROCEDURES_CALL_TYPE_BOOLEAN ?
-          actualReturnType :
-          Blockly.PROCEDURES_CALL_TYPE_REPORTER
+          (actualReturnType === Blockly.PROCEDURES_CALL_TYPE_HAT ||
+            actualReturnType === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) ?
+            Blockly.PROCEDURES_CALL_TYPE_REPORTER :
+            oNewType
         );
       } else {
-        newType = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
+        newType = oNewType;
       }
 
       Blockly.Events.setGroup(true);
@@ -857,24 +881,33 @@ Blockly.Procedures.getBlockReturnType = function(block, workspace) {
     }
   }
 
-  var hasSeenBooleanReturn = false;
+  /** @type {Record<number, boolean>} */
+  var hasSeenReturns = {};
   /** @type {Blockly.Block[]} */
   var descendants = block.getDescendants();
   for (var i = 0; i < descendants.length; i++) {
     if (descendants[i].type === Blockly.PROCEDURES_RETURN_BLOCK_TYPE) {
       // The block at i + 1 should be the block inside of the return block.
-      // Even if the return block is missing its input, this will still be fine, because the
-      // next block should a stacked block which won't be hexagon-shaped.
-      if (i + 1 < descendants.length && descendants[i + 1].outputShape_ === Blockly.OUTPUT_SHAPE_HEXAGONAL) {
-        // keep searching, because there may be other, non-boolean returns in this function definition.
-        hasSeenBooleanReturn = true;
+      if (i + 1 < descendants.length && 
+        descendants[i + 1].outputShape_ !== Blockly.OUTPUT_SHAPE_ROUND &&
+        !descendants[i + 1].isShadow_
+      ) {
+        // keep searching, because there may be other, round shaped returns in this function definition.
+        if (!descendants[i + 1].outputConnection) {
+          return Blockly.PROCEDURES_CALL_TYPE_REPORTER;
+        }
+        hasSeenReturns[descendants[i + 1].outputShape_] = true;
       } else {
         return Blockly.PROCEDURES_CALL_TYPE_REPORTER;
       }
     }
   }
-  if (hasSeenBooleanReturn) {
+  if (hasSeenReturns[Blockly.OUTPUT_SHAPE_HEXAGONAL]) {
     return Blockly.PROCEDURES_CALL_TYPE_BOOLEAN;
+  } else if (hasSeenReturns[Blockly.OUTPUT_SHAPE_SQUARE]) {
+    return Blockly.PROCEDURES_CALL_TYPE_ARRAY;
+  } else if (hasSeenReturns[Blockly.OUTPUT_SHAPE_OBJECT]) {
+    return Blockly.PROCEDURES_CALL_TYPE_OBJECT;
   } else {
     // If we no longer have a return then check if the procedure defaults to a hat.
     // If it does, then make it a hat instead of a statement.
