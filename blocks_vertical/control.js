@@ -169,6 +169,117 @@ Blockly.Blocks['control_if_else'] = {
   }
 };
 
+Blockly.Blocks['control_if_else_extends'] = {
+  /**
+   * Block for if-else.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "",
+      "category": Blockly.Categories.control,
+      "extensions": ["colours_control", "shape_statement"]
+    });
+    this.extendCount_ = 0;
+    this.argumentIds_ = [];
+    this.extendDefinitions_ = {
+      collapse: true,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          "if"
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          "Boolean",
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          "then"
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.NEXT_STATEMENT,
+          null,
+          null,
+          null,
+        ),
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          "else if"
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          "Boolean",
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          "then"
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.NEXT_STATEMENT,
+          null,
+          null,
+          null,
+        ),
+      ],
+      ends: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          "else"
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.NEXT_STATEMENT,
+          null,
+          null,
+          null,
+        ),
+      ]
+    }
+    this.plusminus_ = new Blockly.FieldExtender(
+      this.handlePlus_.bind(this),
+      this.handleMinus_.bind(this),
+      true,
+      false
+    );
+    this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+    this.insertInputsAtIndex(0, {});
+  },
+  // callback functions
+  handlePlus_: function () {
+    this.insertInputsAtIndex(this.argumentIds_.length, {});
+  },
+  handleMinus_: function () {
+    this.insertInputsAtIndex(this.argumentIds_.length, {});
+  },
+
+  mutationToDom: Blockly.ExtenderMutation.mutationToDom,
+  domToMutation: Blockly.ExtenderMutation.domToMutation,
+  updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
+
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
+  findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
+
+  insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
+  removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
+  disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
+  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
+  createAllInputs_: Blockly.ExtenderMutation.createAllInputs_,
+  deleteShadows_: Blockly.ExtenderMutation.deleteShadows_,
+};
+
 Blockly.Blocks['control_stop'] = {
   /**
    * Block for stop all scripts.

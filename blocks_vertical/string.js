@@ -100,15 +100,17 @@ Blockly.Blocks['string_join_extends'] = { // usb
       starts: [
         Blockly.ExtenderMutation.defineNewInput(
           Blockly.DUMMY_INPUT, // special case for labels
+          null,
           "join" // label text
         )
       ],
       // inputs and labels that extend and retract
       proceeds: [
         Blockly.ExtenderMutation.defineNewInput(
-          "input_value", // input type
+          Blockly.VALUE_INPUT, // input type
           "text", // shadow type, if applicable
-          null // "check" for the input
+          "TEXT", // "field" for the shadow
+          null, // "check" for the input
         )
       ],
       // inputs and labels that are always at the end.
@@ -127,10 +129,10 @@ Blockly.Blocks['string_join_extends'] = { // usb
   },
   // callback functions
   handlePlus_: function () {
-    this.insertInputWithIndex_(this.argumentIds_.length + 1);
+    this.insertInputsAtIndex(this.extendCount_ + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    this.insertInputsAtIndex(this.extendCount_, {});
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
@@ -139,8 +141,10 @@ Blockly.Blocks['string_join_extends'] = { // usb
 
   customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,

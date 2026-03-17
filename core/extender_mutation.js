@@ -17,10 +17,18 @@ Blockly.ExtenderMutation.mutationToDom = function() {
 
 Blockly.ExtenderMutation.domToMutation = function(xmlElement) {
   var argumentIds = xmlElement.getAttribute('argumentids');
+  var extendCount = xmlElement.getAttribute('extendCount');
+
   // don't update if args are not changed
   if (JSON.stringify(this.argumentIds_) === argumentIds) {
     return;
   }
+
+  // The number of times it's been extended. This is not the same as the number
+  // of argument IDs or inputs/fields on the block, as multiple inputs can be
+  // applied or removed at will.
+  this.extendCount_ = JSON.parse(extendCount);
+
   this.argumentIds_ = JSON.parse(argumentIds);
   if (this.argumentIds_.length >= 3) {
     this.plusminus_.setEnableMinus(true);
@@ -30,8 +38,8 @@ Blockly.ExtenderMutation.domToMutation = function(xmlElement) {
   this.updateDisplay_();
 };
 
-Blockly.ExtenderMutation.defineNewInput = function(type, definition, check) {
-  return {type, definition, check};
+Blockly.ExtenderMutation.defineNewInput = function(type, shadow, field, check) {
+  return {type, shadow, field, check};
 };
 
 Blockly.ExtenderMutation.customContextMenu = function(menuOptions, originalBlock) {
@@ -62,7 +70,7 @@ Blockly.ExtenderMutation.findBlockIndex_ = function(block) {
 Blockly.ExtenderMutation.handlePlus_ = function() {
   Blockly.Events.setGroup(true);
   var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
-  if (this.extendCount_.length === 2) {
+  if (this.extendCount_ === 2) {
     this.plusminus_.setEnableMinus(true);
   }
 
@@ -77,31 +85,72 @@ Blockly.ExtenderMutation.handlePlus_ = function() {
 };
 
 /**
+ * Find a definition of a singular input by working down the definition tree.
+ */
+Blockly.ExtenderMutation.getInputDefinitionFromIndex_ = function (index, block) {
+
+}
+
+/**
+ * Get the definition of a set of inputs from the index it was called from.
+ */
+Blockly.ExtenderMutation.getInputDefinitionsFromIndex_ = function (index, block) {
+  if (index !== 0) {
+    console.log(block.extendDefinitions_);
+    return block.extendDefinitions_.proceeds;
+  } else {
+    return block.extendDefinitions_.starts;
+  }
+}
+
+/**
+ * Coordinate a set of fields and inputs at a given index.
+ */
+Blockly.ExtenderMutation.insertInputsAtIndex = function(index) {
+  var definitions = Blockly.ExtenderMutation.getInputDefinitionsFromIndex_(index, this);
+  if (!definitions) {
+    return;
+  }
+
+  definitions = definitions.reverse();
+
+  console.log(definitions);
+
+  for (var definition of definitions) {
+    this.insertInputWithIndex_(index, definition);    
+  }
+}
+
+/**
  * Insert an input inline on a block at a specified index. 
  * @param {Number} index The index to insert the input.
  * @param {Name} name The name of the input to insert.
  */
-Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, type, definition, check) {
-  if (typeof name != "string") name = Blockly.utils.genUid();
-  this.argumentIds_.splice(index - 1, 0, name);
+Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
+  if (typeof definition.id == "undefined") definition.id = Blockly.utils.genUid();
+  this.argumentIds_.splice(index - 1, 0, definition.id);
 
   var input;
-  if (type === Blockly.DUMMY_INPUT) {
-    var label = new Blockly.FieldLabel(definitions.definition);
+  if (definition.type === Blockly.DUMMY_INPUT) {
+    var label = new Blockly.FieldLabel(definition.field);
     input = this.insertDummyInput(index, Blockly.utils.genUid());
     input.appendField(label);
-  } else if (type === Blockly.NEXT_STATEMENT) {
+  } else if (definition.type === Blockly.NEXT_STATEMENT) {
     input = this.insertStatementInput(
-      this.inputList.length - 1,
-
+      index,
+      definition.id
     );
-  } else {
-    input = this.insertValueInput(index, name);
 
-    if (this.extendInput_.type) {
+    if (!this.isInsertionMarker()) {
+      this.render(false);
+    }
+  } else {
+    input = this.insertValueInput(index, definition.id);
+
+    if (definition.shadow) {
       Blockly.Events.disable();
-      var newBlock = this.workspace.newBlock(this.extendInput_.type);
-      newBlock.setFieldValue('', this.extendInput_.name);
+      var newBlock = this.workspace.newBlock(definition.shadow);
+      newBlock.setFieldValue('', definition.field);
       newBlock.setShadow(true);
 
       if (!this.isInsertionMarker()) {
@@ -117,8 +166,8 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, type, definitio
     }
   }
 
-  if (this.extendInput_.check) {
-    input.setCheck(this.extendInput_.check);
+  if (definition.check) {
+    input.setCheck(definition.check);
   }
 
   return input;
@@ -183,8 +232,6 @@ Blockly.ExtenderMutation.disconnectOldBlocks_ = function() {
 
   var indexStart = (this.hasFirstLabel_) ? 1 : 0;
   var inputCount = (this.hasFirstLabel_) ? this.inputList.length - 1 : this.inputList.length;
-
-  console.log(this.inputList);
 
   // Disconnect old blocks, except the first and last ones.
   for (var i = indexStart; i < inputCount; ++i) {
