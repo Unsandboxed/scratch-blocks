@@ -11,6 +11,7 @@ goog.provide('Blockly.ExtenderMutation');
 Blockly.ExtenderMutation.mutationToDom = function() {
   var container = document.createElement('mutation');
   container.setAttribute('argumentids', JSON.stringify(this.argumentIds_));
+  container.setAttribute('extendCount', JSON.stringify(this.extendCount_));
   return container;
 };
 
@@ -80,16 +81,16 @@ Blockly.ExtenderMutation.handlePlus_ = function() {
  * @param {Number} index The index to insert the input.
  * @param {Name} name The name of the input to insert.
  */
-Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, type, name, definition) {
+Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, type, definition, check) {
   if (typeof name != "string") name = Blockly.utils.genUid();
   this.argumentIds_.splice(index - 1, 0, name);
 
   var input;
-  if (type === "label") {
+  if (type === Blockly.DUMMY_INPUT) {
     var label = new Blockly.FieldLabel(definitions.definition);
     input = this.insertDummyInput(index, Blockly.utils.genUid());
     input.appendField(label);
-  } else if (type === "statement") {
+  } else if (type === Blockly.NEXT_STATEMENT) {
     input = this.insertStatementInput(
       this.inputList.length - 1,
 

@@ -99,7 +99,7 @@ Blockly.Blocks['string_join_extends'] = { // usb
        // inputs and labels to always put at the start of a block
       starts: [
         Blockly.ExtenderMutation.defineNewInput(
-          "label", // special case for labels
+          Blockly.DUMMY_INPUT, // special case for labels
           "join" // label text
         )
       ],
