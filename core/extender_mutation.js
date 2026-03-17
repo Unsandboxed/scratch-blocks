@@ -70,7 +70,7 @@ Blockly.ExtenderMutation.findBlockIndex_ = function(block) {
 Blockly.ExtenderMutation.handlePlus_ = function() {
   Blockly.Events.setGroup(true);
   var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
-  if (this.extendCount_ === 2) {
+  if (this.extendCount_ > 1) {
     this.plusminus_.setEnableMinus(true);
   }
 
@@ -97,9 +97,9 @@ Blockly.ExtenderMutation.getInputDefinitionFromIndex_ = function (index, block) 
 Blockly.ExtenderMutation.getInputDefinitionsFromIndex_ = function (index, block) {
   if (index !== 0) {
     console.log(block.extendDefinitions_);
-    return block.extendDefinitions_.proceeds;
+    return [...block.extendDefinitions_.proceeds];
   } else {
-    return block.extendDefinitions_.starts;
+    return [...block.extendDefinitions_.starts];
   }
 }
 
@@ -114,10 +114,13 @@ Blockly.ExtenderMutation.insertInputsAtIndex = function(index) {
 
   definitions = definitions.reverse();
 
-  console.log(definitions);
-
   for (var definition of definitions) {
     this.insertInputWithIndex_(index, definition);    
+  }
+
+  this.extendCount_++;
+  if (this.extendCount_ > 1) {
+    this.plusminus_.setEnableMinus(true);
   }
 }
 
@@ -140,10 +143,6 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
       index,
       definition.id
     );
-
-    if (!this.isInsertionMarker()) {
-      this.render(false);
-    }
   } else {
     input = this.insertValueInput(index, definition.id);
 
@@ -286,6 +285,9 @@ Blockly.ExtenderMutation.removeAllInputs_ = function() {
 Blockly.ExtenderMutation.createAllInputs_ = function(connectionMap) {
   // create inputs
   for (var i = 0; i < this.argumentIds_.length; ++i) {
+    const extendDefinition = undefined;
+    if (!extendDefinition) return;
+
     var id = this.argumentIds_[i];
     var input = this.insertValueInput(i, id);
 
