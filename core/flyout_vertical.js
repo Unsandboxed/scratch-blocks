@@ -338,10 +338,11 @@ Blockly.VerticalFlyout.prototype.setMetrics_ = function(xyRatio) {
       this.workspace_.scrollY + metrics.absoluteTop);
 
   this.clipRect_.setAttribute('height', Math.max(0, metrics.viewHeight) + 'px');
+  console.log('help.');
   this.clipRect_.setAttribute('width', (
     // If we are declipping on hover then we need to be able to see all of the blocks.
     // Otherwise we can just set it to the flyout width and call it a day.
-    this.declipOnHover_ ? 1e301 : metrics.viewWidth
+    this.declipOnHover_ ? 9999999999999999999999999999999 : metrics.viewWidth
   ) + 'px');
 
   if (this.categoryScrollPositions) {

@@ -872,7 +872,7 @@ Blockly.Css.CONTENT = [
     'overflow: hidden;', // Everything else.
     '-ms-overflow-style: none;', // Edge and IE.
     'scrollbar-width: none;', // FireFox.
-    // end scrollbar hack
+    // // end scrollbar hack
     'position: absolute;',
     'font-family: "Helvetica Neue", Helvetica, sans-serif;',
     'z-index: 40;', /* so blocks go over toolbox when dragging */
