@@ -200,17 +200,27 @@ Blockly.BlockSvg.NOTCH_PATH_RIGHT = (
  */
 Blockly.BlockSvg.NOTCH_START_PADDING = 3 * Blockly.BlockSvg.GRID_UNIT;
 
-var withCornerRadius_ = function(radius, fn) {
+var wrapFn = function(fn, self) {
+  'use strict';
+  return function() {
+    'use strict';
+    return fn.apply((self || this), Array.prototype.slice.call(arguments, 0));
+  };
+};
+
+Blockly.BlockSvg.withCornerRadius_ = function withCornerRadius_(radius, fn) {
   var oldRadius = Blockly.BlockSvg.CORNER_RADIUS;
   Blockly.BlockSvg.CORNER_RADIUS = radius;
   var res = fn();
   Blockly.BlockSvg.CORNER_RADIUS = oldRadius;
   return res;
 };
+var withCornerRadius_ = wrapFn(Blockly.BlockSvg.withCornerRadius_);
 
-function makeTopLeftCornerStart_() {
+Blockly.BlockSvg.makeTopLeftCornerStart_ = function makeTopLeftCornerStart_() {
   return 'm 0,' + Blockly.BlockSvg.CORNER_RADIUS;
-}
+};
+var makeTopLeftCornerStart_ = wrapFn(Blockly.BlockSvg.makeTopLeftCornerStart_);
 
 /**
  * SVG start point for drawing the top-left corner.
@@ -231,11 +241,12 @@ Blockly.BlockSvg.TOP_LEFT_CORNER_START_4 = withCornerRadius_(Blockly.BlockSvg.CO
  */
 Blockly.BlockSvg.TOP_LEFT_CORNER_START_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeTopLeftCornerStart_);
 
-function makeTopLeftCorner_() {
+Blockly.BlockSvg.makeTopLeftCorner_ = function makeTopLeftCorner_() {
   return 'A ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 ' +
     Blockly.BlockSvg.CORNER_RADIUS + ',0';
-}
+};
+var makeTopLeftCorner_ = wrapFn(Blockly.BlockSvg.makeTopLeftCorner_);
 
 /**
  * SVG path for drawing the rounded top-left corner.
@@ -255,32 +266,41 @@ Blockly.BlockSvg.TOP_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CORNER_R
  */
 Blockly.BlockSvg.TOP_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeTopLeftCorner_);
 
+Blockly.BlockSvg.makeTopRightCorner_ = function makeTopRightCorner_() {
+  return 'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 ' +
+    Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS;
+};
+var makeTopRightCorner_ = wrapFn(Blockly.BlockSvg.makeTopRightCorner_);
+
 /**
  * SVG path for drawing the rounded top-right corner.
  * @const
  */
-Blockly.BlockSvg.TOP_RIGHT_CORNER =
-    'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 ' +
+Blockly.BlockSvg.TOP_RIGHT_CORNER = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeTopRightCorner_);
+
+Blockly.BlockSvg.makeBottomRightCorner_ = function makeBottomRightCorner_() {
+  return ' a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
+    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 -' +
     Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS;
+};
+var makeBottomRightCorner_ = wrapFn(Blockly.BlockSvg.makeBottomRightCorner_);
 
 /**
  * SVG path for drawing the rounded bottom-right corner.
  * @const
  */
-Blockly.BlockSvg.BOTTOM_RIGHT_CORNER =
-    ' a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 -' +
-    Blockly.BlockSvg.CORNER_RADIUS + ',' +
-    Blockly.BlockSvg.CORNER_RADIUS;
+Blockly.BlockSvg.BOTTOM_RIGHT_CORNER = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS, makeBottomRightCorner_);
 
-function makeBottomLeftCorner_() {
+Blockly.BlockSvg.makeBottomLeftCorner_ = function makeBottomLeftCorner_() {
   return 'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
      Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,1 -' +
      Blockly.BlockSvg.CORNER_RADIUS + ',-' +
      Blockly.BlockSvg.CORNER_RADIUS;
-}
+};
+var makeBottomLeftCorner_ = wrapFn(Blockly.BlockSvg.makeBottomLeftCorner_);
 
 /**
  * SVG path for drawing the rounded bottom-left corner.
@@ -301,12 +321,13 @@ Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CORNE
  */
 Blockly.BlockSvg.BOTTOM_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_8, makeBottomLeftCorner_);
 
-function makeInnerTopLeftCorner_() {
+Blockly.BlockSvg.makeInnerTopLeftCorner_ = function makeInnerTopLeftCorner_() {
   return ' a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 -' +
     Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS;
-}
+};
+var makeInnerTopLeftCorner_ = wrapFn(Blockly.BlockSvg.makeInnerTopLeftCorner_);
 
 /**
  * SVG path for drawing the top-left corner of a statement input.
@@ -327,12 +348,13 @@ Blockly.BlockSvg.INNER_TOP_LEFT_CORNER_4 = withCornerRadius_(Blockly.BlockSvg.CO
  */
 Blockly.BlockSvg.INNER_TOP_LEFT_CORNER_8 = withCornerRadius_(Blockly.BlockSvg.CORNER_RADIUS_4, makeInnerTopLeftCorner_);
 
-function makeInnerBottomLeftCorner_() {
+Blockly.BlockSvg.makeInnerBottomLeftCorner_ = function makeInnerBottomLeftCorner_() {
   return 'a ' + Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS + ' 0 0,0 ' +
     Blockly.BlockSvg.CORNER_RADIUS + ',' +
     Blockly.BlockSvg.CORNER_RADIUS;
-}
+};
+var makeInnerBottomLeftCorner_ = wrapFn(Blockly.BlockSvg.makeInnerBottomLeftCorner_);
 
 /**
  * SVG path for drawing the bottom-left corner of a statement input.
