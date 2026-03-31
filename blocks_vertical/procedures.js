@@ -186,6 +186,7 @@ Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation = function(no
 
 // Shared by all three procedure blocks (procedures_declaration,
 // procedures_call, and procedures_prototype).
+// TODO: Update any calls to the old way of getting a procCode to use this instead
 /**
  * Returns the name of the procedure this block calls, or the empty string if
  * it has not yet been set.
@@ -193,7 +194,9 @@ Blockly.ScratchBlocks.ProcedureUtils.argumentReporterDomToMutation = function(no
  * @this Blockly.Block
  */
 Blockly.ScratchBlocks.ProcedureUtils.getProcCode = function() {
-  return this.procCode_;
+  var procCode_ = Blockly.Procedures.getProcCodeOf(this)[1];
+
+  return procCode_;
 };
 
 /**
@@ -227,14 +230,11 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate
 
     returnType = this.getReturn();
 
-    if (this.hasStatementInput() && returnType !== Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
-      if (returnType === Blockly.PROCEDURES_CALL_TYPE_HAT) {
-        this.setPreviousStatement(false, null);
-        this.setNextStatement(true, null);
-      } else {
-        this.setOutput(true, null);
-      }
-    } else if (returnType === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
+    if (this.hasStatementInput && returnType === Blockly.PROCEDURES_CALL_TYPE_HAT) {
+      this.setPreviousStatement(false, null);
+      this.setNextStatement(true, null);
+    }
+    if (returnType === Blockly.PROCEDURES_CALL_TYPE_STATEMENT) {
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
     } else if (returnType === Blockly.PROCEDURES_CALL_TYPE_BOOLEAN) {
@@ -282,20 +282,6 @@ Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_ = function(forceReturnUpdate
       this.parentBlock_.render();
     }
   }
-};
-
-/**
- * Find if the procedure has a branch input or not.
- * @returns {boolean} The type of the return block
- */
-Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput = function() {
-  var inputList = this.inputList;
-  if (!inputList) return false;
-
-  for (var i = 0; i < inputList.length; i++) {
-    if (inputList[i].type === 3) return true;
-  }
-  return false;
 };
 
 /**
@@ -1150,7 +1136,8 @@ Blockly.Blocks['procedures_definition'] = {
     this.return_ = Blockly.PROCEDURES_CALL_TYPE_STATEMENT;
     this.hat_ = false;
     this.customColour_ = "colours_more";
-  }
+  },
+  getProcCode: Blockly.ScratchBlocks.ProcedureUtils.getProcCode
 };
 
 Blockly.Blocks['procedures_call'] = {
@@ -1177,7 +1164,6 @@ Blockly.Blocks['procedures_call'] = {
   deleteShadows_: Blockly.ScratchBlocks.ProcedureUtils.deleteShadows_,
   createAllInputs_: Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_,
   updateDisplay_: Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_,
-  hasStatementInput: Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput,
   getReturn: Blockly.ScratchBlocks.ProcedureUtils.getReturn,
 
   // Exist on all three blocks, but have different implementations.
@@ -1220,7 +1206,6 @@ Blockly.Blocks['procedures_prototype'] = {
   deleteShadows_: Blockly.ScratchBlocks.ProcedureUtils.deleteShadows_,
   createAllInputs_: Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_,
   updateDisplay_: Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_,
-  hasStatementInput: Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput,
 
   // Exist on all three blocks, but have different implementations.
   mutationToDom: Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom,
@@ -1261,7 +1246,6 @@ Blockly.Blocks['procedures_declaration'] = {
   deleteShadows_: Blockly.ScratchBlocks.ProcedureUtils.deleteShadows_,
   createAllInputs_: Blockly.ScratchBlocks.ProcedureUtils.createAllInputs_,
   updateDisplay_: Blockly.ScratchBlocks.ProcedureUtils.updateDisplay_,
-  hasStatementInput: Blockly.ScratchBlocks.ProcedureUtils.hasStatementInput,
 
   // Exist on all three blocks, but have different implementations.
   mutationToDom: Blockly.ScratchBlocks.ProcedureUtils.definitionMutationToDom,

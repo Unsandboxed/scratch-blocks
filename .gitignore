@@ -34,6 +34,7 @@ python_compressed.js
 /gh-pages/Gemfile.lock
 /gh-pages/closure-library
 /gh-pages/_site
+/gh-pages/node_modules
 /*compiler*.jar
 /local_blockly_compressed_vertical.js
 /chromedriver

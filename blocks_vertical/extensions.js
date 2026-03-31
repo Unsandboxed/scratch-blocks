@@ -47,17 +47,53 @@ Blockly.Blocks['extension_inlineblock_test_normal'] = {
     });
     this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
 
-    this.leftCorner_ = [
-      Blockly.BlockSvg.TOP_LEFT_CORNER,
-      Blockly.BlockSvg.BOTTOM_LEFT_CORNER,
-      Blockly.BlockSvg.TOP_LEFT_CORNER_START,
-      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
-      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
-    ];
-    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS;
+    this.cornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS;
+    this.cornerOverride_ = true;
 
     // Counteract the renderer doubling the edge width for this test
     this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
+  }
+};
+
+Blockly.Blocks['extension_inlineblock_test_boolean'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "inline block test (boolean)",
+      "message1": "%1",
+      "args0": [],
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "SUBSTACK"
+        }
+      ],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more", "output_boolean"]
+    });
+  }
+};
+
+Blockly.Blocks['extension_inlineblock_test_object'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "inline block test (object)",
+      "message1": "%1",
+      "args0": [],
+      "args1": [
+        {
+          "type": "input_statement",
+          "name": "SUBSTACK"
+        }
+      ],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more", "output_object"]
+    });
   }
 };
 
@@ -81,14 +117,8 @@ Blockly.Blocks['extension_inlineblock_test_rounder'] = {
     });
     this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
 
-    this.leftCorner_ = [
-      Blockly.BlockSvg.TOP_LEFT_CORNER_4,
-      Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4,
-      Blockly.BlockSvg.TOP_LEFT_CORNER_START_4,
-      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
-      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
-    ];
-    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_4;
+    this.cornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS * 4;
+    this.cornerOverride_ = true;
 
     // Counteract the renderer doubling the edge width for this test
     this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
@@ -116,14 +146,8 @@ Blockly.Blocks['extension_inlineblock_test_evenrounder'] = {
     });
     this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
 
-    this.leftCorner_ = [
-      Blockly.BlockSvg.TOP_LEFT_CORNER_8,
-      Blockly.BlockSvg.BOTTOM_LEFT_CORNER_8,
-      Blockly.BlockSvg.TOP_LEFT_CORNER_START_8,
-      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
-      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
-    ];
-    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_8;
+    this.cornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS * 8;
+    this.cornerOverride_ = true;
 
     // Counteract the renderer doubling the edge width for this test
     this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
