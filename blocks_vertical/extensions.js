@@ -27,13 +27,13 @@ goog.require('Blockly.Colours');
 goog.require('Blockly.constants');
 goog.require('Blockly.ScratchBlocks.VerticalExtensions');
 
-Blockly.Blocks['extension_inlineblock_test_normal'] = {
+Blockly.Blocks['extension_inlineblock_test_square'] = {
   /**
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
-      "message0": "inline block test (1 * CNR)",
+      "message0": "inline block test (square)",
       "message1": "%1",
       "args0": [],
       "args1": [
@@ -46,9 +46,6 @@ Blockly.Blocks['extension_inlineblock_test_normal'] = {
       "extensions": ["colours_more", "output_string"]
     });
     this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
-
-    this.cornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS;
-    this.cornerOverride_ = true;
 
     // Counteract the renderer doubling the edge width for this test
     this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
@@ -94,63 +91,6 @@ Blockly.Blocks['extension_inlineblock_test_object'] = {
       "category": Blockly.Categories.more,
       "extensions": ["colours_more", "output_object"]
     });
-  }
-};
-
-Blockly.Blocks['extension_inlineblock_test_rounder'] = {
-  /**
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": "inline block test (4 * CNR)",
-      "message1": "%1",
-      "args0": [],
-      "args1": [
-        {
-          "type": "input_statement",
-          "name": "SUBSTACK"
-        }
-      ],
-      "category": Blockly.Categories.more,
-      "extensions": ["colours_more", "output_string"]
-    });
-    this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
-
-    this.cornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS * 4;
-    this.cornerOverride_ = true;
-
-    // Counteract the renderer doubling the edge width for this test
-    this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
-  }
-};
-
-
-Blockly.Blocks['extension_inlineblock_test_evenrounder'] = {
-  /**
-   * @this Blockly.Block
-   */
-  init: function() {
-    this.jsonInit({
-      "message0": "inline block test (8 * CNR)",
-      "message1": "%1",
-      "args0": [],
-      "args1": [
-        {
-          "type": "input_statement",
-          "name": "SUBSTACK"
-        }
-      ],
-      "category": Blockly.Categories.more,
-      "extensions": ["colours_more", "output_string"]
-    });
-    this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
-
-    this.cornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS * 8;
-    this.cornerOverride_ = true;
-
-    // Counteract the renderer doubling the edge width for this test
-    this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
   }
 };
 
