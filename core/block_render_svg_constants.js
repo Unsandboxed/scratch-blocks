@@ -296,6 +296,19 @@ Blockly.BlockSvg.prototype.makeInnerBottomLeftCorner = function(radius) {
 };
 
 /**
+ * Minimum width of the edge shape of a reporter.
+ * @const
+ */
+Blockly.BlockSvg.MIN_EDGE_SHAPE_WIDTH = Infinity;
+
+/**
+ * Minimum width of the edge shape of an "Inline Block".
+ * An Inline block is a reporter with a branch connection.
+ * @const
+ */
+Blockly.BlockSvg.MIN_INLINE_BLOCK_EDGE_SHAPE_WIDTH = 48;
+
+/**
  * SVG path for an empty hexagonal input shape.
  * @const
  */
