@@ -306,7 +306,7 @@ Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH = Infinity;
  * An Inline block is a reporter with a branch connection.
  * @const
  */
-Blockly.BlockSvg.MAX_INLINE_BLOCK_EDGE_SHAPE_WIDTH = 48;
+Blockly.BlockSvg.MAX_INLINE_BLOCK_EDGE_SHAPE_WIDTH = Infinity;
 
 /**
  * SVG path for an empty hexagonal input shape.

@@ -27,6 +27,21 @@ goog.require('Blockly.Colours');
 goog.require('Blockly.constants');
 goog.require('Blockly.ScratchBlocks.VerticalExtensions');
 
+Blockly.Blocks['extension_reporter_test_next'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "renderer test (next)",
+      "args0": [],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more", "output_string"]
+    });
+    this.setNextStatement(true);
+  }
+};
+
 Blockly.Blocks['extension_inlineblock_test_square'] = {
   /**
    * @this Blockly.Block

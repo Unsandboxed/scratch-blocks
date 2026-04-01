@@ -346,25 +346,24 @@ Blockly.Block.prototype.unplug = function(opt_healStack) {
       // Disconnect from any superior block.
       this.outputConnection.disconnect();
     }
-  } else {
-    if (this.previousConnection) {
-      var previousTarget = null;
-      if (this.previousConnection.isConnected()) {
-        // Remember the connection that any next statements need to connect to.
-        previousTarget = this.previousConnection.targetConnection;
-        // Detach this block from the parent's tree.
-        this.previousConnection.disconnect();
-      }
+  }
+  if (this.previousConnection) {
+    var previousTarget = null;
+    if (this.previousConnection.isConnected()) {
+      // Remember the connection that any next statements need to connect to.
+      previousTarget = this.previousConnection.targetConnection;
+      // Detach this block from the parent's tree.
+      this.previousConnection.disconnect();
     }
-    var nextBlock = this.getNextBlock();
-    if (opt_healStack && nextBlock) {
-      // Disconnect the next statement.
-      var nextTarget = this.nextConnection.targetConnection;
-      nextTarget.disconnect();
-      if (previousTarget && previousTarget.checkType_(nextTarget)) {
-        // Attach the next statement to the previous statement.
-        previousTarget.connect(nextTarget);
-      }
+  }
+  var nextBlock = this.getNextBlock();
+  if (opt_healStack && nextBlock) {
+    // Disconnect the next statement.
+    var nextTarget = this.nextConnection.targetConnection;
+    nextTarget.disconnect();
+    if (previousTarget && previousTarget.checkType_(nextTarget)) {
+      // Attach the next statement to the previous statement.
+      previousTarget.connect(nextTarget);
     }
   }
 };
@@ -1049,6 +1048,8 @@ Blockly.Block.prototype.setPreviousStatement = function(newBoolean, opt_check) {
       this.previousConnection =
           this.makeConnection_(Blockly.PREVIOUS_STATEMENT);
     }
+    this.previousConnection =
+      this.makeConnection_(Blockly.PREVIOUS_STATEMENT);
     this.previousConnection.setCheck(opt_check);
   } else {
     if (this.previousConnection) {
