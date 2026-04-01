@@ -715,12 +715,12 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
     var shape = this.getOutputShape();
     if (shape !== Blockly.OUTPUT_SHAPE_SQUARE) {
       this.edgeShapeHeight_ = inputRows.bottomEdge / 2;
-      var minEdgeShapeWidth = Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH;
+      var maxEdgeShapeWidth = Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH;
 
       // hack to fix the padding on inline blocks.
       // in an ideal world, the first part would stay and the second part would die in a fire.
       if (this.hasStatementInput && this.outputConnection) {
-        minEdgeShapeWidth = Blockly.BlockSvg.MAX_INLINE_BLOCK_EDGE_SHAPE_WIDTH;
+        maxEdgeShapeWidth = Blockly.BlockSvg.MAX_INLINE_BLOCK_EDGE_SHAPE_WIDTH;
 
         this.edgeShapeHeight_ += (inputRows.filter(input => input.type == 3).length + 1) *
           (Blockly.BlockSvg.STATEMENT_INPUT_INNER_SPACE +
@@ -731,7 +731,7 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
           (2 * Blockly.BlockSvg.CORNER_RADIUS - (Blockly.BlockSvg.CORNER_RADIUS - 4)));
       }
 
-      this.edgeShapeWidth_ = Math.min(this.edgeShapeHeight_, minEdgeShapeWidth);
+      this.edgeShapeWidth_ = Math.min(this.edgeShapeHeight_, maxEdgeShapeWidth);
       this.edgeShape_ = shape;
       this.squareTopLeftCorner_ = true;
     }
