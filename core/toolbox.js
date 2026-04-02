@@ -162,29 +162,29 @@ Blockly.Toolbox.prototype.init = function() {
         Blockly.Touch.clearTouchIdentifier();  // Don't block future drags.
       }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
 
-  // Manual scrolling (because firefox stinks)
-  Blockly.bindEventWithChecks_(this.HtmlDiv, 'mouseup', this,
-      function(e) {
-        if (e.button == 0 && this.lmb_) {
-          this.lmb_ = false;
-        }
-      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
-  Blockly.bindEventWithChecks_(this.HtmlDiv, 'wheel', this,
-      function(e) {
-        if (!this.lmb_) {
-          this.updateScroll_(e.deltaY || 0);
-        }
-      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ false);
+  // // Manual scrolling (because firefox stinks)
+  // Blockly.bindEventWithChecks_(this.HtmlDiv, 'mouseup', this,
+  //     function(e) {
+  //       if (e.button == 0 && this.lmb_) {
+  //         this.lmb_ = false;
+  //       }
+  //     }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
+  // Blockly.bindEventWithChecks_(this.HtmlDiv, 'wheel', this,
+  //     function(e) {
+  //       if (!this.lmb_) {
+  //         this.updateScroll_(e.deltaY || 0);
+  //       }
+  //     }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ false);
 
-  // Mobile requires us to use pointermove instead of mousemove.
-  Blockly.bindEventWithChecks_(this.HtmlDiv, 'pointermove', this,
-      function(e) {
-        var oy_ = this.clientY_ || 0;
-        this.clientY_ = e.clientY || 0;
-        if (this.lmb_) {
-          this.updateScroll_(oy_ - this.clientY_);
-        }
-      }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
+  // // Mobile requires us to use pointermove instead of mousemove.
+  // Blockly.bindEventWithChecks_(this.HtmlDiv, 'pointermove', this,
+  //     function(e) {
+  //       var oy_ = this.clientY_ || 0;
+  //       this.clientY_ = e.clientY || 0;
+  //       if (this.lmb_) {
+  //         this.updateScroll_(oy_ - this.clientY_);
+  //       }
+  //     }, /*opt_noCaptureIdentifier*/ false, /*opt_noPreventDefault*/ true);
 
   this.createFlyout_();
   this.categoryMenu_ = new Blockly.Toolbox.CategoryMenu(this, this.HtmlDiv);

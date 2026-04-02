@@ -27,13 +27,28 @@ goog.require('Blockly.Colours');
 goog.require('Blockly.constants');
 goog.require('Blockly.ScratchBlocks.VerticalExtensions');
 
-Blockly.Blocks['extension_inlineblock_test_normal'] = {
+Blockly.Blocks['extension_reporter_test_next'] = {
   /**
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
-      "message0": "inline block test (1 * CNR)",
+      "message0": "renderer test (next)",
+      "args0": [],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more", "output_string"]
+    });
+    this.setNextStatement(true);
+  }
+};
+
+Blockly.Blocks['extension_inlineblock_test_square'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "inline block test (square)",
       "message1": "%1",
       "args0": [],
       "args1": [
@@ -46,28 +61,19 @@ Blockly.Blocks['extension_inlineblock_test_normal'] = {
       "extensions": ["colours_more", "output_string"]
     });
     this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
-
-    this.leftCorner_ = [
-      Blockly.BlockSvg.TOP_LEFT_CORNER,
-      Blockly.BlockSvg.BOTTOM_LEFT_CORNER,
-      Blockly.BlockSvg.TOP_LEFT_CORNER_START,
-      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
-      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
-    ];
-    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS;
 
     // Counteract the renderer doubling the edge width for this test
     this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
   }
 };
 
-Blockly.Blocks['extension_inlineblock_test_rounder'] = {
+Blockly.Blocks['extension_inlineblock_test_boolean'] = {
   /**
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
-      "message0": "inline block test (4 * CNR)",
+      "message0": "inline block test (boolean)",
       "message1": "%1",
       "args0": [],
       "args1": [
@@ -77,32 +83,18 @@ Blockly.Blocks['extension_inlineblock_test_rounder'] = {
         }
       ],
       "category": Blockly.Categories.more,
-      "extensions": ["colours_more", "output_string"]
+      "extensions": ["colours_more", "output_boolean"]
     });
-    this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
-
-    this.leftCorner_ = [
-      Blockly.BlockSvg.TOP_LEFT_CORNER_4,
-      Blockly.BlockSvg.BOTTOM_LEFT_CORNER_4,
-      Blockly.BlockSvg.TOP_LEFT_CORNER_START_4,
-      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
-      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
-    ];
-    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_4;
-
-    // Counteract the renderer doubling the edge width for this test
-    this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
   }
 };
 
-
-Blockly.Blocks['extension_inlineblock_test_evenrounder'] = {
+Blockly.Blocks['extension_inlineblock_test_object'] = {
   /**
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
-      "message0": "inline block test (8 * CNR)",
+      "message0": "inline block test (object)",
       "message1": "%1",
       "args0": [],
       "args1": [
@@ -112,21 +104,8 @@ Blockly.Blocks['extension_inlineblock_test_evenrounder'] = {
         }
       ],
       "category": Blockly.Categories.more,
-      "extensions": ["colours_more", "output_string"]
+      "extensions": ["colours_more", "output_object"]
     });
-    this.setOutputShape(Blockly.OUTPUT_SHAPE_SQUARE);
-
-    this.leftCorner_ = [
-      Blockly.BlockSvg.TOP_LEFT_CORNER_8,
-      Blockly.BlockSvg.BOTTOM_LEFT_CORNER_8,
-      Blockly.BlockSvg.TOP_LEFT_CORNER_START_8,
-      Blockly.BlockSvg.INNER_TOP_LEFT_CORNER,
-      Blockly.BlockSvg.INNER_BOTTOM_LEFT_CORNER,
-    ];
-    this.leftCornerRadius_ = Blockly.BlockSvg.CORNER_RADIUS_8;
-
-    // Counteract the renderer doubling the edge width for this test
-    this.statementInputEdgeWidth_ = Blockly.BlockSvg.STATEMENT_INPUT_EDGE_WIDTH / 2;
   }
 };
 

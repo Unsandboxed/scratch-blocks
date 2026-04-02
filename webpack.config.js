@@ -68,6 +68,9 @@ module.exports = [{
         from: 'node_modules/google-closure-library',
         to: 'closure-library'
       }, {
+        from: 'node_modules/google-closure-library',
+        to: 'playgrounds/node_modules/google-closure-library'
+      }, {
         from: 'blocks_common',
         to: 'playgrounds/blocks_common',
       }, /*{

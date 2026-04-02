@@ -32,6 +32,7 @@ goog.provide('Blockly');
 goog.require('goog.polypatch');
 
 goog.require('Blockly.ExtenderMutation');
+goog.require('Blockly.BlockSvg.constants');
 goog.require('Blockly.BlockSvg.render');
 goog.require('Blockly.DropDownDiv');
 goog.require('Blockly.ColourMutation');
