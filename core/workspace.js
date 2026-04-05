@@ -94,6 +94,7 @@ Blockly.Workspace = function(opt_options) {
    */
   this.blockDB_ = Object.create(null);
 
+  this.frames_ = [];
   /**
    * @type {!Blockly.VariableMap}
    * A map from variable type to list of variable names.  The lists contain all

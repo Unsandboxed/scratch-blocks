@@ -34,6 +34,7 @@ goog.require('Blockly.constants');
 goog.require('Blockly.DataCategory');
 goog.require('Blockly.DropDownDiv');
 goog.require('Blockly.Events.BlockCreate');
+goog.require('Blockly.Frame');
 goog.require('Blockly.Gesture');
 goog.require('Blockly.Grid');
 goog.require('Blockly.Options');
@@ -455,6 +456,9 @@ Blockly.WorkspaceSvg.prototype.createDom = function(opt_backgroundClass) {
     }
   }
   /** @type {SVGElement} */
+  this.svgFrameCanvas_ = Blockly.utils.createSvgElement('g',
+    {'class': 'unsandboxedFrameCanvas'}, this.svgGroup_, this);
+  /** @type {SVGElement} */
   this.svgBlockCanvas_ = Blockly.utils.createSvgElement('g',
       {'class': 'blocklyBlockCanvas'}, this.svgGroup_, this);
   /** @type {SVGElement} */
@@ -494,6 +498,38 @@ Blockly.WorkspaceSvg.prototype.createDom = function(opt_backgroundClass) {
   }
   this.recordCachedAreas();
   return this.svgGroup_;
+};
+
+Blockly.WorkspaceSvg.prototype.createNewFrameAroundStack = function(rootBlock) {
+  // 1. Get the bounding box of the entire script stack
+  var blocks = rootBlock.getDescendants();
+  var topX = Infinity, topY = Infinity;
+  var botX = -Infinity, botY = -Infinity;
+
+  blocks.forEach(function (block) {
+    var xy = block.getRelativeToSurfaceXY();
+    var size = block.getHeightWidth();
+    topX = Math.min(topX, xy.x);
+    topY = Math.min(topY, xy.y);
+    botX = Math.max(botX, xy.x + size.width);
+    botY = Math.max(botY, xy.y + size.height);
+  });
+
+  // 2. Calculate final dimensions with padding
+  var padding = 24;
+  var data = {
+    x: topX - padding,
+    y: topY - padding - 20, // Extra space for header
+    width: (botX - topX) + (padding * 2),
+    height: (botY - topY) + (padding * 2) + 20,
+    title: "Script Group"
+  };
+
+  // 3. Instantiate and store
+  var frame = new Blockly.Frame(this, data);
+  if (!this.frames_) this.frames_ = [];
+  this.frames_.push(frame);
+  return frame;
 };
 
 /**
@@ -902,6 +938,9 @@ Blockly.WorkspaceSvg.prototype.translate = function(x, y) {
   // Now update the block drag surface if we're using one.
   if (this.blockDragSurface_) {
     this.blockDragSurface_.translateAndScaleGroup(x, y, this.scale);
+  } 
+  if (this.svgFrameCanvas_) {
+    this.svgFrameCanvas_.setAttribute('transform', translation);
   }
   this.queueIntersectionCheck();
 };

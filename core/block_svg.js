@@ -31,6 +31,7 @@ goog.require('Blockly.BlockAnimations');
 goog.require('Blockly.ContextMenu');
 goog.require('Blockly.Events.Ui');
 goog.require('Blockly.Events.BlockMove');
+goog.require('Blockly.Frame');
 goog.require('Blockly.Grid');
 goog.require('Blockly.RenderedConnection');
 goog.require('Blockly.scratchBlocksUtils');
@@ -733,6 +734,18 @@ Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
     return;
   }
 
+  if (this.isDeletable() && this.isMovable() && !this.isCollapsed()) {
+    var menuOption = {
+      text: "Add to New Frame",
+      enabled: true,
+      callback: function() {
+        var frame = this.workspace.createNewFrameAroundStack(this);
+        // Optional: Add all connected blocks too
+      }.bind(this)
+    };
+    menuOptions.push(menuOption);
+  }
+
   // Allow the block to add or modify menuOptions.
   if (this.customContextMenu) {
     this.customContextMenu(menuOptions);
@@ -853,6 +866,37 @@ Blockly.BlockSvg.prototype.setInsertionMarker = function(insertionMarker, opt_mi
   Blockly.BlockSvg.superClass_.setInsertionMarker.call(this, insertionMarker);
   this.insertionMarkerMinWidth_ = opt_minWidth;
   this.updateColour();
+};
+
+/**
+ * Set whether the block is visible or not.
+ * @param {boolean} visible True if visible.
+ */
+Blockly.BlockSvg.prototype.setVisible = function(visible) {
+  var root = this.getSvgRoot();
+  if (!root) return;
+
+  // Toggle CSS class
+  if (visible) {
+    Blockly.utils.removeClass(root, 'blocklyHidden');
+  } else {
+    Blockly.utils.addClass(root, 'blocklyHidden');
+  }
+
+  var connections = this.getConnections_(true);
+  for (var i = 0; i < connections.length; i++) {
+    connections[i].unhidden_ = visible; // Custom flag if needed
+    // In some versions, you can set the connection to hidden directly:
+    if (connections[i].setHidden) connections[i].setHidden(!visible);
+  }
+
+  // Force render to update internal state
+  this.render();
+
+  var children = this.getChildren();
+  for (var i = 0; i < children.length; i++) {
+    children[i].setVisible(visible);
+  }
 };
 
 /**
@@ -1318,6 +1362,15 @@ Blockly.BlockSvg.prototype.bumpNeighbours_ = function() {
   if (rootBlock.isInFlyout) {
     return;  // Don't move blocks around in a flyout.
   }
+
+  for (var i = 0, otherBlock; otherBlock = allBlocks[i]; i++) {
+    // ADD THIS LINE:
+    if (otherBlock instanceof Blockly.Frame || otherBlock.isFrame) {
+      continue; // Don't bump against frames!
+    }
+    // ... existing bumping logic ...
+  }
+
   // Loop through every connection on this block.
   var myConnections = this.getConnections_(false);
   for (var i = 0, connection; connection = myConnections[i]; i++) {
