@@ -437,6 +437,22 @@ Blockly.Css.CONTENT = [
     'pointer-events: none;',
   '}',
 
+  '.blocklyFrameDragGroup .blocklyFrameBody {',
+    /* Frame during drag. */
+  '}',
+
+  '.blocklyBlockBlurred {',
+    /* Placeholder - blur not applied. */
+  '}',
+
+  '.blocklyFrameDragging .blocklyFrameBody {',
+    /* Frame transparent during drag. */
+  '}',
+
+  '.blocklyFrameDragging .blocklyFrameHeader {',
+    /* Frame header stays visible and opaque. */
+  '}',
+
   '.blocklyToolboxDelete {',
     'cursor: url("<<<PATH>>>/handdelete.cur"), auto;',
   '}',

@@ -6,6 +6,8 @@
 
 goog.provide('Blockly.Frame');
 
+goog.require('Blockly.ContextMenu');
+goog.require('Blockly.Events');
 goog.require('Blockly.utils');
 goog.require('goog.dom');
 
@@ -30,9 +32,12 @@ Blockly.Frame = function(workspace, data) {
   this.height = data.height || 150;
   this.userWidth_ = data.width || 200;
   this.userHeight_ = data.height || 150;
+  this.userRight_ = this.x + this.userWidth_;
+  this.userBottom_ = this.y + this.userHeight_;
 
   this.isMinimized_ = false;
   this.oldHeight_ = this.height; 
+  this.isLocked_ = !!data.locked;
 
   this.title = data.title || "New Group";
   this.color = data.color || "#4C97FF";
@@ -44,12 +49,74 @@ Blockly.Frame = function(workspace, data) {
   
   this.changeWrapper_ = this.onWorkspaceChange_.bind(this);
   this.workspace_.addChangeListener(this.changeWrapper_);
+
+  /** @private {boolean} */
+  this.useDragSurface_ =
+      Blockly.utils.is3dSupported() && !!workspace.getBlockDragSurface();
+
+  /** @private {?Blockly.BlockDragSurfaceSvg} */
+  this.dragSurface_ = this.useDragSurface_ ? workspace.getBlockDragSurface() : null;
+
+  /** @private {?number} */
+  this.deleteArea_ = Blockly.DELETE_AREA_NONE;
+
+  /** @private {boolean} */
+  this.wouldDeleteFrame_ = false;
+
+  /** @private {?SVGGElement} */
+  this.dragContainerGroup_ = null;
+
+  /** @private {number} */
+  this.dragDeltaX_ = 0;
+
+  /** @private {number} */
+  this.dragDeltaY_ = 0;
+
+  /** @private {boolean} */
+  this.isOnDragSurface_ = false;
 };
+
+/**
+ * Header height used by frame UI.
+ * @type {number}
+ * @const
+ */
+Blockly.Frame.HEADER_HEIGHT = 28;
+
+/**
+ * Header icon inset from the edge.
+ * @type {number}
+ * @const
+ */
+Blockly.Frame.HEADER_ICON_INSET = 0;
+
+/**
+ * Header minimize icon size.
+ * @type {number}
+ * @const
+ */
+Blockly.Frame.MINIMIZE_ICON_SIZE = 32;
+
+/**
+ * Header delete icon size.
+ * @type {number}
+ * @const
+ */
+Blockly.Frame.DELETE_ICON_SIZE = 32;
+
+/**
+ * Opacity used for the temporary drag ghost group.
+ * @type {number}
+ * @const
+ */
+Blockly.Frame.DRAG_GHOST_OPACITY = 0.92;
 
 /**
  * Create the SVG elements for the frame.
  */
 Blockly.Frame.prototype.createDom = function() {
+  var iconMiddleY = (Blockly.Frame.HEADER_HEIGHT / 2);
+
   this.svgGroup_ = Blockly.utils.createSvgElement('g', {
     'class': 'blocklyFrame',
     'transform': 'translate(' + this.x + ',' + this.y + ')'
@@ -68,13 +135,13 @@ Blockly.Frame.prototype.createDom = function() {
     'stroke-width': 1,
     'stroke-dasharray': '4,4',
     'rx': 4, 'ry': 4,
-    'style': 'pointer-events: none;'
+    'style': 'pointer-events: all;'
   }, this.svgGroup_);
 
   this.header_ = Blockly.utils.createSvgElement('rect', {
     'class': 'blocklyFrameHeader',
     'width': this.width,
-    'height': 28,
+    'height': Blockly.Frame.HEADER_HEIGHT,
     'fill': this.color,
     'fill-opacity': 0.8,
     'rx': 4, 'ry': 4,
@@ -93,33 +160,45 @@ Blockly.Frame.prototype.createDom = function() {
   
   Blockly.bindEventWithChecks_(this.resizeHandle_, 'mousedown', this, this.onMouseDownResize_);
   Blockly.bindEventWithChecks_(this.header_, 'mousedown', this, this.onMouseDown_);
+  Blockly.bindEventWithChecks_(this.rect_, 'mousedown', this, this.onBodyMouseDown_);
 
-  this.minimizeButton_ = Blockly.utils.createSvgElement('text', {
-      'class': 'blocklyFrameMinimize',
-      'x': this.width - 25,
-      'y': 19,
-      'style': 'font-size: 14pt; fill: white; cursor: pointer; user-select: none;'
+  this.minimizeButton_ = Blockly.utils.createSvgElement('image', {
+    'class': 'blocklyFrameMinimize',
+    'x': Blockly.Frame.HEADER_ICON_INSET,
+    'y': iconMiddleY - Blockly.Frame.MINIMIZE_ICON_SIZE / 2,
+    'width': Blockly.Frame.MINIMIZE_ICON_SIZE,
+    'height': Blockly.Frame.MINIMIZE_ICON_SIZE,
+    'style': 'cursor: pointer;'
   }, this.svgGroup_);
-  this.minimizeButton_.textContent = '−';
+  this.updateMinimizeIcon_();
   
   Blockly.bindEventWithChecks_(this.minimizeButton_, 'mousedown', this, this.toggleMinimize_);
 
-  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function(e) {
-      var newTitle = prompt("Rename Group:", this.title);
-      if (newTitle) {
-          this.title = newTitle;
-          this.text_.textContent = newTitle;
-      }
+  this.deleteButton_ = Blockly.utils.createSvgElement('image', {
+    'class': 'blocklyFrameDelete',
+    'y': iconMiddleY - Blockly.Frame.DELETE_ICON_SIZE / 2,
+    'width': Blockly.Frame.DELETE_ICON_SIZE,
+    'height': Blockly.Frame.DELETE_ICON_SIZE,
+    'style': 'cursor: pointer;'
+  }, this.svgGroup_);
+  this.deleteButton_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
+      this.workspace_.options.pathToMedia + 'delete-x.svg');
+  Blockly.bindEventWithChecks_(this.deleteButton_, 'mousedown', this, this.onDeleteMouseDown_);
+
+  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function() {
+      this.promptRename_();
   });
 
   this.text_ = Blockly.utils.createSvgElement('text', {
     'class': 'blocklyFrameText',
-    'x': 10,
+    'x': Blockly.Frame.HEADER_ICON_INSET + Blockly.Frame.MINIMIZE_ICON_SIZE + 8,
     'y': 19,
     'style': 'font-size: 12pt; font-weight: bold; fill: white; pointer-events: none; ' +
              'font-family: "Helvetica Neue", Helvetica, sans-serif;'
   }, this.svgGroup_);
   this.text_.textContent = this.title;
+
+  this.updateHeaderControls_();
 };
 
 /**
@@ -130,43 +209,61 @@ Blockly.Frame.prototype.render = function() {
   this.updateColorFromBlocks_();
 
   var blocks = this.getBlocksInside_();
-  var contentWidth = 0;
-  var contentHeight = 0;
+  var headerHeight = Blockly.Frame.HEADER_HEIGHT;
+  var minLeft = this.x;
+  var minTop = this.y;
+  var rightEdge = this.userRight_;
+  var bottomEdge = this.userBottom_;
 
   if (!this.isMinimized_ && blocks.length > 0) {
-    var minX = Infinity, minY = Infinity;
-    var maxX = -Infinity, maxY = -Infinity;
-    
-    blocks.forEach(function(b) {
-      var loc = b.getRelativeToSurfaceXY();
-      var size = b.getHeightWidth();
-      minX = Math.min(minX, loc.x);
-      minY = Math.min(minY, loc.y);
-      maxX = Math.max(maxX, loc.x + size.width);
-      maxY = Math.max(maxY, loc.y + size.height);
-    });
-
-    // Content bounds relative to the frame's top-left corner
-    // Includes 24px padding and accounts for the 28px header height
-    contentWidth = (maxX - this.x) + 24;
-    contentHeight = (maxY - this.y) + 24;
+    var contentBounds = this.getContentBounds_(blocks);
+    minLeft = contentBounds.x;
+    minTop = contentBounds.y;
+    rightEdge = Math.max(rightEdge, contentBounds.x + contentBounds.width);
+    bottomEdge = Math.max(bottomEdge, contentBounds.y + contentBounds.height);
   }
 
-  // Use the larger of the user's manual resize or the actual content size
-  this.width = Math.max(this.userWidth_, contentWidth);
-  this.height = this.isMinimized_ ? 28 : Math.max(this.userHeight_, contentHeight);
+  this.x = minLeft;
+  this.y = minTop;
+  this.width = Math.max(100, rightEdge - this.x);
+  this.height = this.isMinimized_ ? headerHeight : Math.max(50, bottomEdge - this.y);
+  this.userWidth_ = this.userRight_ - this.x;
+  this.userHeight_ = this.userBottom_ - this.y;
 
   // Update DOM elements
   this.svgGroup_.setAttribute('transform', 'translate(' + this.x + ',' + this.y + ')');
   this.rect_.setAttribute('width', this.width);
   this.rect_.setAttribute('height', this.height);
   this.header_.setAttribute('width', this.width);
-  
-  if (this.minimizeButton_) {
-    this.minimizeButton_.setAttribute('x', this.width - 25);
-  }
+
+  this.updateHeaderControls_();
   
   this.updateHandlePosition_();
+};
+
+/**
+ * Update frame header control positions for the current width/state.
+ * @private
+ */
+Blockly.Frame.prototype.updateHeaderControls_ = function() {
+  if (this.deleteButton_) {
+    this.deleteButton_.setAttribute('x', this.width - Blockly.Frame.HEADER_ICON_INSET -
+        Blockly.Frame.DELETE_ICON_SIZE);
+  }
+  this.updateMinimizeIcon_();
+};
+
+/**
+ * Update the minimize icon to match the current frame state.
+ * @private
+ */
+Blockly.Frame.prototype.updateMinimizeIcon_ = function() {
+  if (!this.minimizeButton_) {
+    return;
+  }
+  this.minimizeButton_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
+      this.workspace_.options.pathToMedia +
+      (this.isMinimized_ ? 'comment-arrow-up.svg' : 'comment-arrow-down.svg'));
 };
 
 /**
@@ -242,6 +339,8 @@ Blockly.Frame.prototype.moveBy = function(dx, dy) {
   }
   this.x += dx;
   this.y += dy;
+  this.userRight_ += dx;
+  this.userBottom_ += dy;
   this.svgGroup_.setAttribute('transform', 'translate(' + this.x + ',' + this.y + ')');
 };
 
@@ -255,37 +354,187 @@ Blockly.Frame.prototype.autoResizeToContents = function() {
     return;
   }
 
-  var minX = Infinity, minY = Infinity;
-  var maxX = -Infinity, maxY = -Infinity;
-  var padding = 24;
-  var headerHeight = 28;
-
-  blocks.forEach(function(block) {
-    var loc = block.getRelativeToSurfaceXY();
-    var size = block.getHeightWidth();
-    minX = Math.min(minX, loc.x);
-    minY = Math.min(minY, loc.y);
-    maxX = Math.max(maxX, loc.x + size.width);
-    maxY = Math.max(maxY, loc.y + size.height);
-  });
-
-  // Calculate new bounds with padding.
-  this.x = minX - padding;
-  this.y = minY - padding - headerHeight;
-  this.width = (maxX - minX) + (padding * 2);
-  this.height = (maxY - minY) + (padding * 2) + headerHeight;
+  var contentBounds = this.getContentBounds_(blocks);
+  this.x = contentBounds.x;
+  this.y = contentBounds.y;
+  this.width = contentBounds.width;
+  this.height = contentBounds.height;
+  this.userRight_ = this.x + this.width;
+  this.userBottom_ = this.y + this.height;
+  this.userWidth_ = this.width;
+  this.userHeight_ = this.height;
 
   // Apply to DOM.
   this.svgGroup_.setAttribute('transform', 'translate(' + this.x + ',' + this.y + ')');
   this.rect_.setAttribute('width', this.width);
   this.rect_.setAttribute('height', this.height);
   this.header_.setAttribute('width', this.width);
-  
-  if (this.minimizeButton_) {
-    this.minimizeButton_.setAttribute('x', this.width - 25);
-  }
+
+  this.updateHeaderControls_();
   
   this.updateHandlePosition_();
+};
+
+/**
+ * Encode a frame as XML, excluding positional attributes.
+ * @param {boolean=} opt_noId True if the encoder should skip the frame ID.
+ * @return {!Element} XML element.
+ * @public
+ */
+Blockly.Frame.prototype.toXml = function(opt_noId) {
+  var element = goog.dom.createDom('frame');
+  if (!opt_noId) {
+    element.setAttribute('id', this.id);
+  }
+  element.setAttribute('title', this.title || '');
+  element.setAttribute('color', this.color || '#4C97FF');
+  if (this.isMinimized_) {
+    element.setAttribute('minimized', true);
+  }
+  if (this.isLocked_) {
+    element.setAttribute('locked', true);
+  }
+  return element;
+};
+
+/**
+ * Encode a frame as XML with XY coordinates.
+ * @param {boolean=} opt_noId True if the encoder should skip the frame ID.
+ * @return {!Element} XML element.
+ * @public
+ */
+Blockly.Frame.prototype.toXmlWithXY = function(opt_noId) {
+  var element = this.toXml(opt_noId);
+  element.setAttribute('x', Math.round(this.x));
+  element.setAttribute('y', Math.round(this.y));
+  element.setAttribute('w', Math.round(this.userWidth_));
+  element.setAttribute('h', Math.round(this.userHeight_));
+  return element;
+};
+
+/**
+ * Decode an XML frame tag and return the parsed attributes.
+ * @param {!Element} xml XML frame element.
+ * @return {!Object} Parsed frame attributes.
+ * @public
+ */
+Blockly.Frame.parseAttributes = function(xml) {
+  var x = parseInt(xml.getAttribute('x'), 10);
+  var y = parseInt(xml.getAttribute('y'), 10);
+  var w = parseInt(xml.getAttribute('w'), 10);
+  var h = parseInt(xml.getAttribute('h'), 10);
+  return {
+    id: xml.getAttribute('id') || undefined,
+    x: isNaN(x) ? 0 : x,
+    y: isNaN(y) ? 0 : y,
+    width: isNaN(w) ? 200 : w,
+    height: isNaN(h) ? 150 : h,
+    title: xml.getAttribute('title') || 'New Group',
+    color: xml.getAttribute('color') || '#4C97FF',
+    minimized: xml.getAttribute('minimized') == 'true',
+    locked: xml.getAttribute('locked') == 'true'
+  };
+};
+
+/**
+ * Decode an XML frame tag and create a frame on a rendered workspace.
+ * @param {!Element} xmlFrame XML frame element.
+ * @param {!Blockly.WorkspaceSvg} workspace The workspace.
+ * @return {?Blockly.Frame} The created frame, or null if not created.
+ * @public
+ */
+Blockly.Frame.fromXml = function(xmlFrame, workspace) {
+  if (!workspace.rendered || !workspace.svgFrameCanvas_) {
+    return null;
+  }
+
+  var info = Blockly.Frame.parseAttributes(xmlFrame);
+
+  var frame = new Blockly.Frame(workspace, {
+    id: info.id,
+    x: info.x,
+    y: info.y,
+    width: info.width,
+    height: info.height,
+    title: info.title,
+    color: info.color,
+    locked: info.locked
+  });
+  if (!workspace.frames_) {
+    workspace.frames_ = [];
+  }
+  workspace.frames_.push(frame);
+
+  if (info.minimized) {
+    frame.toggleMinimize_(null, true);
+  } else {
+    frame.render();
+  }
+  return frame;
+};
+
+/**
+ * Capture frame state used for undo/redo.
+ * @return {!Object} Frame state.
+ * @private
+ */
+Blockly.Frame.prototype.getStateForUndo_ = function() {
+  return {
+    x: this.x,
+    y: this.y,
+    userRight: this.userRight_,
+    userBottom: this.userBottom_
+  };
+};
+
+/**
+ * Apply undo/redo state to this frame.
+ * @param {!Object} state State captured by getStateForUndo_.
+ * @private
+ */
+Blockly.Frame.prototype.applyStateFromUndo_ = function(state) {
+  if (!state) {
+    return;
+  }
+  this.x = state.x;
+  this.y = state.y;
+  this.userRight_ = state.userRight;
+  this.userBottom_ = state.userBottom;
+  this.userWidth_ = this.userRight_ - this.x;
+  this.userHeight_ = this.userBottom_ - this.y;
+  this.render();
+};
+
+/**
+ * Apply an undo/redo title change.
+ * @param {string} title Frame title.
+ * @private
+ */
+Blockly.Frame.prototype.setTitleFromUndo_ = function(title) {
+  this.title = title;
+  if (this.text_) {
+    this.text_.textContent = title;
+  }
+};
+
+/**
+ * Apply an undo/redo minimized state.
+ * @param {boolean} minimized Whether the frame should be minimized.
+ * @private
+ */
+Blockly.Frame.prototype.setMinimizedFromUndo_ = function(minimized) {
+  if (this.isMinimized_ !== minimized) {
+    this.toggleMinimize_(null, true);
+  }
+};
+
+/**
+ * Apply an undo/redo lock state.
+ * @param {boolean} locked Whether the frame should be locked.
+ * @private
+ */
+Blockly.Frame.prototype.setLockedFromUndo_ = function(locked) {
+  this.isLocked_ = !!locked;
 };
 
 /**
@@ -306,9 +555,34 @@ Blockly.Frame.prototype.isPointInside = function(x, y) {
  * @public
  */
 Blockly.Frame.prototype.dispose = function() {
+  this.setDragVisual_(false);
+  if (this.onMouseMoveWrapper_) {
+    Blockly.unbindEvent_(this.onMouseMoveWrapper_);
+    this.onMouseMoveWrapper_ = null;
+  }
+  if (this.onMouseUpWrapper_) {
+    Blockly.unbindEvent_(this.onMouseUpWrapper_);
+    this.onMouseUpWrapper_ = null;
+  }
+  if (this.onMouseMoveResizeWrapper_) {
+    Blockly.unbindEvent_(this.onMouseMoveResizeWrapper_);
+    this.onMouseMoveResizeWrapper_ = null;
+  }
+  if (this.onMouseUpResizeWrapper_) {
+    Blockly.unbindEvent_(this.onMouseUpResizeWrapper_);
+    this.onMouseUpResizeWrapper_ = null;
+  }
+
   if (this.changeWrapper_ && this.workspace_) {
     this.workspace_.removeChangeListener(this.changeWrapper_);
     this.changeWrapper_ = null;
+  }
+
+  var currentDragNode = (this.dragSurface_ && this.dragSurface_.getCurrentBlock) ?
+      this.dragSurface_.getCurrentBlock() : null;
+  if (currentDragNode && this.dragContainerGroup_ &&
+      currentDragNode === this.dragContainerGroup_) {
+    this.dragSurface_.clearAndHide();
   }
 
   if (this.svgGroup_) {
@@ -316,7 +590,25 @@ Blockly.Frame.prototype.dispose = function() {
     this.svgGroup_ = null;
   }
 
+  if (this.workspace_ && this.workspace_.frames_) {
+    var index = this.workspace_.frames_.indexOf(this);
+    if (index !== -1) {
+      this.workspace_.frames_.splice(index, 1);
+    }
+  }
+
+  if (this.workspace_ && this.workspace_.blockFrameOwnership_) {
+    for (var blockId in this.workspace_.blockFrameOwnership_) {
+      if (this.workspace_.blockFrameOwnership_[blockId] == this.id) {
+        delete this.workspace_.blockFrameOwnership_[blockId];
+      }
+    }
+  }
+
   this.workspace_ = null;
+  this.dragSurface_ = null;
+  this.dragContainerGroup_ = null;
+  this.isOnDragSurface_ = false;
   this.rect_ = null;
   this.header_ = null;
   this.resizeHandle_ = null;
@@ -328,15 +620,28 @@ Blockly.Frame.prototype.dispose = function() {
  * @private
  */
 Blockly.Frame.prototype.onMouseDown_ = function(e) {
+  if (this.isDragging_) {
+    return;
+  }
   if (Blockly.utils.isRightButton(e)) {
+    this.showContextMenu_(e);
+    e.stopPropagation();
+    e.preventDefault();
     return;
   }
   this.workspace_.markFocused();
   Blockly.hideChaff();
+  this.setDragVisual_(true);
   
   this.isDragging_ = true;
+  this.preDragState_ = this.getStateForUndo_();
   this.startDragMouseX_ = e.clientX;
   this.startDragMouseY_ = e.clientY;
+  this.dragDeltaX_ = 0;
+  this.dragDeltaY_ = 0;
+  if (typeof this.workspace_.recordCachedAreas === 'function') {
+    this.workspace_.recordCachedAreas();
+  }
 
   // Capture current blocks to move them as a unit
   if (this.isMinimized_ && this.minimizedBlocks_ && this.minimizedBlocks_.length > 0) {
@@ -345,9 +650,27 @@ Blockly.Frame.prototype.onMouseDown_ = function(e) {
     this.capturedBlocks_ = this.getBlocksInside_();
   }
 
+  if (this.dragSurface_) {
+    this.isOnDragSurface_ = this.moveToDragSurface_();
+  }
+
   this.onMouseMoveWrapper_ = Blockly.bindEventWithChecks_(document, 'mousemove', this, this.onMouseMove_);
   this.onMouseUpWrapper_ = Blockly.bindEventWithChecks_(document, 'mouseup', this, this.onMouseUp_);
   
+  e.stopPropagation();
+  e.preventDefault();
+};
+
+/**
+ * Handle mousedown on the frame body.
+ * @param {!Event} e Mouse down event.
+ * @private
+ */
+Blockly.Frame.prototype.onBodyMouseDown_ = function(e) {
+  if (!Blockly.utils.isRightButton(e)) {
+    return;
+  }
+  this.showContextMenu_(e);
   e.stopPropagation();
   e.preventDefault();
 };
@@ -364,14 +687,22 @@ Blockly.Frame.prototype.onMouseMove_ = function(e) {
   this.startDragMouseX_ = e.clientX;
   this.startDragMouseY_ = e.clientY;
 
-  this.moveBy(dx, dy);
+  this.dragDeltaX_ += dx;
+  this.dragDeltaY_ += dy;
+
+  if (this.dragSurface_ && this.isOnDragSurface_) {
+    this.dragSurface_.translateSurface(this.dragDeltaX_, this.dragDeltaY_);
+  } else {
+    this.moveBy(dx, dy);
+  }
+  this.updateDeleteDragState_(e);
 };
 
 /**
  * Stop dragging the frame.
  * @private
  */
-Blockly.Frame.prototype.onMouseUp_ = function() {
+Blockly.Frame.prototype.onMouseUp_ = function(e) {
   if (this.onMouseMoveWrapper_) {
     Blockly.unbindEvent_(this.onMouseMoveWrapper_);
     this.onMouseMoveWrapper_ = null;
@@ -380,10 +711,180 @@ Blockly.Frame.prototype.onMouseUp_ = function() {
     Blockly.unbindEvent_(this.onMouseUpWrapper_);
     this.onMouseUpWrapper_ = null;
   }
-  
+
   this.isDragging_ = false;
-  this.capturedBlocks_ = [];
+  this.setDragVisual_(false);
+
+  // Refresh delete state once at drop position.
+  if (e) {
+    this.updateDeleteDragState_(e);
+  }
+  var shouldDelete = this.wouldDeleteFrame_;
+
+  // Clear drag deletion affordance and trashcan state.
+  this.setDeleteStyle_(false);
+  this.deleteArea_ = Blockly.DELETE_AREA_NONE;
+  this.wouldDeleteFrame_ = false;
+  if (this.workspace_.trashcan) {
+    this.workspace_.trashcan.setOpen_(false);
+  }
+
+  if (this.dragSurface_ && this.isOnDragSurface_) {
+    this.moveOffDragSurface_(shouldDelete ? null : {x: this.x, y: this.y});
+  }
+
+  if (shouldDelete) {
+    this.preDragState_ = null;
+    this.capturedBlocks_ = [];
+    this.dragDeltaX_ = 0;
+    this.dragDeltaY_ = 0;
+    this.deleteFrame_();
+    return;
+  }
+
+  if (this.dragDeltaX_ || this.dragDeltaY_) {
+    this.moveBy(this.dragDeltaX_, this.dragDeltaY_);
+  }
+
   this.render();
+
+  if (this.preDragState_) {
+    var newState = this.getStateForUndo_();
+    Blockly.Events.fire(new Blockly.Events.FrameChange(
+        this, 'state', this.preDragState_, newState));
+    this.preDragState_ = null;
+  }
+
+  this.dragDeltaX_ = 0;
+  this.dragDeltaY_ = 0;
+  this.capturedBlocks_ = [];
+  this.isOnDragSurface_ = false;
+};
+
+/**
+ * Update delete affordance while dragging this frame.
+ * @param {!Event} e The most recent move/up event.
+ * @private
+ */
+Blockly.Frame.prototype.updateDeleteDragState_ = function(e) {
+  if (!this.workspace_ || typeof this.workspace_.isDeleteArea !== 'function') {
+    return;
+  }
+  this.deleteArea_ = this.workspace_.isDeleteArea(e);
+  this.wouldDeleteFrame_ = this.deleteArea_ != Blockly.DELETE_AREA_NONE;
+  this.setDeleteStyle_(this.wouldDeleteFrame_);
+
+  if (this.workspace_.trashcan) {
+    this.workspace_.trashcan.setOpen_(
+        this.wouldDeleteFrame_ && this.deleteArea_ == Blockly.DELETE_AREA_TRASH);
+  }
+};
+
+/**
+ * Toggle delete cursor styling while dragging.
+ * @param {boolean} enable True if frame would be deleted on drop.
+ * @private
+ */
+Blockly.Frame.prototype.setDeleteStyle_ = function(enable) {
+  if (!this.svgGroup_) {
+    return;
+  }
+  if (enable) {
+    Blockly.utils.addClass(this.svgGroup_, 'blocklyDraggingDelete');
+  } else {
+    Blockly.utils.removeClass(this.svgGroup_, 'blocklyDraggingDelete');
+  }
+};
+
+/**
+ * Toggle a stronger visual treatment while dragging this frame.
+ * @param {boolean} enable True if drag visuals should be enabled.
+ * @private
+ */
+Blockly.Frame.prototype.setDragVisual_ = function(enable) {
+  if (!this.svgGroup_) {
+    return;
+  }
+  // Mark this frame as being dragged
+  if (enable) {
+    Blockly.utils.addClass(this.svgGroup_, 'blocklyFrameDragging');
+  } else {
+    Blockly.utils.removeClass(this.svgGroup_, 'blocklyFrameDragging');
+  }
+};
+
+/**
+ * Move this frame to the drag surface for smooth dragging above overlays.
+ * @private
+ */
+Blockly.Frame.prototype.moveToDragSurface_ = function() {
+  if (!this.dragSurface_ || !this.svgGroup_) {
+    return false;
+  }
+
+  // Drag surface is global; if occupied, fall back to normal dragging.
+  if (this.dragSurface_.getCurrentBlock && this.dragSurface_.getCurrentBlock()) {
+    return false;
+  }
+  this.dragContainerGroup_ = /** @type {!SVGGElement} */ (
+      Blockly.utils.createSvgElement('g', {'class': 'blocklyFrameDragGroup'}, null));
+  this.dragContainerGroup_.setAttribute('opacity', Blockly.Frame.DRAG_GHOST_OPACITY);
+
+  // Move frame and captured top-level stacks under a single drag group.
+  this.dragContainerGroup_.appendChild(this.svgGroup_);
+  for (var i = 0, block; block = this.capturedBlocks_[i]; i++) {
+    if (block && block.getSvgRoot) {
+      var root = block.getSvgRoot();
+      if (root && root.parentNode) {
+        this.dragContainerGroup_.appendChild(root);
+      }
+    }
+  }
+
+  this.dragSurface_.translateSurface(0, 0);
+  this.dragSurface_.setBlocksAndShow(this.dragContainerGroup_);
+  return true;
+};
+
+/**
+ * Move this frame back from the drag surface to the frame canvas.
+ * @param {{x:number,y:number}?} newXY Workspace coordinates to restore to.
+ *     If null, remove from drag surface without reparenting.
+ * @private
+ */
+Blockly.Frame.prototype.moveOffDragSurface_ = function(newXY) {
+  if (!this.dragSurface_) {
+    return;
+  }
+  var current = this.dragSurface_.getCurrentBlock ?
+      this.dragSurface_.getCurrentBlock() : null;
+  if (!current || current !== this.dragContainerGroup_) {
+    this.dragContainerGroup_ = null;
+    this.isOnDragSurface_ = false;
+    return;
+  }
+  var blockCanvas = this.workspace_.getCanvas();
+  if (newXY) {
+    this.dragSurface_.clearAndHide(blockCanvas);
+
+    // Move frame back to frame canvas and blocks back to block canvas.
+    this.workspace_.svgFrameCanvas_.appendChild(this.svgGroup_);
+    this.svgGroup_.setAttribute('transform',
+        'translate(' + newXY.x + ',' + newXY.y + ')');
+
+    if (this.dragContainerGroup_) {
+      while (this.dragContainerGroup_.firstChild) {
+        blockCanvas.appendChild(this.dragContainerGroup_.firstChild);
+      }
+      goog.dom.removeNode(this.dragContainerGroup_);
+      this.dragContainerGroup_ = null;
+    }
+  } else {
+    // Drop-to-delete path.
+    this.dragSurface_.clearAndHide();
+    this.dragContainerGroup_ = null;
+  }
+  this.isOnDragSurface_ = false;
 };
 
 /**
@@ -395,9 +896,13 @@ Blockly.Frame.prototype.onMouseDownResize_ = function(e) {
   if (Blockly.utils.isRightButton(e)) {
     return;
   }
+  if (this.isLocked_) {
+    return;
+  }
   Blockly.hideChaff();
   
   this.isResizing_ = true;
+  this.preResizeState_ = this.getStateForUndo_();
   this.startResizeX_ = e.clientX;
   this.startResizeY_ = e.clientY;
   
@@ -422,12 +927,16 @@ Blockly.Frame.prototype.onMouseMoveResize_ = function(e) {
   this.startResizeX_ = e.clientX;
   this.startResizeY_ = e.clientY;
 
-  this.userWidth_ += dx;
-  this.userHeight_ += dy;
+  this.userRight_ += dx;
+  this.userBottom_ += dy;
+  this.userWidth_ = this.userRight_ - this.x;
+  this.userHeight_ = this.userBottom_ - this.y;
   
   // Prevent the frame from becoming too small to interact with.
   this.userWidth_ = Math.max(this.userWidth_, 100);
   this.userHeight_ = Math.max(this.userHeight_, 50);
+  this.userRight_ = this.x + this.userWidth_;
+  this.userBottom_ = this.y + this.userHeight_;
 
   this.render();
 };
@@ -447,6 +956,13 @@ Blockly.Frame.prototype.onMouseUpResize_ = function() {
     Blockly.unbindEvent_(this.onMouseUpResizeWrapper_);
     this.onMouseUpResizeWrapper_ = null;
   }
+
+  if (this.preResizeState_) {
+    var newState = this.getStateForUndo_();
+    Blockly.Events.fire(new Blockly.Events.FrameChange(
+        this, 'state', this.preResizeState_, newState));
+    this.preResizeState_ = null;
+  }
 };
 
 /**
@@ -454,11 +970,13 @@ Blockly.Frame.prototype.onMouseUpResize_ = function() {
  * @param {Event} e Mouse down event.
  * @private
  */
-Blockly.Frame.prototype.toggleMinimize_ = function(e) {
+Blockly.Frame.prototype.toggleMinimize_ = function(e, opt_skipEvent) {
   if (e) {
     e.stopPropagation();
     e.preventDefault();
   }
+
+  var oldMinimized = this.isMinimized_;
 
   // Snapshot blocks before they are hidden.
   if (!this.isMinimized_) {
@@ -479,18 +997,150 @@ Blockly.Frame.prototype.toggleMinimize_ = function(e) {
 
   if (this.isMinimized_) {
     this.oldHeight_ = this.height;
-    this.height = 28;
-    this.minimizeButton_.textContent = '+';
+    this.height = Blockly.Frame.HEADER_HEIGHT;
     this.resizeHandle_.style.display = 'none';
   } else {
     this.height = this.oldHeight_ || 150;
-    this.minimizeButton_.textContent = '−';
     this.resizeHandle_.style.display = 'block';
     // Clear snapshot so the next minimize takes a fresh scan.
     this.minimizedBlocks_ = [];
   }
 
   this.render();
+
+  if (!opt_skipEvent && oldMinimized !== this.isMinimized_) {
+    Blockly.Events.fire(new Blockly.Events.FrameChange(
+        this, 'minimized', oldMinimized, this.isMinimized_));
+  }
+};
+
+/**
+ * Show a prompt to rename this frame.
+ * @private
+ */
+Blockly.Frame.prototype.promptRename_ = function() {
+  if (this.isLocked_) {
+    return;
+  }
+  var oldTitle = this.title;
+  Blockly.prompt('Rename Group:', this.title, function(newTitle) {
+    if (newTitle !== null) {
+      this.title = newTitle;
+      this.text_.textContent = newTitle;
+      Blockly.Events.fire(new Blockly.Events.FrameChange(
+          this, 'title', oldTitle, newTitle));
+    }
+  }.bind(this));
+};
+
+/**
+ * Auto-fit the frame to contained blocks and record an undoable state change.
+ * @private
+ */
+Blockly.Frame.prototype.autoFitAndRecord_ = function() {
+  if (this.isLocked_) {
+    return;
+  }
+  var oldState = this.getStateForUndo_();
+  this.autoResizeToContents();
+  var newState = this.getStateForUndo_();
+  Blockly.Events.fire(new Blockly.Events.FrameChange(
+      this, 'state', oldState, newState));
+};
+
+/**
+ * Show the frame context menu.
+ * @param {!Event} e Mouse event.
+ * @private
+ */
+Blockly.Frame.prototype.showContextMenu_ = function(e) {
+  if (this.workspace_.options.readOnly) {
+    return;
+  }
+
+  var hasBlocks = this.getBlocksInside_().length > 0;
+  var menuOptions = [
+    {
+      text: this.isLocked_ ? 'Unlock Group' : 'Lock Group',
+      enabled: true,
+      callback: this.toggleLock_.bind(this)
+    },
+    {
+      text: 'Rename Group',
+      enabled: !this.isLocked_,
+      callback: this.promptRename_.bind(this)
+    },
+    {
+      text: this.isMinimized_ ? 'Expand Group' : 'Collapse Group',
+      enabled: true,
+      callback: this.toggleMinimize_.bind(this, null)
+    },
+    {
+      text: 'Auto-Fit Group',
+      enabled: hasBlocks && !this.isLocked_,
+      callback: this.autoFitAndRecord_.bind(this)
+    },
+    {
+      text: 'Delete Group',
+      enabled: !this.isLocked_,
+      callback: this.deleteFrame_.bind(this)
+    }
+  ];
+
+  Blockly.ContextMenu.show(e, menuOptions, this.workspace_.RTL);
+};
+
+/**
+ * Delete this frame and contained blocks as one grouped operation.
+ * @private
+ */
+Blockly.Frame.prototype.deleteFrame_ = function() {
+  var existingGroup = Blockly.Events.getGroup();
+  if (!existingGroup) {
+    Blockly.Events.setGroup(true);
+  }
+
+  try {
+    Blockly.Events.fire(new Blockly.Events.FrameDelete(this));
+
+    var blocks = this.getBlocksInside_().slice();
+    for (var i = 0, block; block = blocks[i]; i++) {
+      if (block && block.workspace) {
+        block.dispose();
+      }
+    }
+
+    this.dispose();
+  } finally {
+    if (!existingGroup) {
+      Blockly.Events.setGroup(false);
+    }
+  }
+};
+
+/**
+ * Handle mousedown on the delete icon.
+ * @param {!Event} e Mouse down event.
+ * @private
+ */
+Blockly.Frame.prototype.onDeleteMouseDown_ = function(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  if (this.isLocked_) {
+    return;
+  }
+  this.deleteFrame_();
+};
+
+/**
+ * Toggle locked state and record an undoable state change.
+ * @private
+ */
+Blockly.Frame.prototype.toggleLock_ = function() {
+  var oldLocked = this.isLocked_;
+  this.isLocked_ = !this.isLocked_;
+  Blockly.Events.fire(new Blockly.Events.FrameChange(
+      this, 'locked', oldLocked, this.isLocked_));
 };
 
 /**
@@ -505,15 +1155,113 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
 
   if (e.type === Blockly.Events.BLOCK_MOVE) {
     var block = this.workspace_.getBlockById(e.blockId);
-    if (block) {
-      var xy = block.getRelativeToSurfaceXY();
-      // Only render if the block is within 100px of the frame's boundaries.
-      if (xy.x > this.x - 100 && xy.x < this.x + this.width + 100 &&
-          xy.y > this.y - 100 && xy.y < this.y + this.height + 100) {
-        this.render();
-      }
+    if (block && this.blockIntersectsFrame_(block, 100)) {
+      this.render();
     }
   }
+};
+
+/**
+ * Return the workspace bounds of a top-level block.
+ * @param {!Blockly.BlockSvg} block The block to measure.
+ * @return {{left: number, top: number, right: number, bottom: number}}
+ *     The block bounds in workspace coordinates.
+ * @private
+ */
+Blockly.Frame.prototype.getBlockBounds_ = function(block) {
+  var xy = block.getRelativeToSurfaceXY();
+  var size = block.getHeightWidth();
+  return {
+    left: xy.x,
+    top: xy.y,
+    right: xy.x + size.width,
+    bottom: xy.y + size.height
+  };
+};
+
+/**
+ * Compute frame bounds that tightly wrap the provided blocks.
+ * @param {!Array.<!Blockly.BlockSvg>} blocks Top-level blocks in the frame.
+ * @return {{x: number, y: number, width: number, height: number}} Wrapped
+ *     bounds in workspace coordinates.
+ * @private
+ */
+Blockly.Frame.prototype.getContentBounds_ = function(blocks) {
+  var minX = Infinity;
+  var minY = Infinity;
+  var maxX = -Infinity;
+  var maxY = -Infinity;
+  var padding = 24;
+  var headerHeight = Blockly.Frame.HEADER_HEIGHT;
+
+  blocks.forEach(function(block) {
+    var bounds = this.getBlockBounds_(block);
+    minX = Math.min(minX, bounds.left);
+    minY = Math.min(minY, bounds.top);
+    maxX = Math.max(maxX, bounds.right);
+    maxY = Math.max(maxY, bounds.bottom);
+  }, this);
+
+  return {
+    x: minX - padding,
+    y: minY - padding - headerHeight,
+    width: (maxX - minX) + (padding * 2),
+    height: (maxY - minY) + (padding * 2) + headerHeight
+  };
+};
+
+/**
+ * Check whether a block overlaps the frame bounds.
+ * @param {!Blockly.BlockSvg} block The block to test.
+ * @param {number=} opt_margin Extra margin around the frame bounds.
+ * @return {boolean} True if the block overlaps the frame.
+ * @private
+ */
+Blockly.Frame.prototype.blockIntersectsFrame_ = function(block, opt_margin) {
+  var margin = opt_margin || 0;
+  var bounds = this.getBlockBounds_(block);
+  return bounds.right >= this.x - margin &&
+      bounds.left <= this.x + this.width + margin &&
+      bounds.bottom >= this.y - margin &&
+      bounds.top <= this.y + this.height + margin;
+};
+
+/**
+ * Determine whether this frame is the single owner for a top-level block.
+ * If multiple frames overlap the same block, ownership is given to the
+ * smallest frame area; ties go to the most recently created frame.
+ * @param {!Blockly.BlockSvg} block The block to test.
+ * @return {boolean} True if this frame owns the block.
+ * @private
+ */
+Blockly.Frame.prototype.ownsBlock_ = function(block) {
+  if (!this.workspace_) {
+    return false;
+  }
+
+  if (!this.workspace_.blockFrameOwnership_) {
+    this.workspace_.blockFrameOwnership_ = Object.create(null);
+  }
+  var ownership = this.workspace_.blockFrameOwnership_;
+  var ownerId = ownership[block.id];
+
+  if (ownerId) {
+    var ownerFrame = this.workspace_.getFrameById(ownerId);
+    if (ownerFrame && ownerFrame.svgGroup_ && ownerFrame.blockIntersectsFrame_(block, 5)) {
+      return ownerId == this.id;
+    }
+    delete ownership[block.id];
+  }
+
+  if (this.blockIntersectsFrame_(block, 5)) {
+    if (this.isLocked_) {
+      return false;
+    }
+    ownership[block.id] = this.id;
+    return true;
+  }
+
+  return false;
 };
 
 /**
@@ -526,11 +1274,7 @@ Blockly.Frame.prototype.getBlocksInside_ = function() {
   var blocks = this.workspace_.getTopBlocks(false);
   
   for (var i = 0, block; block = blocks[i]; i++) {
-    var xy = block.getRelativeToSurfaceXY();
-    // Check if the block's top-left corner is inside the frame.
-    // Adding a small buffer helps capture blocks that are nearly centered.
-    if (xy.x >= this.x - 5 && xy.x <= (this.x + this.width) &&
-        xy.y >= this.y && xy.y <= (this.y + this.height)) {
+    if (this.ownsBlock_(block)) {
       inside.push(block);
     }
   }

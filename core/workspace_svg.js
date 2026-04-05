@@ -34,6 +34,7 @@ goog.require('Blockly.constants');
 goog.require('Blockly.DataCategory');
 goog.require('Blockly.DropDownDiv');
 goog.require('Blockly.Events.BlockCreate');
+goog.require('Blockly.Events.FrameCreate');
 goog.require('Blockly.Frame');
 goog.require('Blockly.Gesture');
 goog.require('Blockly.Grid');
@@ -501,10 +502,22 @@ Blockly.WorkspaceSvg.prototype.createDom = function(opt_backgroundClass) {
 };
 
 Blockly.WorkspaceSvg.prototype.createNewFrameAroundStack = function(rootBlock) {
+  if (!rootBlock) {
+    return null;
+  }
+
+  var topBlock = rootBlock.getRootBlock ? rootBlock.getRootBlock() : rootBlock;
+  var ownership = this.blockFrameOwnership_;
+  if (ownership && ownership[topBlock.id]) {
+    return null;
+  }
+
   // 1. Get the bounding box of the entire script stack
-  var blocks = rootBlock.getDescendants();
+  var blocks = topBlock.getDescendants();
   var topX = Infinity, topY = Infinity;
   var botX = -Infinity, botY = -Infinity;
+  var padding = 24;
+  var headerHeight = Blockly.Frame.HEADER_HEIGHT;
 
   blocks.forEach(function (block) {
     var xy = block.getRelativeToSurfaceXY();
@@ -516,12 +529,11 @@ Blockly.WorkspaceSvg.prototype.createNewFrameAroundStack = function(rootBlock) {
   });
 
   // 2. Calculate final dimensions with padding
-  var padding = 24;
   var data = {
     x: topX - padding,
-    y: topY - padding - 20, // Extra space for header
+    y: topY - padding - headerHeight,
     width: (botX - topX) + (padding * 2),
-    height: (botY - topY) + (padding * 2) + 20,
+    height: (botY - topY) + (padding * 2) + headerHeight,
     title: "Script Group"
   };
 
@@ -529,6 +541,18 @@ Blockly.WorkspaceSvg.prototype.createNewFrameAroundStack = function(rootBlock) {
   var frame = new Blockly.Frame(this, data);
   if (!this.frames_) this.frames_ = [];
   this.frames_.push(frame);
+
+  // Record ownership immediately so context-menu guards work without requiring
+  // a later move/render cycle.
+  if (!this.blockFrameOwnership_) {
+    this.blockFrameOwnership_ = Object.create(null);
+  }
+  this.blockFrameOwnership_[topBlock.id] = frame.id;
+
+  // Ensure initial visuals and internal block containment state are current.
+  frame.render();
+
+  Blockly.Events.fire(new Blockly.Events.FrameCreate(frame));
   return frame;
 };
 
@@ -1694,6 +1718,37 @@ Blockly.WorkspaceSvg.prototype.showContextMenu_ = function(e) {
   if (this.options.comments) {
     menuOptions.push(Blockly.ContextMenu.workspaceCommentOption(ws, e));
   }
+
+  // Option to add a frame at the click location.
+  var addFrameOption = {
+    text: 'Add Group',
+    enabled: true,
+    callback: function() {
+      var injectionDiv = ws.getInjectionDiv();
+      var boundingRect = injectionDiv.getBoundingClientRect();
+
+      var clientOffsetPixels = new goog.math.Coordinate(
+          e.clientX - boundingRect.left, e.clientY - boundingRect.top);
+      var mainOffsetPixels = ws.getOriginOffsetInPixels();
+      var finalOffsetPixels = goog.math.Coordinate.difference(
+          clientOffsetPixels, mainOffsetPixels);
+      var finalOffsetMainWs = finalOffsetPixels.scale(1 / ws.scale);
+
+      var frame = new Blockly.Frame(ws, {
+        x: finalOffsetMainWs.x,
+        y: finalOffsetMainWs.y,
+        width: 200,
+        height: 150,
+        title: 'Script Group'
+      });
+      if (!ws.frames_) {
+        ws.frames_ = [];
+      }
+      ws.frames_.push(frame);
+      Blockly.Events.fire(new Blockly.Events.FrameCreate(frame));
+    }
+  };
+  menuOptions.push(addFrameOption);
 
   // Option to delete all blocks.
   // Count the number of blocks that are deletable.

@@ -32,6 +32,7 @@ goog.provide('Blockly.Xml');
 
 goog.require('Blockly.Events.BlockCreate');
 goog.require('Blockly.Events.VarCreate');
+goog.require('Blockly.Frame');
 
 goog.require('goog.asserts');
 goog.require('goog.dom');
@@ -51,6 +52,11 @@ Blockly.Xml.workspaceToDom = function(workspace, opt_noId) {
   });
   for (var i = 0, comment; comment = comments[i]; i++) {
     xml.appendChild(comment.toXmlWithXY(opt_noId));
+  }
+  if (workspace.frames_ && workspace.frames_.length) {
+    for (var i = 0, frame; frame = workspace.frames_[i]; i++) {
+      xml.appendChild(frame.toXmlWithXY(opt_noId));
+    }
   }
   var blocks = workspace.getTopBlocks(true);
   for (var i = 0, block; block = blocks[i]; i++) {
@@ -448,6 +454,7 @@ Blockly.Xml.domToWorkspace = function(xml, workspace) {
   if (workspace.setResizesEnabled) {
     workspace.setResizesEnabled(false);
   }
+  var frameNodes = [];
   var variablesFirst = true;
   try {
     for (var i = 0; i < childCount; i++) {
@@ -482,6 +489,10 @@ Blockly.Xml.domToWorkspace = function(xml, workspace) {
         } else {
           Blockly.WorkspaceComment.fromXml(xmlChild, workspace);
         }
+        variablesFirst = false;
+      } else if (name == 'frame') {
+        frameNodes.push(xmlChild);
+        variablesFirst = false;
       } else if (name == 'variables') {
         if (variablesFirst) {
           Blockly.Xml.domToVariables(xmlChild, workspace);
@@ -494,6 +505,12 @@ Blockly.Xml.domToWorkspace = function(xml, workspace) {
       } else if (name == 'procedures') {
         Blockly.Xml.domToProcedures(xmlChild, workspace);
         variablesFirst = false;
+      }
+    }
+
+    if (workspace.rendered && frameNodes.length) {
+      for (var i = 0, xmlFrame; xmlFrame = frameNodes[i]; i++) {
+        Blockly.Frame.fromXml(xmlFrame, /** @type {!Blockly.WorkspaceSvg} */ (workspace));
       }
     }
   } finally {

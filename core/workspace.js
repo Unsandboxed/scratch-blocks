@@ -96,6 +96,12 @@ Blockly.Workspace = function(opt_options) {
 
   this.frames_ = [];
   /**
+   * Map from top-level block ID to owning frame ID.
+   * Used to keep frame membership stable when frames overlap.
+   * @type {!Object<string, string>}
+   */
+  this.blockFrameOwnership_ = Object.create(null);
+  /**
    * @type {!Blockly.VariableMap}
    * A map from variable type to list of variable names.  The lists contain all
    * of the named variables in the workspace, including variables
@@ -301,6 +307,10 @@ Blockly.Workspace.prototype.clear = function() {
   if (!existingGroup) {
     Blockly.Events.setGroup(true);
   }
+  while (this.frames_ && this.frames_.length) {
+    this.frames_[this.frames_.length - 1].dispose();
+  }
+  this.blockFrameOwnership_ = Object.create(null);
   while (this.topBlocks_.length) {
     this.topBlocks_[0].dispose();
   }
@@ -614,6 +624,41 @@ Blockly.Workspace.prototype.getBlockById = function(id) {
  */
 Blockly.Workspace.prototype.getCommentById = function(id) {
   return this.commentDB_[id] || null;
+};
+
+/**
+ * Find the frame on this workspace with the specified ID.
+ * @param {string} id ID of frame to find.
+ * @return {?Blockly.Frame} The sought after frame or null if not found.
+ */
+Blockly.Workspace.prototype.getFrameById = function(id) {
+  if (!this.frames_) {
+    return null;
+  }
+  for (var i = 0, frame; frame = this.frames_[i]; i++) {
+    if (frame.id == id) {
+      return frame;
+    }
+  }
+  return null;
+};
+
+/**
+ * Whether a block is currently owned by a locked frame.
+ * @param {string|!Blockly.Block} blockOrId Block instance or block ID.
+ * @return {boolean} True if block belongs to a locked frame.
+ */
+Blockly.Workspace.prototype.isBlockInLockedFrame = function(blockOrId) {
+  if (!this.blockFrameOwnership_) {
+    return false;
+  }
+  var blockId = typeof blockOrId == 'string' ? blockOrId : blockOrId.id;
+  var ownerFrameId = this.blockFrameOwnership_[blockId];
+  if (!ownerFrameId) {
+    return false;
+  }
+  var frame = this.getFrameById(ownerFrameId);
+  return !!(frame && frame.isLocked_);
 };
 
 /**

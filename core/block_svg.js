@@ -734,12 +734,17 @@ Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
     return;
   }
 
-  if (this.isDeletable() && this.isMovable() && !this.isCollapsed()) {
+  var rootBlock = this.getRootBlock();
+  var ownership = this.workspace.blockFrameOwnership_;
+  var ownerFrameId = ownership && rootBlock ? ownership[rootBlock.id] : null;
+
+  if (this.isDeletable() && this.isMovable() && !this.isCollapsed() &&
+      !this.isInFlyout && !this.workspace.isFlyout && !ownerFrameId) {
     var menuOption = {
-      text: "Add to New Frame",
+      text: "Add to New Group",
       enabled: true,
       callback: function() {
-        var frame = this.workspace.createNewFrameAroundStack(this);
+        var frame = this.workspace.createNewFrameAroundStack(rootBlock || this);
         // Optional: Add all connected blocks too
       }.bind(this)
     };
@@ -1362,15 +1367,6 @@ Blockly.BlockSvg.prototype.bumpNeighbours_ = function() {
   if (rootBlock.isInFlyout) {
     return;  // Don't move blocks around in a flyout.
   }
-
-  for (var i = 0, otherBlock; otherBlock = allBlocks[i]; i++) {
-    // ADD THIS LINE:
-    if (otherBlock instanceof Blockly.Frame || otherBlock.isFrame) {
-      continue; // Don't bump against frames!
-    }
-    // ... existing bumping logic ...
-  }
-
   // Loop through every connection on this block.
   var myConnections = this.getConnections_(false);
   for (var i = 0, connection; connection = myConnections[i]; i++) {
