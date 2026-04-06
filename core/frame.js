@@ -1134,9 +1134,8 @@ Blockly.Frame.prototype.cleanUpScriptsInside_ = function() {
   }
 
   var oldState = this.getStateForUndo_();
-
-  var blocks = this.getBlocksInside_();
   var scriptStacks = [];
+  var blocks = this.getBlocksInside_();
   for (var i = 0; i < blocks.length; i++) {
     var block = blocks[i];
     if (!block || block.getParent() || block.outputConnection) {
@@ -1200,7 +1199,7 @@ Blockly.Frame.prototype.cleanUpScriptsInside_ = function() {
       cursorY += stack.getHeightWidth().height + spacing;
     }
 
-    this.render();
+    this.autoResizeToContents();
     this.resizeWorkspaceContents_();
 
     var newState = this.getStateForUndo_();
@@ -1376,6 +1375,8 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
     if ((oldState.x !== newState.x || oldState.y !== newState.y ||
         oldState.userRight !== newState.userRight ||
         oldState.userBottom !== newState.userBottom)) {
+      // Keep workspace drag metrics in sync with frame-driven geometry changes.
+      this.resizeWorkspaceContents_();
       Blockly.Events.fire(new Blockly.Events.FrameChange(
           this, 'state', oldState, newState));
     }
@@ -1460,6 +1461,13 @@ Blockly.Frame.prototype.ownsBlock_ = function(block) {
     return false;
   }
 
+  // Insertion markers are transient drag previews and must not influence
+  // persistent frame ownership or bounds.
+  if (block && typeof block.isInsertionMarker === 'function' &&
+      block.isInsertionMarker()) {
+    return false;
+  }
+
   if (!this.workspace_.blockFrameOwnership_) {
     this.workspace_.blockFrameOwnership_ = Object.create(null);
   }
@@ -1528,6 +1536,10 @@ Blockly.Frame.prototype.getBlocksInside_ = function() {
   var blocks = this.workspace_.getTopBlocks(false);
   
   for (var i = 0, block; block = blocks[i]; i++) {
+    if (typeof block.isInsertionMarker === 'function' &&
+        block.isInsertionMarker()) {
+      continue;
+    }
     if (this.ownsBlock_(block)) {
       inside.push(block);
     }
