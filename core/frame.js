@@ -71,6 +71,15 @@ Blockly.Frame = function(workspace, data) {
 
   /** @private {boolean} */
   this.isOnDragSurface_ = false;
+
+  /** @private {boolean} */
+  this.pendingWorkspaceRender_ = false;
+
+  /** @private {?number} */
+  this.pendingRenderHandle_ = null;
+
+  /** @private {?Object} */
+  this.pendingWorkspaceRenderOldState_ = null;
 };
 
 /**
@@ -202,10 +211,6 @@ Blockly.Frame.prototype.createDom = function() {
   this.deleteButton_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
       this.workspace_.options.pathToMedia + 'delete-x.svg');
   Blockly.bindEventWithChecks_(this.deleteButton_, 'mousedown', this, this.onDeleteMouseDown_);
-
-  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function() {
-    this.promptRename_();
-  });
 
   this.text_ = Blockly.utils.createSvgElement('text', {
     'class': 'blocklyText blocklyFrameText',
@@ -645,6 +650,17 @@ Blockly.Frame.prototype.dispose = function() {
     this.workspace_.removeChangeListener(this.changeWrapper_);
     this.changeWrapper_ = null;
   }
+
+  if (this.pendingRenderHandle_ !== null) {
+    if (typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(this.pendingRenderHandle_);
+    } else {
+      clearTimeout(this.pendingRenderHandle_);
+    }
+    this.pendingRenderHandle_ = null;
+  }
+  this.pendingWorkspaceRender_ = false;
+  this.pendingWorkspaceRenderOldState_ = null;
 
   var currentDragNode = (this.dragSurface_ && this.dragSurface_.getCurrentBlock) ?
       this.dragSurface_.getCurrentBlock() : null;
@@ -1100,14 +1116,13 @@ Blockly.Frame.prototype.promptRename_ = function() {
     return;
   }
   var oldTitle = this.title;
-  Blockly.prompt('Rename Group:', this.title, function(newTitle) {
-    if (newTitle !== null) {
-      this.title = newTitle;
-      this.text_.textContent = newTitle;
-      Blockly.Events.fire(new Blockly.Events.FrameChange(
-          this, 'title', oldTitle, newTitle));
-    }
-  }.bind(this));
+  var newTitle = prompt('Rename Group:', this.title);
+  if (newTitle !== null) {
+    this.title = newTitle;
+    this.text_.textContent = newTitle;
+    Blockly.Events.fire(new Blockly.Events.FrameChange(
+        this, 'title', oldTitle, newTitle));
+  }
 };
 
 /**
@@ -1249,7 +1264,7 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
       callback: this.toggleLock_.bind(this)
     },
     {
-      text: 'Rename Group',
+      text: 'Rename',
       enabled: !this.isLocked_,
       callback: this.promptRename_.bind(this)
     },
@@ -1269,7 +1284,7 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
       callback: this.cleanUpScriptsInside_.bind(this)
     },
     {
-      text: 'Delete Group',
+      text: 'Delete',
       enabled: !this.isLocked_,
       callback: this.deleteFrame_.bind(this)
     }
@@ -1336,6 +1351,57 @@ Blockly.Frame.prototype.toggleLock_ = function() {
 };
 
 /**
+ * Queue a single frame render for the next animation tick.
+ * @param {!Object=} opt_oldState Prior frame state to use for change events.
+ * @private
+ */
+Blockly.Frame.prototype.queueWorkspaceRender_ = function(opt_oldState) {
+  if (!this.pendingWorkspaceRenderOldState_) {
+    this.pendingWorkspaceRenderOldState_ = opt_oldState || this.getStateForUndo_();
+  }
+
+  if (this.pendingWorkspaceRender_) {
+    return;
+  }
+
+  this.pendingWorkspaceRender_ = true;
+  var flush = this.flushQueuedWorkspaceRender_.bind(this);
+  if (typeof requestAnimationFrame === 'function') {
+    this.pendingRenderHandle_ = requestAnimationFrame(flush);
+  } else {
+    this.pendingRenderHandle_ = setTimeout(flush, 0);
+  }
+};
+
+/**
+ * Flush a queued frame render and emit state events if geometry changed.
+ * @private
+ */
+Blockly.Frame.prototype.flushQueuedWorkspaceRender_ = function() {
+  this.pendingWorkspaceRender_ = false;
+  this.pendingRenderHandle_ = null;
+
+  if (!this.workspace_ || !this.svgGroup_) {
+    this.pendingWorkspaceRenderOldState_ = null;
+    return;
+  }
+
+  var oldState = this.pendingWorkspaceRenderOldState_ || this.getStateForUndo_();
+  this.pendingWorkspaceRenderOldState_ = null;
+
+  this.render();
+  var newState = this.getStateForUndo_();
+  if ((oldState.x !== newState.x || oldState.y !== newState.y ||
+      oldState.userRight !== newState.userRight ||
+      oldState.userBottom !== newState.userBottom)) {
+    // Keep workspace drag metrics in sync with frame-driven geometry changes.
+    this.resizeWorkspaceContents_();
+    Blockly.Events.fire(new Blockly.Events.FrameChange(
+        this, 'state', oldState, newState));
+  }
+};
+
+/**
  * Handle workspace changes to update the frame if blocks move nearby.
  * @param {!Blockly.Events.Abstract} e Change event.
  * @private
@@ -1357,6 +1423,13 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
     return;
   }
 
+  if (e.type === Blockly.Events.BLOCK_CHANGE) {
+    // Most field/comment/disabled changes do not affect frame geometry.
+    if (e.element !== 'collapsed' && e.element !== 'mutation') {
+      return;
+    }
+  }
+
   var ownership = this.workspace_.blockFrameOwnership_;
   var wasOwnedByThisFrame = !!(ownership && e.blockId &&
       ownership[e.blockId] === this.id);
@@ -1371,17 +1444,7 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
   }
 
   if (shouldRender) {
-    var oldState = this.getStateForUndo_();
-    this.render();
-    var newState = this.getStateForUndo_();
-    if ((oldState.x !== newState.x || oldState.y !== newState.y ||
-        oldState.userRight !== newState.userRight ||
-        oldState.userBottom !== newState.userBottom)) {
-      // Keep workspace drag metrics in sync with frame-driven geometry changes.
-      this.resizeWorkspaceContents_();
-      Blockly.Events.fire(new Blockly.Events.FrameChange(
-          this, 'state', oldState, newState));
-    }
+    this.queueWorkspaceRender_(this.getStateForUndo_());
   }
 
 };
