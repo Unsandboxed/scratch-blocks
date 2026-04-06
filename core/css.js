@@ -571,7 +571,8 @@ Blockly.Css.CONTENT = [
   '}',
 
   '.blocklyHidden {',
-    'display: none;',
+    'visibility: hidden !important;',
+    'pointer-events: none !important;',
   '}',
 
   '.blocklyFieldDropdown:not(.blocklyHidden) {',

@@ -34,6 +34,9 @@ goog.require('Blockly.constants');
 goog.require('Blockly.DataCategory');
 goog.require('Blockly.DropDownDiv');
 goog.require('Blockly.Events.BlockCreate');
+goog.require('Blockly.Events.FrameChange');
+goog.require('Blockly.Events.FrameCreate');
+goog.require('Blockly.Frame');
 goog.require('Blockly.Gesture');
 goog.require('Blockly.Grid');
 goog.require('Blockly.Options');
@@ -455,6 +458,9 @@ Blockly.WorkspaceSvg.prototype.createDom = function(opt_backgroundClass) {
     }
   }
   /** @type {SVGElement} */
+  this.svgFrameCanvas_ = Blockly.utils.createSvgElement('g',
+    {'class': 'unsandboxedFrameCanvas'}, this.svgGroup_, this);
+  /** @type {SVGElement} */
   this.svgBlockCanvas_ = Blockly.utils.createSvgElement('g',
       {'class': 'blocklyBlockCanvas'}, this.svgGroup_, this);
   /** @type {SVGElement} */
@@ -494,6 +500,64 @@ Blockly.WorkspaceSvg.prototype.createDom = function(opt_backgroundClass) {
   }
   this.recordCachedAreas();
   return this.svgGroup_;
+};
+
+Blockly.WorkspaceSvg.prototype.createNewFrameAroundStack = function(rootBlock) {
+  if (!rootBlock) {
+    return null;
+  }
+
+  var topBlock = rootBlock.getRootBlock ? rootBlock.getRootBlock() : rootBlock;
+  var ownership = this.blockFrameOwnership_;
+  if (ownership && ownership[topBlock.id]) {
+    return null;
+  }
+
+  // 1. Get the bounding box of the entire script stack
+  var blocks = topBlock.getDescendants();
+  var topX = Infinity, topY = Infinity;
+  var botX = -Infinity, botY = -Infinity;
+  var padding = 24;
+  var headerHeight = Blockly.Frame.HEADER_HEIGHT;
+
+  blocks.forEach(function (block) {
+    var xy = block.getRelativeToSurfaceXY();
+    var size = block.getHeightWidth();
+    topX = Math.min(topX, xy.x);
+    topY = Math.min(topY, xy.y);
+    botX = Math.max(botX, xy.x + size.width);
+    botY = Math.max(botY, xy.y + size.height);
+  });
+
+  // 2. Calculate final dimensions with padding
+  var data = {
+    x: topX - padding,
+    y: topY - padding - headerHeight,
+    width: (botX - topX) + (padding * 2),
+    height: (botY - topY) + (padding * 2) + headerHeight,
+    title: "Script Group"
+  };
+
+  // 3. Instantiate and store
+  var frame = new Blockly.Frame(this, data);
+  if (!this.frames_) this.frames_ = [];
+  this.frames_.push(frame);
+
+  // Record ownership immediately so context-menu guards work without requiring
+  // a later move/render cycle.
+  if (!this.blockFrameOwnership_) {
+    this.blockFrameOwnership_ = Object.create(null);
+  }
+  this.blockFrameOwnership_[topBlock.id] = frame.id;
+
+  // Ensure initial visuals and internal block containment state are current.
+  frame.render();
+  if (typeof frame.resizeWorkspaceContents_ === 'function') {
+    frame.resizeWorkspaceContents_();
+  }
+
+  Blockly.Events.fire(new Blockly.Events.FrameCreate(frame));
+  return frame;
 };
 
 /**
@@ -902,6 +966,9 @@ Blockly.WorkspaceSvg.prototype.translate = function(x, y) {
   // Now update the block drag surface if we're using one.
   if (this.blockDragSurface_) {
     this.blockDragSurface_.translateAndScaleGroup(x, y, this.scale);
+  } 
+  if (this.svgFrameCanvas_) {
+    this.svgFrameCanvas_.setAttribute('transform', translation);
   }
   this.queueIntersectionCheck();
 };
@@ -1587,22 +1654,222 @@ Blockly.WorkspaceSvg.prototype.getBlocksBoundingBox = function() {
 };
 
 /**
- * Clean up the workspace by ordering all the blocks in a column.
+ * Clean up the workspace using a column-based layout similar to
+ * "Clean up Blocks+".
+ * @param {*=} opt_makeSpaceForBlock Optional block to leave extra space for.
  */
-Blockly.WorkspaceSvg.prototype.cleanUp = function() {
+Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
   this.setResizesEnabled(false);
   Blockly.Events.setGroup(true);
-  var topBlocks = this.getTopBlocks(true);
-  var cursorY = 0;
-  for (var i = 0, block; block = topBlocks[i]; i++) {
-    var xy = block.getRelativeToSurfaceXY();
-    block.moveBy(-xy.x, cursorY - xy.y);
-    block.snapToGrid();
-    cursorY = block.getRelativeToSurfaceXY().y +
-        block.getHeightWidth().height + Blockly.BlockSvg.MIN_BLOCK_Y;
+  try {
+    var topBlocks = this.getTopBlocks(true);
+    var topFrames = this.frames_ ? this.frames_.slice() : [];
+    if (!topBlocks.length && !topFrames.length) {
+      return;
+    }
+
+    // Refresh and snapshot frame ownership so cleanup uses a stable view.
+    var frameOwnedByBlockId = Object.create(null);
+    var frameOwnedBlocksByFrameId = Object.create(null);
+    for (var f = 0; f < topFrames.length; f++) {
+      var topFrame = topFrames[f];
+      if (!topFrame || !topFrame.svgGroup_ ||
+          typeof topFrame.getBlocksInside_ !== 'function') {
+        continue;
+      }
+      var ownedBlocks = topFrame.getBlocksInside_();
+      frameOwnedBlocksByFrameId[topFrame.id] = ownedBlocks;
+      for (var ob = 0; ob < ownedBlocks.length; ob++) {
+        frameOwnedByBlockId[ownedBlocks[ob].id] = topFrame.id;
+      }
+    }
+
+    var topComments = this.getTopComments();
+    var maxWidths = Object.create(null);
+
+    // Include attached comment width when determining column width.
+    for (var i = 0; i < topComments.length; i++) {
+      var comment = topComments[i];
+      if (!comment || !comment.block_ || !comment.block_.getRootBlock ||
+          typeof comment.getBoundingRectangle !== 'function') {
+        continue;
+      }
+
+      // Re-run auto positioning so attached comments settle next to their blocks.
+      if (comment.setVisible) {
+        comment.setVisible(false);
+        comment.needsAutoPositioning_ = true;
+        comment.setVisible(true);
+      }
+
+      var root = comment.block_.getRootBlock();
+      if (!root || typeof root.getBoundingRectangle !== 'function') {
+        continue;
+      }
+      var commentBounds = comment.getBoundingRectangle();
+      var rootBounds = root.getBoundingRectangle();
+      var widthWithComment = commentBounds.bottomRight.x - rootBounds.topLeft.x;
+      maxWidths[root.id] = Math.max(widthWithComment, maxWidths[root.id] || 0);
+    }
+
+    var TOLERANCE = 256;
+    var columns = [];
+    var orphans = {
+      x: -999999,
+      count: 0,
+      blocks: []
+    };
+
+    // Build columns based on X-position, keeping reporter orphans separate.
+    // Skip stacks owned by frames so frame-contained scripts stay in place.
+    for (i = 0; i < topBlocks.length; i++) {
+      var topBlock = topBlocks[i];
+      var ownerFrameId = frameOwnedByBlockId[topBlock.id] ||
+          (this.blockFrameOwnership_ && this.blockFrameOwnership_[topBlock.id]);
+      if (ownerFrameId && typeof this.getFrameById === 'function' &&
+          this.getFrameById(ownerFrameId)) {
+        continue;
+      }
+      if (topBlock.outputConnection) {
+        orphans.blocks.push(topBlock);
+        continue;
+      }
+
+      var pos = topBlock.getRelativeToSurfaceXY();
+      var bestCol = null;
+      var bestError = TOLERANCE;
+      for (var c = 0; c < columns.length; c++) {
+        var col = columns[c];
+        var err = Math.abs(pos.x - col.x);
+        if (err < bestError) {
+          bestError = err;
+          bestCol = col;
+        }
+      }
+
+      if (bestCol) {
+        bestCol.x = (bestCol.x * bestCol.count + pos.x) / ++bestCol.count;
+        bestCol.blocks.push(topBlock);
+      } else {
+        columns.push({
+          x: pos.x,
+          count: 1,
+          blocks: [topBlock]
+        });
+      }
+    }
+
+    // Include rendered frames in the same column layout pass.
+    for (i = 0; i < topFrames.length; i++) {
+      var frame = topFrames[i];
+      if (!frame || !frame.svgGroup_) {
+        continue;
+      }
+
+      var bestFrameCol = null;
+      var bestFrameError = TOLERANCE;
+      for (c = 0; c < columns.length; c++) {
+        var frameCol = columns[c];
+        var frameErr = Math.abs(frame.x - frameCol.x);
+        if (frameErr < bestFrameError) {
+          bestFrameError = frameErr;
+          bestFrameCol = frameCol;
+        }
+      }
+
+      if (bestFrameCol) {
+        bestFrameCol.x = (bestFrameCol.x * bestFrameCol.count + frame.x) /
+            ++bestFrameCol.count;
+        bestFrameCol.blocks.push(frame);
+      } else {
+        columns.push({
+          x: frame.x,
+          count: 1,
+          blocks: [frame]
+        });
+      }
+    }
+
+    columns.sort(function(a, b) {
+      return a.x - b.x;
+    });
+    for (c = 0; c < columns.length; c++) {
+      columns[c].blocks.sort(function(a, b) {
+        var ay = a.isFrame ? a.y : a.getRelativeToSurfaceXY().y;
+        var by = b.isFrame ? b.y : b.getRelativeToSurfaceXY().y;
+        return ay - by;
+      });
+    }
+
+    if (orphans.blocks.length) {
+      orphans.blocks.sort(function(a, b) {
+        return a.getRelativeToSurfaceXY().y - b.getRelativeToSurfaceXY().y;
+      });
+      columns.unshift(orphans);
+    }
+
+    var makeSpaceForBlock =
+        opt_makeSpaceForBlock && opt_makeSpaceForBlock.getRootBlock ?
+            opt_makeSpaceForBlock.getRootBlock() : null;
+
+    var cursorX = 48;
+    for (c = 0; c < columns.length; c++) {
+      var column = columns[c];
+      var cursorY = 64;
+      var maxWidth = 0;
+
+      for (i = 0; i < column.blocks.length; i++) {
+        var block = column.blocks[i];
+        var isFrame = !!block.isFrame;
+        var extraWidth = (block === makeSpaceForBlock) ? 380 : 0;
+        var extraHeight = (block === makeSpaceForBlock) ? 480 : 72;
+        var xy = isFrame ? {x: block.x, y: block.y} :
+            block.getRelativeToSurfaceXY();
+        var dx = cursorX - xy.x;
+        var dy = cursorY - xy.y;
+        if (dx || dy) {
+          if (isFrame) {
+            var oldFrameState = block.getStateForUndo_ ? block.getStateForUndo_() : null;
+            var prevCapturedBlocks = block.capturedBlocks_;
+            block.capturedBlocks_ = frameOwnedBlocksByFrameId[block.id] || null;
+            block.moveBy(dx, dy);
+            block.capturedBlocks_ = prevCapturedBlocks;
+            if (oldFrameState && block.getStateForUndo_) {
+              var newFrameState = block.getStateForUndo_();
+              Blockly.Events.fire(new Blockly.Events.FrameChange(
+                  block, 'state', oldFrameState, newFrameState));
+            }
+          } else {
+            block.moveBy(dx, dy);
+          }
+        }
+
+        var heightWidth = isFrame ?
+            {width: block.width, height: block.height} : block.getHeightWidth();
+        cursorY += heightWidth.height + extraHeight;
+
+        var maxWidthWithComments = isFrame ? 0 : (maxWidths[block.id] || 0);
+        maxWidth = Math.max(maxWidth,
+            Math.max(heightWidth.width + extraWidth, maxWidthWithComments));
+      }
+
+      cursorX += maxWidth + 96;
+    }
+
+    // Reposition top comments after the blocks have been moved.
+    for (i = 0; i < topComments.length; i++) {
+      comment = topComments[i];
+      if (comment && comment.setVisible) {
+        comment.setVisible(false);
+        comment.needsAutoPositioning_ = true;
+        comment.setVisible(true);
+      }
+    }
+  } finally {
+    Blockly.Events.setGroup(false);
+    this.setResizesEnabled(true);
+    this.resizeContents();
   }
-  Blockly.Events.setGroup(false);
-  this.setResizesEnabled(true);
 };
 
 /**
@@ -1655,6 +1922,37 @@ Blockly.WorkspaceSvg.prototype.showContextMenu_ = function(e) {
   if (this.options.comments) {
     menuOptions.push(Blockly.ContextMenu.workspaceCommentOption(ws, e));
   }
+
+  // Option to add a frame at the click location.
+  var addFrameOption = {
+    text: 'Add Group',
+    enabled: true,
+    callback: function() {
+      var injectionDiv = ws.getInjectionDiv();
+      var boundingRect = injectionDiv.getBoundingClientRect();
+
+      var clientOffsetPixels = new goog.math.Coordinate(
+          e.clientX - boundingRect.left, e.clientY - boundingRect.top);
+      var mainOffsetPixels = ws.getOriginOffsetInPixels();
+      var finalOffsetPixels = goog.math.Coordinate.difference(
+          clientOffsetPixels, mainOffsetPixels);
+      var finalOffsetMainWs = finalOffsetPixels.scale(1 / ws.scale);
+
+      var frame = new Blockly.Frame(ws, {
+        x: finalOffsetMainWs.x,
+        y: finalOffsetMainWs.y,
+        width: 200,
+        height: 150,
+        title: 'Script Group'
+      });
+      if (!ws.frames_) {
+        ws.frames_ = [];
+      }
+      ws.frames_.push(frame);
+      Blockly.Events.fire(new Blockly.Events.FrameCreate(frame));
+    }
+  };
+  menuOptions.push(addFrameOption);
 
   // Option to delete all blocks.
   // Count the number of blocks that are deletable.
@@ -2076,6 +2374,49 @@ Blockly.WorkspaceSvg.getContentDimensions_ = function(ws, svgSize) {
 };
 
 /**
+ * Get the bounding box for all rendered frames on the workspace, in workspace
+ * coordinates.
+ * @param {!Blockly.WorkspaceSvg} ws The workspace to inspect.
+ * @return {?Object} The frame bounds, or null if there are no rendered frames.
+ * @private
+ */
+Blockly.WorkspaceSvg.getFrameBoundsExact_ = function(ws) {
+  if (!ws.frames_ || !ws.frames_.length) {
+    return null;
+  }
+
+  var left = Infinity;
+  var top = Infinity;
+  var right = -Infinity;
+  var bottom = -Infinity;
+  var hasFrame = false;
+
+  for (var i = 0; i < ws.frames_.length; i++) {
+    var frame = ws.frames_[i];
+    if (!frame || !frame.svgGroup_) {
+      continue;
+    }
+
+    hasFrame = true;
+    left = Math.min(left, frame.x);
+    top = Math.min(top, frame.y);
+    right = Math.max(right, frame.x + frame.width);
+    bottom = Math.max(bottom, frame.y + frame.height);
+  }
+
+  if (!hasFrame) {
+    return null;
+  }
+
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top
+  };
+};
+
+/**
  * Get the bounding box for all workspace contents, in pixels.
  * @param {!Blockly.WorkspaceSvg} ws The workspace to inspect.
  * @return {!Object} The dimensions of the contents of the given workspace, as
@@ -2087,6 +2428,27 @@ Blockly.WorkspaceSvg.getContentDimensions_ = function(ws, svgSize) {
 Blockly.WorkspaceSvg.getContentDimensionsExact_ = function(ws) {
   // Block bounding box is in workspace coordinates.
   var blockBox = ws.getBlocksBoundingBox();
+  var frameBox = Blockly.WorkspaceSvg.getFrameBoundsExact_(ws);
+
+  if (frameBox) {
+    if (!blockBox.width && !blockBox.height) {
+      blockBox = frameBox;
+    } else {
+      var left = Math.min(blockBox.x, frameBox.x);
+      var top = Math.min(blockBox.y, frameBox.y);
+      var right = Math.max(blockBox.x + blockBox.width,
+          frameBox.x + frameBox.width);
+      var bottom = Math.max(blockBox.y + blockBox.height,
+          frameBox.y + frameBox.height);
+      blockBox = {
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top
+      };
+    }
+  }
+
   var scale = ws.scale;
 
   // Convert to pixels.

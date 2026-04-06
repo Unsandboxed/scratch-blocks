@@ -346,25 +346,24 @@ Blockly.Block.prototype.unplug = function(opt_healStack) {
       // Disconnect from any superior block.
       this.outputConnection.disconnect();
     }
-  } else {
-    if (this.previousConnection) {
-      var previousTarget = null;
-      if (this.previousConnection.isConnected()) {
-        // Remember the connection that any next statements need to connect to.
-        previousTarget = this.previousConnection.targetConnection;
-        // Detach this block from the parent's tree.
-        this.previousConnection.disconnect();
-      }
+  }
+  if (this.previousConnection) {
+    var previousTarget = null;
+    if (this.previousConnection.isConnected()) {
+      // Remember the connection that any next statements need to connect to.
+      previousTarget = this.previousConnection.targetConnection;
+      // Detach this block from the parent's tree.
+      this.previousConnection.disconnect();
     }
-    var nextBlock = this.getNextBlock();
-    if (opt_healStack && nextBlock) {
-      // Disconnect the next statement.
-      var nextTarget = this.nextConnection.targetConnection;
-      nextTarget.disconnect();
-      if (previousTarget && previousTarget.checkType_(nextTarget)) {
-        // Attach the next statement to the previous statement.
-        previousTarget.connect(nextTarget);
-      }
+  }
+  var nextBlock = this.getNextBlock();
+  if (opt_healStack && nextBlock) {
+    // Disconnect the next statement.
+    var nextTarget = this.nextConnection.targetConnection;
+    nextTarget.disconnect();
+    if (previousTarget && previousTarget.checkType_(nextTarget)) {
+      // Attach the next statement to the previous statement.
+      previousTarget.connect(nextTarget);
     }
   }
 };
@@ -611,10 +610,23 @@ Blockly.Block.prototype.getDescendants = function(ordered, opt_ignoreShadows) {
 };
 
 /**
+ * Check if this block is in a locked frame.
+ * @return {boolean} True if block belongs to a locked frame.
+ * @private
+ */
+Blockly.Block.prototype.isInLockedFrame_ = function() {
+  return this.workspace && this.workspace.isBlockInLockedFrame &&
+      this.workspace.isBlockInLockedFrame(this.id);
+};
+
+/**
  * Get whether this block is deletable or not.
  * @return {boolean} True if deletable.
  */
 Blockly.Block.prototype.isDeletable = function() {
+  if (this.isInLockedFrame_()) {
+    return false;
+  }
   return this.deletable_ && !this.isShadow_ &&
       !(this.workspace && this.workspace.options.readOnly);
 };
@@ -632,6 +644,9 @@ Blockly.Block.prototype.setDeletable = function(deletable) {
  * @return {boolean} True if movable.
  */
 Blockly.Block.prototype.isMovable = function() {
+  if (this.isInLockedFrame_()) {
+    return false;
+  }
   return this.movable_ && !this.isShadow_ &&
       !(this.workspace && this.workspace.options.readOnly);
 };
@@ -695,6 +710,9 @@ Blockly.Block.prototype.setInsertionMarker = function(insertionMarker) {
  * @return {boolean} True if editable.
  */
 Blockly.Block.prototype.isEditable = function() {
+  if (this.isInLockedFrame_()) {
+    return false;
+  }
   return this.editable_ && !(this.workspace && this.workspace.options.readOnly);
 };
 
@@ -1049,6 +1067,8 @@ Blockly.Block.prototype.setPreviousStatement = function(newBoolean, opt_check) {
       this.previousConnection =
           this.makeConnection_(Blockly.PREVIOUS_STATEMENT);
     }
+    this.previousConnection =
+      this.makeConnection_(Blockly.PREVIOUS_STATEMENT);
     this.previousConnection.setCheck(opt_check);
   } else {
     if (this.previousConnection) {

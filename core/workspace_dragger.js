@@ -81,6 +81,23 @@ Blockly.WorkspaceDragger.prototype.startDrag = function() {
   if (Blockly.selected) {
     Blockly.selected.unselect();
   }
+  // Refresh metrics at the actual drag start; workspace bounds may have changed
+  // since this dragger was constructed (e.g. after deleting large comments).
+  this.startDragMetrics_ = this.workspace_.getMetrics();
+  this.startScrollXY_ = new goog.math.Coordinate(
+      this.workspace_.scrollX, this.workspace_.scrollY);
+
+  // Clamp starting scroll position to the current content bounds so the first
+  // drag step does not snap unexpectedly.
+  var clampedStart = this.constrainWorkspaceXY_(this.startScrollXY_,
+      this.startDragMetrics_);
+  if (clampedStart.x !== this.startScrollXY_.x ||
+      clampedStart.y !== this.startScrollXY_.y) {
+    var x = -clampedStart.x - this.startDragMetrics_.contentLeft;
+    var y = -clampedStart.y - this.startDragMetrics_.contentTop;
+    this.updateScroll_(x, y);
+    this.startScrollXY_ = clampedStart;
+  }
   this.workspace_.setupDragSurface();
 };
 
@@ -103,21 +120,35 @@ Blockly.WorkspaceDragger.prototype.endDrag = function(currentDragDeltaXY) {
  * @package
  */
 Blockly.WorkspaceDragger.prototype.drag = function(currentDragDeltaXY) {
-  var metrics = this.startDragMetrics_;
+  var metrics = this.workspace_.getMetrics() || this.startDragMetrics_;
   var newXY = goog.math.Coordinate.sum(this.startScrollXY_, currentDragDeltaXY);
 
-  // Bound the new XY based on workspace bounds.
-  var x = Math.min(newXY.x, -metrics.contentLeft);
-  var y = Math.min(newXY.y, -metrics.contentTop);
-  x = Math.max(x, metrics.viewWidth - metrics.contentLeft -
-               metrics.contentWidth);
-  y = Math.max(y, metrics.viewHeight - metrics.contentTop -
-               metrics.contentHeight);
+  // Bound the new XY based on current workspace bounds.
+  var constrainedXY = this.constrainWorkspaceXY_(newXY, metrics);
+  var x = constrainedXY.x;
+  var y = constrainedXY.y;
 
   x = -x - metrics.contentLeft;
   y = -y - metrics.contentTop;
 
   this.updateScroll_(x, y);
+};
+
+/**
+ * Bound a workspace scroll coordinate to current metrics.
+ * @param {!goog.math.Coordinate} xy Proposed workspace scroll in px.
+ * @param {!Object} metrics Workspace metrics.
+ * @return {!goog.math.Coordinate} Constrained workspace scroll in px.
+ * @private
+ */
+Blockly.WorkspaceDragger.prototype.constrainWorkspaceXY_ = function(xy, metrics) {
+  var x = Math.min(xy.x, -metrics.contentLeft);
+  var y = Math.min(xy.y, -metrics.contentTop);
+  x = Math.max(x, metrics.viewWidth - metrics.contentLeft -
+               metrics.contentWidth);
+  y = Math.max(y, metrics.viewHeight - metrics.contentTop -
+               metrics.contentHeight);
+  return new goog.math.Coordinate(x, y);
 };
 
 /**

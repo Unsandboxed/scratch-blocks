@@ -336,8 +336,10 @@ Blockly.BlockSvg.prototype.renderCompute_ = function(iconWidth) {
   // TODO: We are kinda cheating by doing this.
   // In Scratch, the check is done much later while
   // processing each statement individually.
-  var hasStatement = !!this.inputList.filter(input => input.type == 3).length > 0;
-  this.hasStatementInput = hasStatement;
+  var hasStatementInput = !!this.inputList.filter(input => input.type == 3).length > 0;
+  var hasStackConnection = !!(this.previousConnection || this.nextConnection);
+  this.hasStatementInput = hasStatementInput;
+  this.hasStackConnection = hasStackConnection;
 
   // Previously created row, for special-casing row heights on C- and E- shaped blocks.
   var previousRow;
@@ -453,7 +455,7 @@ Blockly.BlockSvg.prototype.renderCompute_ = function(iconWidth) {
 
   // Compute the preferred right edge.
   inputRows.rightEdge = this.computeRightEdge_(inputRows.rightEdge,
-      hasStatement);
+      hasStatementInput);
 
   // Bottom edge is sum of row heights
   for (var i = 0; i < inputRows.length; i++) {
@@ -522,9 +524,9 @@ Blockly.BlockSvg.prototype.computeInputHeight_ = function(input, row,
       return Blockly.BlockSvg.MIN_BLOCK_Y_REPORTER + 2 * Blockly.BlockSvg.GRID_UNIT;
     }
 
-    if (this.hasStatementInput) {
+    if (this.hasStackConnection || this.hasStatementInput) {
       // Modern blockly uses the minimum block Y when calculating
-      // the height of inline blocks.
+      // the height of reporters with stack connections.
       return Blockly.BlockSvg.MIN_BLOCK_Y;
     } else {
       // All other reporters.
@@ -703,8 +705,6 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
     inputRows.rightEdge = Math.max(inputRows.rightEdge, 100);
   }
 
-  var sawStatement = this.hasStatementInput;
-
   // Amount of space to skip drawing the top and bottom,
   // to make room for the left and right to draw shapes (curves or angles).
   this.edgeShapeHeight_ = 0;
@@ -715,10 +715,13 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
     var shape = this.getOutputShape();
     if (shape !== Blockly.OUTPUT_SHAPE_SQUARE) {
       this.edgeShapeHeight_ = inputRows.bottomEdge / 2;
+      var maxEdgeShapeWidth = Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH;
 
       // hack to fix the padding on inline blocks.
       // in an ideal world, the first part would stay and the second part would die in a fire.
       if (this.hasStatementInput && this.outputConnection) {
+        maxEdgeShapeWidth = Blockly.BlockSvg.MAX_INLINE_BLOCK_EDGE_SHAPE_WIDTH;
+
         this.edgeShapeHeight_ += (inputRows.filter(input => input.type == 3).length + 1) *
           (Blockly.BlockSvg.STATEMENT_INPUT_INNER_SPACE +
           (2 * Blockly.BlockSvg.CORNER_RADIUS - (Blockly.BlockSvg.CORNER_RADIUS - 4)));
@@ -728,7 +731,7 @@ Blockly.BlockSvg.prototype.renderDraw_ = function(iconWidth, inputRows) {
           (2 * Blockly.BlockSvg.CORNER_RADIUS - (Blockly.BlockSvg.CORNER_RADIUS - 4)));
       }
 
-      this.edgeShapeWidth_ = Math.min(this.edgeShapeHeight_, 48);
+      this.edgeShapeWidth_ = Math.min(this.edgeShapeHeight_, maxEdgeShapeWidth);
       this.edgeShape_ = shape;
       this.squareTopLeftCorner_ = true;
     }
@@ -841,15 +844,31 @@ Blockly.BlockSvg.prototype.renderDrawTop_ = function(steps, rightEdge) {
 
     // Top edge.
     if (this.previousConnection) {
-      // Only do this if notch drops an apple
-      if (!this.startHat_) {
-        // Space before the notch
-        steps.push('H', Blockly.BlockSvg.NOTCH_START_PADDING);
-        steps.push(Blockly.BlockSvg.NOTCH_PATH_LEFT);
-      }
+      var notchStart = Blockly.BlockSvg.NOTCH_START_PADDING;
+
       // Create previous block connection.
       var connectionX = (this.RTL ?
           -Blockly.BlockSvg.NOTCH_WIDTH : Blockly.BlockSvg.NOTCH_WIDTH);
+
+      // Reporters have a bit more baggage to deal with.
+      // We need to shift the notch and its stack to fit next to its edge shape.
+      if (this.edgeShape_) {
+        notchStart = (
+          Blockly.BlockSvg.NOTCH_START_PADDING +
+          this.edgeShapeWidth_ -
+          Blockly.BlockSvg.CORNER_RADIUS
+        );
+        connectionX += this.RTL ? -(this.edgeShapeWidth_ - Blockly.BlockSvg.CORNER_RADIUS) :
+          (this.edgeShapeWidth_ - Blockly.BlockSvg.CORNER_RADIUS);
+      };
+
+      // Only do this if notch drops an apple
+      if (!this.startHat_) {
+        // Space before the notch
+        steps.push('H', notchStart);
+        steps.push(Blockly.BlockSvg.NOTCH_PATH_LEFT);
+      };
+
       this.previousConnection.setOffsetInBlock(connectionX, 0);
     }
   }
@@ -919,7 +938,7 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
         // Include corner radius in drawing the horizontal line.
         steps.push('H', cursorX - Blockly.BlockSvg.CORNER_RADIUS - this.edgeShapeWidth_);
         steps.push(this.makeTopRightCorner());
-      } else if (this.hasStatementInput) {
+      } else if (this.hasStatementInput || this.hasStackConnection) {
         // Include corner radius in drawing the horizontal line.
         steps.push('H', cursorX - Blockly.BlockSvg.CORNER_RADIUS);
         steps.push(this.makeTopRightCorner());
@@ -929,7 +948,7 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
       }
       // Subtract CORNER_RADIUS * 2 to account for the top right corner
       // and also the bottom right corner. Only move vertically the non-corner length.
-      if (!this.edgeShape_ || (this.edgeShape_ && this.hasStatementInput)) {
+      if (!this.edgeShape_ || (this.edgeShape_ && (this.hasStatementInput || this.hasStackConnection))) {
         steps.push('v', row.height - Blockly.BlockSvg.CORNER_RADIUS * 2); // marker
       }
     } else if (row.type == Blockly.NEXT_STATEMENT) {
@@ -1060,7 +1079,7 @@ Blockly.BlockSvg.prototype.renderInputShape_ = function(input, x, y) {
  */
 Blockly.BlockSvg.prototype.renderDrawBottom_ = function(steps, cursorY) {
   this.height = cursorY + this.cursorYoffset_;
-  if (!this.edgeShape_ || this.hasStatementInput) {
+  if (!this.edgeShape_ || this.hasStatementInput || this.hasStackConnection) {
     steps.push(this.makeBottomRightCorner());
   }
   if (this.nextConnection) {
@@ -1070,11 +1089,26 @@ Blockly.BlockSvg.prototype.renderDrawBottom_ = function(steps, cursorY) {
       Blockly.BlockSvg.NOTCH_START_PADDING +
       Blockly.BlockSvg.CORNER_RADIUS
     );
-    steps.push('H', notchStart, ' ');
-    steps.push(Blockly.BlockSvg.NOTCH_PATH_RIGHT);
+
     // Create next block connection.
     var connectionX = this.RTL ? -Blockly.BlockSvg.NOTCH_WIDTH :
         Blockly.BlockSvg.NOTCH_WIDTH;
+
+    // Reporters have a bit more baggage to deal with.
+    // We need to shift the notch and its stack to fit next to its edge shape.
+    if (this.edgeShape_) {
+      notchStart = (
+        Blockly.BlockSvg.NOTCH_WIDTH +
+        Blockly.BlockSvg.NOTCH_START_PADDING +
+        this.edgeShapeWidth_
+      );
+      connectionX += this.RTL ? -(this.edgeShapeWidth_ - Blockly.BlockSvg.CORNER_RADIUS) :
+        (this.edgeShapeWidth_ - Blockly.BlockSvg.CORNER_RADIUS);
+    };
+
+    steps.push('H', notchStart, ' ');
+    steps.push(Blockly.BlockSvg.NOTCH_PATH_RIGHT);
+
     this.nextConnection.setOffsetInBlock(connectionX, cursorY);
     // Include height of notch in block height.
     this.height += Blockly.BlockSvg.NOTCH_HEIGHT;
@@ -1175,7 +1209,7 @@ Blockly.BlockSvg.prototype.renderDrawLeft_ = function(steps) {
  * @private
  */
 Blockly.BlockSvg.prototype.drawEdgeShapeRight_ = function(steps) {
-  if (this.edgeShape_ && !this.hasStatementInput) {
+  if (this.edgeShape_ && !this.hasStatementInput && !this.hasStackConnection) {
     // Draw the right-side edge shape.
     if (this.edgeShape_ === Blockly.OUTPUT_SHAPE_ROUND) {
       // Draw a rounded arc.
@@ -1453,7 +1487,7 @@ Blockly.BlockSvg.getAlignedCursor_ = function(cursorX, input, rightEdge, inputRo
   } else if (input.align === Blockly.ALIGN_CENTRE) {
     cursorX = Math.max(cursorX, rightEdge / 2 - input.fieldWidth / 2);
   }
-  if (this.hasStatementInput && x == 0 && this.outputConnection) {
+  if ((this.hasStackConnection || this.hasStatementInput) && x == 0 && this.outputConnection) {
     cursorX += this.edgeShapeWidth_;
   }
   return cursorX;
