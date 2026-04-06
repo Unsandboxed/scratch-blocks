@@ -1662,8 +1662,25 @@ Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
   Blockly.Events.setGroup(true);
   try {
     var topBlocks = this.getTopBlocks(true);
-    if (!topBlocks.length) {
+    var topFrames = this.frames_ ? this.frames_.slice() : [];
+    if (!topBlocks.length && !topFrames.length) {
       return;
+    }
+
+    // Refresh and snapshot frame ownership so cleanup uses a stable view.
+    var frameOwnedByBlockId = Object.create(null);
+    var frameOwnedBlocksByFrameId = Object.create(null);
+    for (var f = 0; f < topFrames.length; f++) {
+      var topFrame = topFrames[f];
+      if (!topFrame || !topFrame.svgGroup_ ||
+          typeof topFrame.getBlocksInside_ !== 'function') {
+        continue;
+      }
+      var ownedBlocks = topFrame.getBlocksInside_();
+      frameOwnedBlocksByFrameId[topFrame.id] = ownedBlocks;
+      for (var ob = 0; ob < ownedBlocks.length; ob++) {
+        frameOwnedByBlockId[ownedBlocks[ob].id] = topFrame.id;
+      }
     }
 
     var topComments = this.getTopComments();
@@ -1703,8 +1720,15 @@ Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
     };
 
     // Build columns based on X-position, keeping reporter orphans separate.
+    // Skip stacks owned by frames so frame-contained scripts stay in place.
     for (i = 0; i < topBlocks.length; i++) {
       var topBlock = topBlocks[i];
+      var ownerFrameId = frameOwnedByBlockId[topBlock.id] ||
+          (this.blockFrameOwnership_ && this.blockFrameOwnership_[topBlock.id]);
+      if (ownerFrameId && typeof this.getFrameById === 'function' &&
+          this.getFrameById(ownerFrameId)) {
+        continue;
+      }
       if (topBlock.outputConnection) {
         orphans.blocks.push(topBlock);
         continue;
@@ -1734,12 +1758,45 @@ Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
       }
     }
 
+    // Include rendered frames in the same column layout pass.
+    for (i = 0; i < topFrames.length; i++) {
+      var frame = topFrames[i];
+      if (!frame || !frame.svgGroup_) {
+        continue;
+      }
+
+      var bestFrameCol = null;
+      var bestFrameError = TOLERANCE;
+      for (c = 0; c < columns.length; c++) {
+        var frameCol = columns[c];
+        var frameErr = Math.abs(frame.x - frameCol.x);
+        if (frameErr < bestFrameError) {
+          bestFrameError = frameErr;
+          bestFrameCol = frameCol;
+        }
+      }
+
+      if (bestFrameCol) {
+        bestFrameCol.x = (bestFrameCol.x * bestFrameCol.count + frame.x) /
+            ++bestFrameCol.count;
+        bestFrameCol.blocks.push(frame);
+      } else {
+        columns.push({
+          x: frame.x,
+          count: 1,
+          blocks: [frame]
+        });
+      }
+    }
+
     columns.sort(function(a, b) {
       return a.x - b.x;
     });
     for (c = 0; c < columns.length; c++) {
       columns[c].blocks.sort(function(a, b) {
-        return a.getRelativeToSurfaceXY().y - b.getRelativeToSurfaceXY().y;
+        var ay = a.isFrame ? a.y : a.getRelativeToSurfaceXY().y;
+        var by = b.isFrame ? b.y : b.getRelativeToSurfaceXY().y;
+        return ay - by;
       });
     }
 
@@ -1762,19 +1819,29 @@ Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
 
       for (i = 0; i < column.blocks.length; i++) {
         var block = column.blocks[i];
+        var isFrame = !!block.isFrame;
         var extraWidth = (block === makeSpaceForBlock) ? 380 : 0;
         var extraHeight = (block === makeSpaceForBlock) ? 480 : 72;
-        var xy = block.getRelativeToSurfaceXY();
+        var xy = isFrame ? {x: block.x, y: block.y} :
+            block.getRelativeToSurfaceXY();
         var dx = cursorX - xy.x;
         var dy = cursorY - xy.y;
         if (dx || dy) {
-          block.moveBy(dx, dy);
+          if (isFrame) {
+            var prevCapturedBlocks = block.capturedBlocks_;
+            block.capturedBlocks_ = frameOwnedBlocksByFrameId[block.id] || null;
+            block.moveBy(dx, dy);
+            block.capturedBlocks_ = prevCapturedBlocks;
+          } else {
+            block.moveBy(dx, dy);
+          }
         }
 
-        var heightWidth = block.getHeightWidth();
+        var heightWidth = isFrame ?
+            {width: block.width, height: block.height} : block.getHeightWidth();
         cursorY += heightWidth.height + extraHeight;
 
-        var maxWidthWithComments = maxWidths[block.id] || 0;
+        var maxWidthWithComments = isFrame ? 0 : (maxWidths[block.id] || 0);
         maxWidth = Math.max(maxWidth,
             Math.max(heightWidth.width + extraWidth, maxWidthWithComments));
       }

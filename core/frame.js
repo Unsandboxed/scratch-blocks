@@ -366,12 +366,11 @@ Blockly.Frame.prototype.updateHandlePosition_ = function() {
  * @param {number} dy Vertical offset.
  */
 Blockly.Frame.prototype.moveBy = function(dx, dy) {
-  if (this.capturedBlocks_) {
-    for (var i = 0, block; block = this.capturedBlocks_[i]; i++) {
-      // Only move top-level blocks; Blockly automatically moves children.
-      if (!block.getParent()) {
-        block.moveBy(dx, dy);
-      }
+  var blocksToMove = this.capturedBlocks_ || this.getBlocksInside_();
+  for (var i = 0, block; block = blocksToMove[i]; i++) {
+    // Only move top-level blocks; Blockly automatically moves children.
+    if (!block.getParent()) {
+      block.moveBy(dx, dy);
     }
   }
   this.x += dx;
@@ -1201,11 +1200,33 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
     return;
   }
 
-  if (e.type === Blockly.Events.BLOCK_MOVE) {
-    var block = this.workspace_.getBlockById(e.blockId);
-    if (block && this.blockIntersectsFrame_(block, 100)) {
-      this.render();
-    }
+  if (!e || !e.type) {
+    return;
+  }
+
+  var isBlockMutationEvent = e.type === Blockly.Events.BLOCK_MOVE ||
+      e.type === Blockly.Events.BLOCK_CHANGE ||
+      e.type === Blockly.Events.BLOCK_CREATE ||
+      e.type === Blockly.Events.BLOCK_DELETE;
+  if (!isBlockMutationEvent) {
+    return;
+  }
+
+  var ownership = this.workspace_.blockFrameOwnership_;
+  var wasOwnedByThisFrame = !!(ownership && e.blockId &&
+      ownership[e.blockId] === this.id);
+
+  var shouldRender = wasOwnedByThisFrame;
+  var block = e.blockId ? this.workspace_.getBlockById(e.blockId) : null;
+  if (block) {
+    var rootBlock = block.getRootBlock ? block.getRootBlock() : block;
+    var ownerId = ownership && ownership[rootBlock.id];
+    shouldRender = shouldRender || ownerId === this.id ||
+        this.blockIntersectsFrame_(rootBlock, 100);
+  }
+
+  if (shouldRender) {
+    this.render();
   }
 };
 
