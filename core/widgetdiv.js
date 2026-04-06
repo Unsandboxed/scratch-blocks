@@ -109,7 +109,7 @@ Blockly.WidgetDiv.createDom = function() {
  */
 Blockly.WidgetDiv.show = function(newOwner, rtl, opt_dispose,
     opt_disposeAnimationFinished, opt_disposeAnimationTimerLength) {
-  Blockly.WidgetDiv.hide();
+  Blockly.WidgetDiv.hide(true);
   Blockly.WidgetDiv.owner_ = newOwner;
   Blockly.WidgetDiv.dispose_ = opt_dispose;
   Blockly.WidgetDiv.disposeAnimationFinished_ = opt_disposeAnimationFinished;

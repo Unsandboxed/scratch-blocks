@@ -1606,6 +1606,12 @@ Blockly.Frame.prototype.getBlocksInside_ = function() {
         block.isInsertionMarker()) {
       continue;
     }
+    // Skip blocks currently being dragged — their in-flight position must
+    // not distort the frame's bounds or trigger ownership changes.
+    if (block.svgGroup_ &&
+        Blockly.utils.hasClass(block.svgGroup_, 'blocklyDragging')) {
+      continue;
+    }
     if (this.ownsBlock_(block)) {
       inside.push(block);
     }
