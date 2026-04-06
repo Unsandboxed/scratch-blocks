@@ -610,10 +610,23 @@ Blockly.Block.prototype.getDescendants = function(ordered, opt_ignoreShadows) {
 };
 
 /**
+ * Check if this block is in a locked frame.
+ * @return {boolean} True if block belongs to a locked frame.
+ * @private
+ */
+Blockly.Block.prototype.isInLockedFrame_ = function() {
+  return this.workspace && this.workspace.isBlockInLockedFrame &&
+      this.workspace.isBlockInLockedFrame(this.id);
+};
+
+/**
  * Get whether this block is deletable or not.
  * @return {boolean} True if deletable.
  */
 Blockly.Block.prototype.isDeletable = function() {
+  if (this.isInLockedFrame_()) {
+    return false;
+  }
   return this.deletable_ && !this.isShadow_ &&
       !(this.workspace && this.workspace.options.readOnly);
 };
@@ -631,6 +644,9 @@ Blockly.Block.prototype.setDeletable = function(deletable) {
  * @return {boolean} True if movable.
  */
 Blockly.Block.prototype.isMovable = function() {
+  if (this.isInLockedFrame_()) {
+    return false;
+  }
   return this.movable_ && !this.isShadow_ &&
       !(this.workspace && this.workspace.options.readOnly);
 };
@@ -694,6 +710,9 @@ Blockly.Block.prototype.setInsertionMarker = function(insertionMarker) {
  * @return {boolean} True if editable.
  */
 Blockly.Block.prototype.isEditable = function() {
+  if (this.isInLockedFrame_()) {
+    return false;
+  }
   return this.editable_ && !(this.workspace && this.workspace.options.readOnly);
 };
 

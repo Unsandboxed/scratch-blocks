@@ -68,6 +68,7 @@ Blockly.Connection.REASON_DIFFERENT_WORKSPACES = 5;
 Blockly.Connection.REASON_SHADOW_PARENT = 6;
 // Fixes #1127, but may be the wrong solution.
 Blockly.Connection.REASON_CUSTOM_PROCEDURE = 7;
+Blockly.Connection.REASON_LOCKED_FRAME = 8;
 
 /**
  * Connection this connection connects to.  Null if not connected.
@@ -234,6 +235,7 @@ Blockly.Connection.prototype.connect_ = function(childConnection) {
   Blockly.Connection.connectReciprocally_(parentConnection, childConnection);
   // Demote the inferior block so that one is a child of the superior one.
   childBlock.setParent(parentBlock);
+
   if (event) {
     event.recordNew();
     Blockly.Events.fire(event);
@@ -314,6 +316,12 @@ Blockly.Connection.prototype.canConnectWithReason_ = function(target) {
     return Blockly.Connection.REASON_WRONG_TYPE;
   } else if (blockA && blockB && blockA.workspace !== blockB.workspace) {
     return Blockly.Connection.REASON_DIFFERENT_WORKSPACES;
+  } else if (!blockA.isShadow() && !blockB.isShadow() &&
+      ((blockA.workspace && blockA.workspace.isBlockInLockedFrame &&
+      blockA.workspace.isBlockInLockedFrame(blockA.id)) ||
+      (blockB.workspace && blockB.workspace.isBlockInLockedFrame &&
+      blockB.workspace.isBlockInLockedFrame(blockB.id)))) {
+    return Blockly.Connection.REASON_LOCKED_FRAME;
   } else if (!this.checkType_(target)) {
     return Blockly.Connection.REASON_CHECKS_FAILED;
   } else if (blockA.isShadow() && !blockB.isShadow()) {
@@ -355,6 +363,8 @@ Blockly.Connection.prototype.checkConnection_ = function(target) {
     case Blockly.Connection.REASON_DIFFERENT_WORKSPACES:
       // Usually this means one block has been deleted.
       throw 'Blocks not on same workspace.';
+    case Blockly.Connection.REASON_LOCKED_FRAME:
+      throw 'Cannot connect blocks in a locked group.';
     case Blockly.Connection.REASON_WRONG_TYPE:
       throw 'Attempt to connect incompatible types.';
     case Blockly.Connection.REASON_TARGET_NULL:

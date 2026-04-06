@@ -106,6 +106,7 @@ Blockly.WorkspaceCommentSvg.prototype.dispose = function() {
     // The comment has already been deleted.
     return;
   }
+  var workspace = this.workspace;
   // If this comment is being deleted, unlink the mouse events.
   if (Blockly.selected == this) {
     this.unselect();
@@ -126,6 +127,12 @@ Blockly.WorkspaceCommentSvg.prototype.dispose = function() {
   Blockly.Events.disable();
   Blockly.WorkspaceCommentSvg.superClass_.dispose.call(this);
   Blockly.Events.enable();
+
+  // Comment deletion changes content bounds; recompute immediately so future
+  // drags don't start from stale scroll limits.
+  if (workspace && typeof workspace.resizeContents === 'function') {
+    workspace.resizeContents();
+  }
 };
 
 /**
