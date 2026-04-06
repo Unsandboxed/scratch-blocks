@@ -211,12 +211,12 @@ Blockly.Frame.prototype.createDom = function() {
   });
 
   this.text_ = Blockly.utils.createSvgElement('text', {
-    'class': 'blocklyFrameText',
+    'class': 'blocklyText blocklyFrameText',
     'x': Blockly.Frame.HEADER_ICON_INSET + Blockly.Frame.MINIMIZE_ICON_SIZE + 8,
     'y': (Blockly.Frame.HEADER_HEIGHT / 2),
     'dominant-baseline': 'middle',
     'alignment-baseline': 'middle',
-    'style': 'font-size: 12pt; font-weight: bold; fill: white; pointer-events: none; ' +
+    'style': 'font-size: 12pt; font-weight: bold; pointer-events: none; ' +
              'font-family: "Helvetica Neue", Helvetica, sans-serif;'
   }, this.svgGroup_);
   this.text_.textContent = this.title;
@@ -350,12 +350,16 @@ Blockly.Frame.prototype.applyColorStyles_ = function(opt_block) {
   this.header_.setAttribute('fill', this.color);
 
 
-  // Use the block's secondary color for the stroke if available for a "Scratch" look
-  var secondaryColor = this.color;
-  if (opt_block && typeof opt_block.getColourSecondary === 'function') {
-    secondaryColor = opt_block.getColourSecondary();
+  // Prefer tertiary for outline contrast, then secondary, then base color.
+  var outlineColor = this.color;
+  if (opt_block) {
+    if (typeof opt_block.getColourTertiary === 'function') {
+      outlineColor = opt_block.getColourTertiary();
+    } else if (typeof opt_block.getColourSecondary === 'function') {
+      outlineColor = opt_block.getColourSecondary();
+    }
   }
-  this.rect_.setAttribute('stroke', secondaryColor);
+  this.rect_.setAttribute('stroke', outlineColor);
 };
 
 /**
