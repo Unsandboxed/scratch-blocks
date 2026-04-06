@@ -34,6 +34,7 @@ goog.require('Blockly.constants');
 goog.require('Blockly.DataCategory');
 goog.require('Blockly.DropDownDiv');
 goog.require('Blockly.Events.BlockCreate');
+goog.require('Blockly.Events.FrameChange');
 goog.require('Blockly.Events.FrameCreate');
 goog.require('Blockly.Frame');
 goog.require('Blockly.Gesture');
@@ -1828,10 +1829,16 @@ Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
         var dy = cursorY - xy.y;
         if (dx || dy) {
           if (isFrame) {
+            var oldFrameState = block.getStateForUndo_ ? block.getStateForUndo_() : null;
             var prevCapturedBlocks = block.capturedBlocks_;
             block.capturedBlocks_ = frameOwnedBlocksByFrameId[block.id] || null;
             block.moveBy(dx, dy);
             block.capturedBlocks_ = prevCapturedBlocks;
+            if (oldFrameState && block.getStateForUndo_) {
+              var newFrameState = block.getStateForUndo_();
+              Blockly.Events.fire(new Blockly.Events.FrameChange(
+                  block, 'state', oldFrameState, newFrameState));
+            }
           } else {
             block.moveBy(dx, dy);
           }
