@@ -1587,22 +1587,149 @@ Blockly.WorkspaceSvg.prototype.getBlocksBoundingBox = function() {
 };
 
 /**
- * Clean up the workspace by ordering all the blocks in a column.
+ * Clean up the workspace using a column-based layout similar to
+ * "Clean up Blocks+".
+ * @param {*=} opt_makeSpaceForBlock Optional block to leave extra space for.
  */
-Blockly.WorkspaceSvg.prototype.cleanUp = function() {
+Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
   this.setResizesEnabled(false);
   Blockly.Events.setGroup(true);
-  var topBlocks = this.getTopBlocks(true);
-  var cursorY = 0;
-  for (var i = 0, block; block = topBlocks[i]; i++) {
-    var xy = block.getRelativeToSurfaceXY();
-    block.moveBy(-xy.x, cursorY - xy.y);
-    block.snapToGrid();
-    cursorY = block.getRelativeToSurfaceXY().y +
-        block.getHeightWidth().height + Blockly.BlockSvg.MIN_BLOCK_Y;
+  try {
+    var topBlocks = this.getTopBlocks(true);
+    if (!topBlocks.length) {
+      return;
+    }
+
+    var topComments = this.getTopComments();
+    var maxWidths = Object.create(null);
+
+    // Include attached comment width when determining column width.
+    for (var i = 0; i < topComments.length; i++) {
+      var comment = topComments[i];
+      if (!comment || !comment.block_ || !comment.block_.getRootBlock ||
+          typeof comment.getBoundingRectangle !== 'function') {
+        continue;
+      }
+
+      // Re-run auto positioning so attached comments settle next to their blocks.
+      if (comment.setVisible) {
+        comment.setVisible(false);
+        comment.needsAutoPositioning_ = true;
+        comment.setVisible(true);
+      }
+
+      var root = comment.block_.getRootBlock();
+      if (!root || typeof root.getBoundingRectangle !== 'function') {
+        continue;
+      }
+      var commentBounds = comment.getBoundingRectangle();
+      var rootBounds = root.getBoundingRectangle();
+      var widthWithComment = commentBounds.bottomRight.x - rootBounds.topLeft.x;
+      maxWidths[root.id] = Math.max(widthWithComment, maxWidths[root.id] || 0);
+    }
+
+    var TOLERANCE = 256;
+    var columns = [];
+    var orphans = {
+      x: -999999,
+      count: 0,
+      blocks: []
+    };
+
+    // Build columns based on X-position, keeping reporter orphans separate.
+    for (i = 0; i < topBlocks.length; i++) {
+      var topBlock = topBlocks[i];
+      if (topBlock.outputConnection) {
+        orphans.blocks.push(topBlock);
+        continue;
+      }
+
+      var pos = topBlock.getRelativeToSurfaceXY();
+      var bestCol = null;
+      var bestError = TOLERANCE;
+      for (var c = 0; c < columns.length; c++) {
+        var col = columns[c];
+        var err = Math.abs(pos.x - col.x);
+        if (err < bestError) {
+          bestError = err;
+          bestCol = col;
+        }
+      }
+
+      if (bestCol) {
+        bestCol.x = (bestCol.x * bestCol.count + pos.x) / ++bestCol.count;
+        bestCol.blocks.push(topBlock);
+      } else {
+        columns.push({
+          x: pos.x,
+          count: 1,
+          blocks: [topBlock]
+        });
+      }
+    }
+
+    columns.sort(function(a, b) {
+      return a.x - b.x;
+    });
+    for (c = 0; c < columns.length; c++) {
+      columns[c].blocks.sort(function(a, b) {
+        return a.getRelativeToSurfaceXY().y - b.getRelativeToSurfaceXY().y;
+      });
+    }
+
+    if (orphans.blocks.length) {
+      orphans.blocks.sort(function(a, b) {
+        return a.getRelativeToSurfaceXY().y - b.getRelativeToSurfaceXY().y;
+      });
+      columns.unshift(orphans);
+    }
+
+    var makeSpaceForBlock =
+        opt_makeSpaceForBlock && opt_makeSpaceForBlock.getRootBlock ?
+            opt_makeSpaceForBlock.getRootBlock() : null;
+
+    var cursorX = 48;
+    for (c = 0; c < columns.length; c++) {
+      var column = columns[c];
+      var cursorY = 64;
+      var maxWidth = 0;
+
+      for (i = 0; i < column.blocks.length; i++) {
+        var block = column.blocks[i];
+        var extraWidth = (block === makeSpaceForBlock) ? 380 : 0;
+        var extraHeight = (block === makeSpaceForBlock) ? 480 : 72;
+        var xy = block.getRelativeToSurfaceXY();
+        var dx = cursorX - xy.x;
+        var dy = cursorY - xy.y;
+        if (dx || dy) {
+          block.moveBy(dx, dy);
+        }
+
+        var heightWidth = block.getHeightWidth();
+        cursorY += heightWidth.height + extraHeight;
+
+        var maxWidthWithComments = maxWidths[block.id] || 0;
+        maxWidth = Math.max(maxWidth,
+            Math.max(heightWidth.width + extraWidth, maxWidthWithComments));
+      }
+
+      cursorX += maxWidth + 96;
+    }
+
+    // Reposition top comments after the blocks have been moved.
+    for (i = 0; i < topComments.length; i++) {
+      comment = topComments[i];
+      if (comment && comment.setVisible) {
+        comment.setVisible(false);
+        comment.needsAutoPositioning_ = true;
+        comment.setVisible(true);
+      }
+    }
+  } finally {
+    Blockly.Events.setGroup(false);
+    this.setResizesEnabled(true);
+    this.resizeContents();
   }
-  Blockly.Events.setGroup(false);
-  this.setResizesEnabled(true);
 };
 
 /**
