@@ -305,6 +305,13 @@ Blockly.Frame.prototype.updateMinimizeIcon_ = function() {
  * @private
  */
 Blockly.Frame.prototype.updateColorFromBlocks_ = function() {
+  // Keep the current frame color while minimized. Collapsing shrinks bounds to
+  // the header, which can temporarily exclude contained stacks from ownership
+  // checks and incorrectly reset color to the default.
+  if (this.isMinimized_) {
+    return;
+  }
+
   var blocks = this.getBlocksInside_();
   var defaultColor = '#4C97FF'; // Scratch Blue
   var newColor = defaultColor;
@@ -320,8 +327,11 @@ Blockly.Frame.prototype.updateColorFromBlocks_ = function() {
 
   // Update DOM only if the color has changed to optimize performance.
   if (this.color !== newColor) {
+    var oldColor = this.color;
     this.color = newColor;
     this.applyColorStyles_(topBlock);
+    Blockly.Events.fire(new Blockly.Events.FrameChange(
+        this, 'color', oldColor, newColor));
   }
 };
 
@@ -507,6 +517,14 @@ Blockly.Frame.fromXml = function(xmlFrame, workspace) {
   } else {
     frame.render();
   }
+  // Re-run once after hydration to stabilize ownership/color when switching
+  // targets or tabs, where block/frame event ordering can vary.
+  setTimeout(function() {
+    if (!frame.workspace_ || !frame.svgGroup_) {
+      return;
+    }
+    frame.render();
+  }, 0);
   frame.resizeWorkspaceContents_();
   return frame;
 };
@@ -521,7 +539,8 @@ Blockly.Frame.prototype.getStateForUndo_ = function() {
     x: this.x,
     y: this.y,
     userRight: this.userRight_,
-    userBottom: this.userBottom_
+    userBottom: this.userBottom_,
+    minimized: this.isMinimized_
   };
 };
 
@@ -573,6 +592,16 @@ Blockly.Frame.prototype.setMinimizedFromUndo_ = function(minimized) {
  */
 Blockly.Frame.prototype.setLockedFromUndo_ = function(locked) {
   this.isLocked_ = !!locked;
+};
+
+/**
+ * Apply an undo/redo color change.
+ * @param {string} color Frame color.
+ * @private
+ */
+Blockly.Frame.prototype.setColorFromUndo_ = function(color) {
+  this.color = color || '#4C97FF';
+  this.applyColorStyles_();
 };
 
 /**
@@ -1226,7 +1255,15 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
   }
 
   if (shouldRender) {
+    var oldState = this.getStateForUndo_();
     this.render();
+    var newState = this.getStateForUndo_();
+    if ((oldState.x !== newState.x || oldState.y !== newState.y ||
+        oldState.userRight !== newState.userRight ||
+        oldState.userBottom !== newState.userBottom)) {
+      Blockly.Events.fire(new Blockly.Events.FrameChange(
+          this, 'state', oldState, newState));
+    }
   }
 };
 
