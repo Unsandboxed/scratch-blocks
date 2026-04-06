@@ -744,8 +744,7 @@ Blockly.BlockSvg.prototype.showContextMenu_ = function(e) {
       text: "Add to New Group",
       enabled: true,
       callback: function() {
-        var frame = this.workspace.createNewFrameAroundStack(rootBlock || this);
-        // Optional: Add all connected blocks too
+        this.workspace.createNewFrameAroundStack(rootBlock || this);
       }.bind(this)
     };
     menuOptions.push(menuOption);

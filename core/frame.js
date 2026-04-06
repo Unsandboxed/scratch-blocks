@@ -24,7 +24,7 @@ Blockly.Frame = function(workspace, data) {
   this.id = data.id || Blockly.utils.genUid();
 
   /** @type {boolean} */
-  this.isFrame = true; 
+  this.isFrame = true;
 
   this.x = data.x || 0;
   this.y = data.y || 0;
@@ -36,7 +36,7 @@ Blockly.Frame = function(workspace, data) {
   this.userBottom_ = this.y + this.userHeight_;
 
   this.isMinimized_ = false;
-  this.oldHeight_ = this.height; 
+  this.oldHeight_ = this.height;
   this.isLocked_ = !!data.locked;
 
   this.title = data.title || "New Group";
@@ -51,8 +51,8 @@ Blockly.Frame = function(workspace, data) {
   this.workspace_.addChangeListener(this.changeWrapper_);
 
   /** @private {?Blockly.BlockDragSurfaceSvg} */
-    this.dragSurface_ = Blockly.utils.is3dSupported() &&
-      workspace.getBlockDragSurface() ? workspace.getBlockDragSurface() : null;
+  this.dragSurface_ = Blockly.utils.is3dSupported() &&
+    workspace.getBlockDragSurface() ? workspace.getBlockDragSurface() : null;
 
   /** @private {?number} */
   this.deleteArea_ = Blockly.DELETE_AREA_NONE;
@@ -203,8 +203,8 @@ Blockly.Frame.prototype.createDom = function() {
       this.workspace_.options.pathToMedia + 'delete-x.svg');
   Blockly.bindEventWithChecks_(this.deleteButton_, 'mousedown', this, this.onDeleteMouseDown_);
 
-  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function() {
-      this.promptRename_();
+  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function () {
+    this.promptRename_();
   });
 
   this.text_ = Blockly.utils.createSvgElement('text', {
@@ -612,9 +612,9 @@ Blockly.Frame.prototype.setColorFromUndo_ = function(color) {
  * @return {boolean} True if the point is inside.
  */
 Blockly.Frame.prototype.isPointInside = function(x, y) {
-  return x >= this.x && 
+  return x >= this.x &&
          x <= (this.x + this.width) &&
-         y >= this.y && 
+         y >= this.y &&
          y <= (this.y + this.height);
 };
 
@@ -768,6 +768,7 @@ Blockly.Frame.prototype.onMouseMove_ = function(e) {
 
 /**
  * Stop dragging the frame.
+ * @param {!Event} e Mouse move event.
  * @private
  */
 Blockly.Frame.prototype.onMouseUp_ = function(e) {
