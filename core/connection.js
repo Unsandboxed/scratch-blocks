@@ -316,10 +316,11 @@ Blockly.Connection.prototype.canConnectWithReason_ = function(target) {
     return Blockly.Connection.REASON_WRONG_TYPE;
   } else if (blockA && blockB && blockA.workspace !== blockB.workspace) {
     return Blockly.Connection.REASON_DIFFERENT_WORKSPACES;
-  } else if ((blockA.workspace && blockA.workspace.isBlockInLockedFrame &&
+  } else if (!blockA.isShadow() && !blockB.isShadow() &&
+      ((blockA.workspace && blockA.workspace.isBlockInLockedFrame &&
       blockA.workspace.isBlockInLockedFrame(blockA.id)) ||
       (blockB.workspace && blockB.workspace.isBlockInLockedFrame &&
-      blockB.workspace.isBlockInLockedFrame(blockB.id))) {
+      blockB.workspace.isBlockInLockedFrame(blockB.id)))) {
     return Blockly.Connection.REASON_LOCKED_FRAME;
   } else if (!this.checkType_(target)) {
     return Blockly.Connection.REASON_CHECKS_FAILED;

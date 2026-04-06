@@ -652,8 +652,18 @@ Blockly.Workspace.prototype.isBlockInLockedFrame = function(blockOrId) {
   if (!this.blockFrameOwnership_) {
     return false;
   }
-  var blockId = typeof blockOrId == 'string' ? blockOrId : blockOrId.id;
+  var block = typeof blockOrId == 'string' ? this.getBlockById(blockOrId) : blockOrId;
+  if (!block) {
+    return false;
+  }
+  var blockId = block.id;
   var ownerFrameId = this.blockFrameOwnership_[blockId];
+  if (!ownerFrameId && typeof block.getRootBlock == 'function') {
+    var rootBlock = block.getRootBlock();
+    if (rootBlock) {
+      ownerFrameId = this.blockFrameOwnership_[rootBlock.id];
+    }
+  }
   if (!ownerFrameId) {
     return false;
   }

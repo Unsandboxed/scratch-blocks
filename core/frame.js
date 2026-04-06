@@ -50,12 +50,9 @@ Blockly.Frame = function(workspace, data) {
   this.changeWrapper_ = this.onWorkspaceChange_.bind(this);
   this.workspace_.addChangeListener(this.changeWrapper_);
 
-  /** @private {boolean} */
-  this.useDragSurface_ =
-      Blockly.utils.is3dSupported() && !!workspace.getBlockDragSurface();
-
   /** @private {?Blockly.BlockDragSurfaceSvg} */
-  this.dragSurface_ = this.useDragSurface_ ? workspace.getBlockDragSurface() : null;
+    this.dragSurface_ = Blockly.utils.is3dSupported() &&
+      workspace.getBlockDragSurface() ? workspace.getBlockDragSurface() : null;
 
   /** @private {?number} */
   this.deleteArea_ = Blockly.DELETE_AREA_NONE;
@@ -1228,10 +1225,10 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
     return;
   }
 
-  var hasBlocks = this.getBlocksInside_().length > 0;
+  var insideBlocks = this.getBlocksInside_();
+  var hasBlocks = insideBlocks.length > 0;
   var hasScriptStacks = false;
   if (hasBlocks) {
-    var insideBlocks = this.getBlocksInside_();
     for (var i = 0; i < insideBlocks.length; i++) {
       var insideBlock = insideBlocks[i];
       if (insideBlock && !insideBlock.getParent() && !insideBlock.outputConnection) {
@@ -1381,6 +1378,7 @@ Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
           this, 'state', oldState, newState));
     }
   }
+
 };
 
 /**
