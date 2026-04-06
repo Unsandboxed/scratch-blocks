@@ -1262,7 +1262,7 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
       callback: this.autoFitAndRecord_.bind(this)
     },
     {
-      text: 'Clean Up Scripts in Group',
+      text: 'Clean up Blocks in Group',
       enabled: hasScriptStacks && !this.isLocked_ && !this.isMinimized_,
       callback: this.cleanUpScriptsInside_.bind(this)
     },
