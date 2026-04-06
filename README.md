@@ -1,8 +1,10 @@
-# TurboWarp/scratch-blocks
+# Unsandboxed/scratch-blocks
+
+Modified version of TurboWarp/scratch-blocks with some additions and renderer fixes.
 
 ## Playgrounds
 
- - **Vertical blocks**: https://turbowarp.github.io/scratch-blocks/tests/vertical_playground_compressed.html
+ - **Vertical blocks**: https://unsandboxed.github.io/scratch-blocks/tests/vertical_playground_compressed.html
 
 ## Local development
 

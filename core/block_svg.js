@@ -31,6 +31,7 @@ goog.require('Blockly.BlockAnimations');
 goog.require('Blockly.ContextMenu');
 goog.require('Blockly.Events.Ui');
 goog.require('Blockly.Events.BlockMove');
+goog.require('Blockly.Frame');
 goog.require('Blockly.Grid');
 goog.require('Blockly.RenderedConnection');
 goog.require('Blockly.scratchBlocksUtils');
@@ -733,6 +734,22 @@ Blockly.BlockSvg.prototype.showContextMenu_ = function(e, originalBlock) {
     return;
   }
 
+  var rootBlock = this.getRootBlock();
+  var ownership = this.workspace.blockFrameOwnership_;
+  var ownerFrameId = ownership && rootBlock ? ownership[rootBlock.id] : null;
+
+  if (this.isDeletable() && this.isMovable() && !this.isCollapsed() &&
+      !this.isInFlyout && !this.workspace.isFlyout && !ownerFrameId) {
+    var menuOption = {
+      text: "Add to New Group",
+      enabled: true,
+      callback: function() {
+        this.workspace.createNewFrameAroundStack(rootBlock || this);
+      }.bind(this)
+    };
+    menuOptions.push(menuOption);
+  }
+
   // Allow the block to add or modify menuOptions.
   if (this.customContextMenu) {
     this.customContextMenu(menuOptions, originalBlock);
@@ -853,6 +870,37 @@ Blockly.BlockSvg.prototype.setInsertionMarker = function(insertionMarker, opt_mi
   Blockly.BlockSvg.superClass_.setInsertionMarker.call(this, insertionMarker);
   this.insertionMarkerMinWidth_ = opt_minWidth;
   this.updateColour();
+};
+
+/**
+ * Set whether the block is visible or not.
+ * @param {boolean} visible True if visible.
+ */
+Blockly.BlockSvg.prototype.setVisible = function(visible) {
+  var root = this.getSvgRoot();
+  if (!root) return;
+
+  // Toggle CSS class
+  if (visible) {
+    Blockly.utils.removeClass(root, 'blocklyHidden');
+  } else {
+    Blockly.utils.addClass(root, 'blocklyHidden');
+  }
+
+  var connections = this.getConnections_(true);
+  for (var i = 0; i < connections.length; i++) {
+    connections[i].unhidden_ = visible; // Custom flag if needed
+    // In some versions, you can set the connection to hidden directly:
+    if (connections[i].setHidden) connections[i].setHidden(!visible);
+  }
+
+  // Force render to update internal state
+  this.render();
+
+  var children = this.getChildren();
+  for (var i = 0; i < children.length; i++) {
+    children[i].setVisible(visible);
+  }
 };
 
 /**
