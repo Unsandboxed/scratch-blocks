@@ -81,7 +81,7 @@ Blockly.Frame = function(workspace, data) {
  * @type {number}
  * @const
  */
-Blockly.Frame.HEADER_HEIGHT = 28;
+Blockly.Frame.HEADER_HEIGHT = 32;
 
 /**
  * Header icon inset from the edge.
@@ -148,13 +148,34 @@ Blockly.Frame.prototype.createDom = function() {
     'style': 'cursor: move;'
   }, this.svgGroup_);
 
-  this.resizeHandle_ = Blockly.utils.createSvgElement('path', {
-    'class': 'blocklyFrameResizeHandle',
-    'd': 'M 15 15 L 15 0 L 0 15 Z',
-    'fill': this.color,
-    'fill-opacity': 0.8,
-    'style': 'cursor: nwse-resize;'
+  // Create a resize handle that visually matches Scratch comment resize gripper.
+  // Use the same structure: a grab triangle (invisible) plus two diagonal lines.
+  var resizeClass = this.workspace_.RTL ? 'scratchCommentResizeSW' : 'scratchCommentResizeSE';
+  this.resizeHandle_ = Blockly.utils.createSvgElement('g', {
+    'class': resizeClass
   }, this.svgGroup_);
+  var resizeSize = (Blockly.ScratchBubble && Blockly.ScratchBubble.RESIZE_SIZE) || 16;
+  var outerPad = (Blockly.ScratchBubble && Blockly.ScratchBubble.RESIZE_OUTER_PAD) || 8;
+  var cornerPad = (Blockly.ScratchBubble && Blockly.ScratchBubble.RESIZE_CORNER_PAD) || 4;
+  // Invisible padded triangle to expand touch target.
+  Blockly.utils.createSvgElement('polygon', {
+    'points': [
+      -outerPad, resizeSize + cornerPad,
+      resizeSize + cornerPad, resizeSize + cornerPad,
+      resizeSize + cornerPad, -outerPad
+    ].join(' ')
+  }, this.resizeHandle_);
+  // Two diagonal grip lines to match Scratch style.
+  Blockly.utils.createSvgElement('line', {
+    'class': 'blocklyResizeLine',
+    'x1': resizeSize / 3, 'y1': resizeSize - 1,
+    'x2': resizeSize - 1, 'y2': resizeSize / 3
+  }, this.resizeHandle_);
+  Blockly.utils.createSvgElement('line', {
+    'class': 'blocklyResizeLine',
+    'x1': resizeSize * 2 / 3, 'y1': resizeSize - 1,
+    'x2': resizeSize - 1, 'y2': resizeSize * 2 / 3
+  }, this.resizeHandle_);
   
   this.updateHandlePosition_();
   
@@ -192,7 +213,9 @@ Blockly.Frame.prototype.createDom = function() {
   this.text_ = Blockly.utils.createSvgElement('text', {
     'class': 'blocklyFrameText',
     'x': Blockly.Frame.HEADER_ICON_INSET + Blockly.Frame.MINIMIZE_ICON_SIZE + 8,
-    'y': 19,
+    'y': (Blockly.Frame.HEADER_HEIGHT / 2),
+    'dominant-baseline': 'middle',
+    'alignment-baseline': 'middle',
     'style': 'font-size: 12pt; font-weight: bold; fill: white; pointer-events: none; ' +
              'font-family: "Helvetica Neue", Helvetica, sans-serif;'
   }, this.svgGroup_);
@@ -242,6 +265,17 @@ Blockly.Frame.prototype.render = function() {
 };
 
 /**
+ * Request the workspace to recompute its visible content extents after a
+ * frame changes size or position.
+ * @private
+ */
+Blockly.Frame.prototype.resizeWorkspaceContents_ = function() {
+  if (this.workspace_ && typeof this.workspace_.resizeContents === 'function') {
+    this.workspace_.resizeContents();
+  }
+};
+
+/**
  * Update frame header control positions for the current width/state.
  * @private
  */
@@ -274,9 +308,10 @@ Blockly.Frame.prototype.updateColorFromBlocks_ = function() {
   var blocks = this.getBlocksInside_();
   var defaultColor = '#4C97FF'; // Scratch Blue
   var newColor = defaultColor;
+  var topBlock = null;
 
   if (blocks.length > 0 && blocks[0]) {
-    var topBlock = blocks[0];
+    topBlock = blocks[0];
     // Scratch/Blockly blocks use getColour to return a hex string.
     if (typeof topBlock.getColour === 'function') {
       newColor = topBlock.getColour();
@@ -286,7 +321,7 @@ Blockly.Frame.prototype.updateColorFromBlocks_ = function() {
   // Update DOM only if the color has changed to optimize performance.
   if (this.color !== newColor) {
     this.color = newColor;
-    this.applyColorStyles_();
+    this.applyColorStyles_(topBlock);
   }
 };
 
@@ -303,7 +338,7 @@ Blockly.Frame.prototype.applyColorStyles_ = function(opt_block) {
   // Update the main body fill and header
   this.rect_.setAttribute('fill', this.color);
   this.header_.setAttribute('fill', this.color);
-  this.resizeHandle_.setAttribute('fill', this.color);
+
 
   // Use the block's secondary color for the stroke if available for a "Scratch" look
   var secondaryColor = this.color;
@@ -318,8 +353,10 @@ Blockly.Frame.prototype.applyColorStyles_ = function(opt_block) {
  * @private
  */
 Blockly.Frame.prototype.updateHandlePosition_ = function() {
-  var hX = this.width - 15;
-  var hY = this.height - 15;
+  var resizeSize = (Blockly.ScratchBubble && Blockly.ScratchBubble.RESIZE_SIZE) || 16;
+  var cornerPad = (Blockly.ScratchBubble && Blockly.ScratchBubble.RESIZE_CORNER_PAD) || 4;
+  var hX = this.width - (resizeSize + cornerPad);
+  var hY = this.height - (resizeSize + cornerPad);
   this.resizeHandle_.setAttribute('transform', 'translate(' + hX + ',' + hY + ')');
 };
 
@@ -357,8 +394,9 @@ Blockly.Frame.prototype.autoResizeToContents = function() {
   var contentBounds = this.getContentBounds_(blocks);
   this.x = contentBounds.x;
   this.y = contentBounds.y;
-  this.width = contentBounds.width;
-  this.height = contentBounds.height;
+  // Enforce minimums to remain consistent with render() constraints.
+  this.width = Math.max(100, contentBounds.width);
+  this.height = Math.max(50, contentBounds.height);
   this.userRight_ = this.x + this.width;
   this.userBottom_ = this.y + this.height;
   this.userWidth_ = this.width;
@@ -431,8 +469,8 @@ Blockly.Frame.parseAttributes = function(xml) {
     height: isNaN(h) ? 150 : h,
     title: xml.getAttribute('title') || 'New Group',
     color: xml.getAttribute('color') || '#4C97FF',
-    minimized: xml.getAttribute('minimized') == 'true',
-    locked: xml.getAttribute('locked') == 'true'
+    minimized: xml.getAttribute('minimized') === 'true',
+    locked: xml.getAttribute('locked') === 'true'
   };
 };
 
@@ -470,6 +508,7 @@ Blockly.Frame.fromXml = function(xmlFrame, workspace) {
   } else {
     frame.render();
   }
+  frame.resizeWorkspaceContents_();
   return frame;
 };
 
@@ -747,6 +786,7 @@ Blockly.Frame.prototype.onMouseUp_ = function(e) {
   }
 
   this.render();
+  this.resizeWorkspaceContents_();
 
   if (this.preDragState_) {
     var newState = this.getStateForUndo_();
@@ -963,6 +1003,8 @@ Blockly.Frame.prototype.onMouseUpResize_ = function() {
         this, 'state', this.preResizeState_, newState));
     this.preResizeState_ = null;
   }
+
+  this.resizeWorkspaceContents_();
 };
 
 /**
@@ -1007,6 +1049,7 @@ Blockly.Frame.prototype.toggleMinimize_ = function(e, opt_skipEvent) {
   }
 
   this.render();
+  this.resizeWorkspaceContents_();
 
   if (!opt_skipEvent && oldMinimized !== this.isMinimized_) {
     Blockly.Events.fire(new Blockly.Events.FrameChange(
@@ -1043,6 +1086,7 @@ Blockly.Frame.prototype.autoFitAndRecord_ = function() {
   }
   var oldState = this.getStateForUndo_();
   this.autoResizeToContents();
+  this.resizeWorkspaceContents_();
   var newState = this.getStateForUndo_();
   Blockly.Events.fire(new Blockly.Events.FrameChange(
       this, 'state', oldState, newState));
@@ -1095,6 +1139,7 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
  * @private
  */
 Blockly.Frame.prototype.deleteFrame_ = function() {
+  var workspace = this.workspace_;
   var existingGroup = Blockly.Events.getGroup();
   if (!existingGroup) {
     Blockly.Events.setGroup(true);
@@ -1111,6 +1156,9 @@ Blockly.Frame.prototype.deleteFrame_ = function() {
     }
 
     this.dispose();
+    if (workspace && typeof workspace.resizeContents === 'function') {
+      workspace.resizeContents();
+    }
   } finally {
     if (!existingGroup) {
       Blockly.Events.setGroup(false);
@@ -1246,11 +1294,44 @@ Blockly.Frame.prototype.ownsBlock_ = function(block) {
   var ownerId = ownership[block.id];
 
   if (ownerId) {
-    var ownerFrame = this.workspace_.getFrameById(ownerId);
-    if (ownerFrame && ownerFrame.svgGroup_ && ownerFrame.blockIntersectsFrame_(block, 5)) {
-      return ownerId == this.id;
+    var ownerFrame = null;
+    if (typeof this.workspace_.getFrameById === 'function') {
+      ownerFrame = this.workspace_.getFrameById(ownerId);
+    } else if (this.workspace_.frames_) {
+      for (var fi = 0; fi < this.workspace_.frames_.length; fi++) {
+        if (this.workspace_.frames_[fi].id === ownerId) {
+          ownerFrame = this.workspace_.frames_[fi];
+          break;
+        }
+      }
     }
-    delete ownership[block.id];
+
+    if (ownerFrame && ownerFrame.svgGroup_ && ownerFrame.blockIntersectsFrame_(block, 5)) {
+      // Prefer the frame with the smaller area (tighter fit). If areas are equal,
+      // prefer the more recently created frame (higher index in workspace.frames_ when available).
+      var ownerArea = (ownerFrame.userWidth_ || ownerFrame.width) * (ownerFrame.userHeight_ || ownerFrame.height);
+      var myArea = (this.userWidth_ || this.width) * (this.userHeight_ || this.height);
+      if (ownerArea < myArea) {
+        return ownerId === this.id;
+      } else if (ownerArea === myArea) {
+        if (this.workspace_.frames_) {
+          var ownerIdx = this.workspace_.frames_.indexOf(ownerFrame);
+          var myIdx = this.workspace_.frames_.indexOf(this);
+          if (myIdx > ownerIdx) {
+            // Current frame is more recent -> claim ownership.
+          } else {
+            return ownerId === this.id;
+          }
+        } else {
+          // No frame ordering information; keep existing owner.
+          return ownerId === this.id;
+        }
+      } else {
+        // Current frame is a tighter fit — fall through to claim ownership.
+      }
+    } else {
+      delete ownership[block.id];
+    }
   }
 
   if (this.blockIntersectsFrame_(block, 5)) {

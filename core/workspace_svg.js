@@ -551,6 +551,9 @@ Blockly.WorkspaceSvg.prototype.createNewFrameAroundStack = function(rootBlock) {
 
   // Ensure initial visuals and internal block containment state are current.
   frame.render();
+  if (typeof frame.resizeWorkspaceContents_ === 'function') {
+    frame.resizeWorkspaceContents_();
+  }
 
   Blockly.Events.fire(new Blockly.Events.FrameCreate(frame));
   return frame;
@@ -2170,6 +2173,49 @@ Blockly.WorkspaceSvg.getContentDimensions_ = function(ws, svgSize) {
 };
 
 /**
+ * Get the bounding box for all rendered frames on the workspace, in workspace
+ * coordinates.
+ * @param {!Blockly.WorkspaceSvg} ws The workspace to inspect.
+ * @return {?Object} The frame bounds, or null if there are no rendered frames.
+ * @private
+ */
+Blockly.WorkspaceSvg.getFrameBoundsExact_ = function(ws) {
+  if (!ws.frames_ || !ws.frames_.length) {
+    return null;
+  }
+
+  var left = Infinity;
+  var top = Infinity;
+  var right = -Infinity;
+  var bottom = -Infinity;
+  var hasFrame = false;
+
+  for (var i = 0; i < ws.frames_.length; i++) {
+    var frame = ws.frames_[i];
+    if (!frame || !frame.svgGroup_) {
+      continue;
+    }
+
+    hasFrame = true;
+    left = Math.min(left, frame.x);
+    top = Math.min(top, frame.y);
+    right = Math.max(right, frame.x + frame.width);
+    bottom = Math.max(bottom, frame.y + frame.height);
+  }
+
+  if (!hasFrame) {
+    return null;
+  }
+
+  return {
+    x: left,
+    y: top,
+    width: right - left,
+    height: bottom - top
+  };
+};
+
+/**
  * Get the bounding box for all workspace contents, in pixels.
  * @param {!Blockly.WorkspaceSvg} ws The workspace to inspect.
  * @return {!Object} The dimensions of the contents of the given workspace, as
@@ -2181,6 +2227,27 @@ Blockly.WorkspaceSvg.getContentDimensions_ = function(ws, svgSize) {
 Blockly.WorkspaceSvg.getContentDimensionsExact_ = function(ws) {
   // Block bounding box is in workspace coordinates.
   var blockBox = ws.getBlocksBoundingBox();
+  var frameBox = Blockly.WorkspaceSvg.getFrameBoundsExact_(ws);
+
+  if (frameBox) {
+    if (!blockBox.width && !blockBox.height) {
+      blockBox = frameBox;
+    } else {
+      var left = Math.min(blockBox.x, frameBox.x);
+      var top = Math.min(blockBox.y, frameBox.y);
+      var right = Math.max(blockBox.x + blockBox.width,
+          frameBox.x + frameBox.width);
+      var bottom = Math.max(blockBox.y + blockBox.height,
+          frameBox.y + frameBox.height);
+      blockBox = {
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top
+      };
+    }
+  }
+
   var scale = ws.scale;
 
   // Convert to pixels.
