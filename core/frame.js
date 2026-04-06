@@ -203,7 +203,7 @@ Blockly.Frame.prototype.createDom = function() {
       this.workspace_.options.pathToMedia + 'delete-x.svg');
   Blockly.bindEventWithChecks_(this.deleteButton_, 'mousedown', this, this.onDeleteMouseDown_);
 
-  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function () {
+  Blockly.bindEventWithChecks_(this.header_, 'dblclick', this, function() {
     this.promptRename_();
   });
 
@@ -885,6 +885,8 @@ Blockly.Frame.prototype.setDragVisual_ = function(enable) {
 
 /**
  * Move this frame to the drag surface for smooth dragging above overlays.
+ * @return {boolean} True if moved to drag surface, false if it stayed on
+ *     the normal workspace layer.
  * @private
  */
 Blockly.Frame.prototype.moveToDragSurface_ = function() {
@@ -897,7 +899,7 @@ Blockly.Frame.prototype.moveToDragSurface_ = function() {
     return false;
   }
   this.dragContainerGroup_ = /** @type {!SVGGElement} */ (
-      Blockly.utils.createSvgElement('g', {'class': 'blocklyFrameDragGroup'}, null));
+    Blockly.utils.createSvgElement('g', {'class': 'blocklyFrameDragGroup'}, null));
   this.dragContainerGroup_.setAttribute('opacity', Blockly.Frame.DRAG_GHOST_OPACITY);
 
   // Move frame and captured top-level stacks under a single drag group.
@@ -1040,6 +1042,8 @@ Blockly.Frame.prototype.onMouseUpResize_ = function() {
 /**
  * Toggle the minimized state of the frame, hiding or showing contained blocks.
  * @param {Event} e Mouse down event.
+ * @param {boolean=} opt_skipEvent True to update state without firing a
+ *     minimize change event.
  * @private
  */
 Blockly.Frame.prototype.toggleMinimize_ = function(e, opt_skipEvent) {
