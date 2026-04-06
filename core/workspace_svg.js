@@ -1687,6 +1687,52 @@ Blockly.WorkspaceSvg.prototype.cleanUp = function(opt_makeSpaceForBlock) {
     var topComments = this.getTopComments();
     var maxWidths = Object.create(null);
 
+    // Clean up scripts inside each frame first. Frame-contained stacks are
+    // later skipped from workspace columns, so lay them out in-frame here.
+    var frameInnerPad = 24;
+    var frameStackSpacing = 72;
+    for (f = 0; f < topFrames.length; f++) {
+      topFrame = topFrames[f];
+      if (!topFrame || !topFrame.svgGroup_ || topFrame.isMinimized_) {
+        continue;
+      }
+      var ownedInFrame = frameOwnedBlocksByFrameId[topFrame.id] || [];
+      var frameStacks = [];
+      for (var fs = 0; fs < ownedInFrame.length; fs++) {
+        var ownedBlock = ownedInFrame[fs];
+        if (!ownedBlock || ownedBlock.getParent()) {
+          continue;
+        }
+        // Keep orphan reporters out of script stack cleanup.
+        if (ownedBlock.outputConnection) {
+          continue;
+        }
+        frameStacks.push(ownedBlock);
+      }
+
+      frameStacks.sort(function(a, b) {
+        var aPos = a.getRelativeToSurfaceXY();
+        var bPos = b.getRelativeToSurfaceXY();
+        if (aPos.y !== bPos.y) {
+          return aPos.y - bPos.y;
+        }
+        return aPos.x - bPos.x;
+      });
+
+      var inFrameX = topFrame.x + frameInnerPad;
+      var inFrameY = topFrame.y + Blockly.Frame.HEADER_HEIGHT + frameInnerPad;
+      for (fs = 0; fs < frameStacks.length; fs++) {
+        var frameStack = frameStacks[fs];
+        var frameStackXY = frameStack.getRelativeToSurfaceXY();
+        var frameDx = inFrameX - frameStackXY.x;
+        var frameDy = inFrameY - frameStackXY.y;
+        if (frameDx || frameDy) {
+          frameStack.moveBy(frameDx, frameDy);
+        }
+        inFrameY += frameStack.getHeightWidth().height + frameStackSpacing;
+      }
+    }
+
     // Include attached comment width when determining column width.
     for (var i = 0; i < topComments.length; i++) {
       var comment = topComments[i];

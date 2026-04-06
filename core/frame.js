@@ -1125,6 +1125,101 @@ Blockly.Frame.prototype.autoFitAndRecord_ = function() {
 };
 
 /**
+ * Clean up top-level script stacks inside this frame only.
+ * @private
+ */
+Blockly.Frame.prototype.cleanUpScriptsInside_ = function() {
+  if (this.isLocked_ || this.isMinimized_) {
+    return;
+  }
+
+  var oldState = this.getStateForUndo_();
+
+  var blocks = this.getBlocksInside_();
+  var scriptStacks = [];
+  for (var i = 0; i < blocks.length; i++) {
+    var block = blocks[i];
+    if (!block || block.getParent() || block.outputConnection) {
+      continue;
+    }
+    scriptStacks.push(block);
+  }
+  if (!scriptStacks.length) {
+    return;
+  }
+
+  scriptStacks.sort(function(a, b) {
+    var aPos = a.getRelativeToSurfaceXY();
+    var bPos = b.getRelativeToSurfaceXY();
+    if (aPos.y !== bPos.y) {
+      return aPos.y - bPos.y;
+    }
+    return aPos.x - bPos.x;
+  });
+
+  var existingGroup = Blockly.Events.getGroup();
+  if (!existingGroup) {
+    Blockly.Events.setGroup(true);
+  }
+  try {
+    this.isInternalCleanup_ = true;
+
+    var pad = 24;
+    var spacing = 72;
+    var cursorX = this.x + pad;
+    var cursorY = this.y + Blockly.Frame.HEADER_HEIGHT + pad;
+
+    // Keep ownership pinned while stacks are repositioned.
+    if (!this.workspace_.blockFrameOwnership_) {
+      this.workspace_.blockFrameOwnership_ = Object.create(null);
+    }
+    var ownership = this.workspace_.blockFrameOwnership_;
+    for (i = 0; i < scriptStacks.length; i++) {
+      ownership[scriptStacks[i].id] = this.id;
+    }
+
+    var projectedBottom = cursorY;
+    for (i = 0; i < scriptStacks.length; i++) {
+      projectedBottom += scriptStacks[i].getHeightWidth().height + spacing;
+    }
+    projectedBottom += pad;
+    if (projectedBottom > this.y + this.height) {
+      this.height = projectedBottom - this.y;
+      this.userBottom_ = Math.max(this.userBottom_, this.y + this.height);
+      this.userHeight_ = this.userBottom_ - this.y;
+    }
+
+    for (i = 0; i < scriptStacks.length; i++) {
+      var stack = scriptStacks[i];
+      var xy = stack.getRelativeToSurfaceXY();
+      var dx = cursorX - xy.x;
+      var dy = cursorY - xy.y;
+      if (dx || dy) {
+        stack.moveBy(dx, dy);
+      }
+      cursorY += stack.getHeightWidth().height + spacing;
+    }
+
+    this.render();
+    this.resizeWorkspaceContents_();
+
+    var newState = this.getStateForUndo_();
+    if ((oldState.x !== newState.x || oldState.y !== newState.y ||
+        oldState.userRight !== newState.userRight ||
+        oldState.userBottom !== newState.userBottom ||
+        oldState.minimized !== newState.minimized)) {
+      Blockly.Events.fire(new Blockly.Events.FrameChange(
+          this, 'state', oldState, newState));
+    }
+  } finally {
+    this.isInternalCleanup_ = false;
+    if (!existingGroup) {
+      Blockly.Events.setGroup(false);
+    }
+  }
+};
+
+/**
  * Show the frame context menu.
  * @param {!Event} e Mouse event.
  * @private
@@ -1135,6 +1230,17 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
   }
 
   var hasBlocks = this.getBlocksInside_().length > 0;
+  var hasScriptStacks = false;
+  if (hasBlocks) {
+    var insideBlocks = this.getBlocksInside_();
+    for (var i = 0; i < insideBlocks.length; i++) {
+      var insideBlock = insideBlocks[i];
+      if (insideBlock && !insideBlock.getParent() && !insideBlock.outputConnection) {
+        hasScriptStacks = true;
+        break;
+      }
+    }
+  }
   var menuOptions = [
     {
       text: this.isLocked_ ? 'Unlock Group' : 'Lock Group',
@@ -1155,6 +1261,11 @@ Blockly.Frame.prototype.showContextMenu_ = function(e) {
       text: 'Auto-Fit Group',
       enabled: hasBlocks && !this.isLocked_,
       callback: this.autoFitAndRecord_.bind(this)
+    },
+    {
+      text: 'Clean Up Scripts in Group',
+      enabled: hasScriptStacks && !this.isLocked_ && !this.isMinimized_,
+      callback: this.cleanUpScriptsInside_.bind(this)
     },
     {
       text: 'Delete Group',
@@ -1229,7 +1340,7 @@ Blockly.Frame.prototype.toggleLock_ = function() {
  * @private
  */
 Blockly.Frame.prototype.onWorkspaceChange_ = function(e) {
-  if (this.isDragging_ || this.isResizing_) {
+  if (this.isDragging_ || this.isResizing_ || this.isInternalCleanup_) {
     return;
   }
 
