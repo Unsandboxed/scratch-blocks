@@ -59,17 +59,38 @@ Blockly.Blocks['operator_add_extends'] = {
    */
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_ADD_EXTENDS,
+      "message0": "",
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_number"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = "+";
-    this.extendInput_ = {
-      type: "math_number",
-      name: "NUM"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          '+'
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -77,27 +98,33 @@ Blockly.Blocks['operator_add_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    this.removeTailInputs_(removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
+  removeTailInputs_: Blockly.ExtenderMutation.removeTailInputs_,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -136,17 +163,38 @@ Blockly.Blocks['operator_subtract_extends'] = {
    */
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_SUBTRACT_EXTENDS,
+      "message0": "",
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_number"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = "-";
-    this.extendInput_ = {
-      type: "math_number",
-      name: "NUM"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          '-'
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -154,27 +202,33 @@ Blockly.Blocks['operator_subtract_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    this.removeTailInputs_(removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
+  removeTailInputs_: Blockly.ExtenderMutation.removeTailInputs_,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -213,17 +267,38 @@ Blockly.Blocks['operator_multiply_extends'] = {
    */
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_MULTIPLY_EXTENDS,
+      "message0": "",
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_number"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = "*";
-    this.extendInput_ = {
-      type: "math_number",
-      name: "NUM"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          '*'
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -231,27 +306,33 @@ Blockly.Blocks['operator_multiply_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    this.removeTailInputs_(removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
+  removeTailInputs_: Blockly.ExtenderMutation.removeTailInputs_,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -290,17 +371,38 @@ Blockly.Blocks['operator_divide_extends'] = {
    */
   init: function() {
     this.jsonInit({
-      "message0": Blockly.Msg.OPERATORS_DIVIDE_EXTENDS,
+      "message0": "",
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_number"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = "/";
-    this.extendInput_ = {
-      type: "math_number",
-      name: "NUM"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          '/'
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -308,27 +410,32 @@ Blockly.Blocks['operator_divide_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    Blockly.ExtenderMutation.removeTailInputs_.call(this, removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -447,13 +554,34 @@ Blockly.Blocks['operator_lt_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_LT_EXTENDS;
-    this.extendInput_ = {
-      type: "text",
-      name: "TEXT"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_LT_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -461,27 +589,32 @@ Blockly.Blocks['operator_lt_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    Blockly.ExtenderMutation.removeTailInputs_.call(this, removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -524,13 +657,34 @@ Blockly.Blocks['operator_lt_equals_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_LT_EQUALS_EXTENDS;
-    this.extendInput_ = {
-      type: "text",
-      name: "TEXT"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_LT_EQUALS_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -538,27 +692,32 @@ Blockly.Blocks['operator_lt_equals_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    Blockly.ExtenderMutation.removeTailInputs_.call(this, removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -601,13 +760,34 @@ Blockly.Blocks['operator_equals_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_EQUALS_EXTENDS;
-    this.extendInput_ = {
-      type: "text",
-      name: "TEXT"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_EQUALS_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -615,27 +795,35 @@ Blockly.Blocks['operator_equals_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+
+    for (var i = 0; i < removeCount && this.argumentIds_.length > minInputs; i++) {
+      this.removeInputWithIndex_(this.argumentIds_.length);
+    }
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -678,13 +866,34 @@ Blockly.Blocks['operator_gt_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_GT_EXTENDS;
-    this.extendInput_ = {
-      type: "text",
-      name: "TEXT"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_GT_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -692,27 +901,35 @@ Blockly.Blocks['operator_gt_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+
+    for (var i = 0; i < removeCount && this.argumentIds_.length > minInputs; i++) {
+      this.removeInputWithIndex_(this.argumentIds_.length);
+    }
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -755,13 +972,34 @@ Blockly.Blocks['operator_gt_equals_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_GT_EQUALS_EXTENDS;
-    this.extendInput_ = {
-      type: "text",
-      name: "TEXT"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_GT_EQUALS_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -769,27 +1007,35 @@ Blockly.Blocks['operator_gt_equals_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+
+    for (var i = 0; i < removeCount && this.argumentIds_.length > minInputs; i++) {
+      this.removeInputWithIndex_(this.argumentIds_.length);
+    }
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -834,12 +1080,34 @@ Blockly.Blocks['operator_and_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_AND_EXTENDS;
-    this.extendInput_ = {
-      check: "Boolean"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          'Boolean'
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_AND_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          'Boolean'
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -847,27 +1115,35 @@ Blockly.Blocks['operator_and_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length + 1);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+
+    for (var i = 0; i < removeCount && this.argumentIds_.length > minInputs; i++) {
+      this.removeInputWithIndex_(this.argumentIds_.length);
+    }
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -912,12 +1188,34 @@ Blockly.Blocks['operator_or_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_OR_EXTENDS;
-    this.extendInput_ = {
-      check: "Boolean"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          'Boolean'
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_OR_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          'Boolean'
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -925,27 +1223,35 @@ Blockly.Blocks['operator_or_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+
+    for (var i = 0; i < removeCount && this.argumentIds_.length > minInputs; i++) {
+      this.removeInputWithIndex_(this.argumentIds_.length);
+    }
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -990,12 +1296,34 @@ Blockly.Blocks['operator_xor_extends'] = {
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_boolean"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_XOR_EXTENDS;
-    this.extendInput_ = {
-      check: "Boolean"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          'Boolean'
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.DUMMY_INPUT,
+          null,
+          Blockly.Msg.OPERATORS_XOR_EXTENDS
+        ),
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          null,
+          null,
+          'Boolean'
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -1003,27 +1331,35 @@ Blockly.Blocks['operator_xor_extends'] = {
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+
+    for (var i = 0; i < removeCount && this.argumentIds_.length > minInputs; i++) {
+      this.removeInputWithIndex_(this.argumentIds_.length);
+    }
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
   domToMutation: Blockly.ExtenderMutation.domToMutation,
   updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
   removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
@@ -1100,57 +1436,120 @@ Blockly.Blocks['operator_min'] = { // usb
   }
 };
 
-Blockly.Blocks['operator_min_extends'] = {
+Blockly.Blocks['operator_number_array_extends'] = {
   /**
-   * Block for adding two numbers.
+   * Shadow reporter that builds an Array of numeric inputs.
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
       "message0": "",
       "category": Blockly.Categories.operators,
-      "extensions": ["colours_operators", "output_number"]
+      "extensions": ["colours_operators", "output_array"]
     });
+    this.extendCount_ = 0;
     this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_MIN_EXTENDS;
-    this.extendInput_ = {
-      type: "math_number",
-      name: "NUM"
+    this.minProceedGroups_ = 1;
+    this.extendDefinitions_ = {
+      collapse: false,
+      starts: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      proceeds: [
+        Blockly.ExtenderMutation.defineNewInput(
+          Blockly.VALUE_INPUT,
+          'math_number',
+          'NUM',
+          null
+        )
+      ],
+      ends: []
     };
-    this.hasFirstLabel_ = false;
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
       true,
       false
     );
-    this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
-  },
-  // callback functions
-  handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
+    this.appendDummyInput('ARRAY_END')
+      .appendField(this.plusminus_, 'PLUS_MINUS');
 
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
+  },
+  syncParentShadowDom_: function () {
+    if (!this.isShadow || !this.isShadow() || !this.outputConnection) return;
+    var parentConnection = this.outputConnection.targetConnection;
+    if (!parentConnection) return;
+    parentConnection.setShadowDom(Blockly.Xml.blockToDom(this));
+  },
+  handlePlus_: function () {
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
+    this.syncParentShadowDom_();
   },
   handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    this.removeTailInputs_(removeCount, minInputs);
+    this.syncParentShadowDom_();
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,
-  domToMutation: Blockly.ExtenderMutation.domToMutation,
-  updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
+  domToMutation: function(xmlElement) {
+    Blockly.ExtenderMutation.domToMutation.call(this, xmlElement);
+    this.syncParentShadowDom_();
+  },
+  updateDisplay_: function() {
+    Blockly.ExtenderMutation.updateDisplay_.call(this);
+    this.syncParentShadowDom_();
+  },
 
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
   findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
 
   insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
+  removeTailInputs_: Blockly.ExtenderMutation.removeTailInputs_,
   removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
   disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
-  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
+  removeAllInputs_: function() {
+    for (var i = this.inputList.length - 1; i >= 0; --i) {
+      if (this.inputList[i].name === 'ARRAY_END') continue;
+      this.inputList[i].dispose();
+      this.inputList.splice(i, 1);
+    }
+  },
   createAllInputs_: Blockly.ExtenderMutation.createAllInputs_,
   deleteShadows_: Blockly.ExtenderMutation.deleteShadows_,
+};
+
+Blockly.Blocks['operator_min_extends'] = {
+  /**
+   * Block for finding the smallest value in an array of numbers.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.OPERATORS_MIN_EXTENDS,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "ARRAY",
+          "check": "Array"
+        }
+      ],
+      "category": Blockly.Categories.operators,
+      "extensions": ["colours_operators", "output_number"]
+    });
+  }
 };
 
 Blockly.Blocks['operator_max'] = { // usb
@@ -1179,55 +1578,23 @@ Blockly.Blocks['operator_max'] = { // usb
 
 Blockly.Blocks['operator_max_extends'] = {
   /**
-   * Block for adding two numbers.
+   * Block for finding the largest value in an array of numbers.
    * @this Blockly.Block
    */
   init: function() {
     this.jsonInit({
-      "message0": "",
+      "message0": Blockly.Msg.OPERATORS_MAX_EXTENDS,
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "ARRAY",
+          "check": "Array"
+        }
+      ],
       "category": Blockly.Categories.operators,
       "extensions": ["colours_operators", "output_number"]
     });
-    this.argumentIds_ = [];
-    this.extendLabel_ = Blockly.Msg.OPERATORS_MAX_EXTENDS;
-    this.extendInput_ = {
-      type: "math_number",
-      name: "NUM"
-    };
-    this.hasFirstLabel_ = false;
-    this.plusminus_ = new Blockly.FieldExtender(
-      this.handlePlus_.bind(this),
-      this.handleMinus_.bind(this),
-      true,
-      false
-    );
-    this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
-  },
-  // callback functions
-  handlePlus_: function () {
-    var label = new Blockly.FieldLabel(this.extendLabel_);
-    var input = this.insertInputWithIndex_(this.argumentIds_.length);
-
-    if (this.argumentIds_.length > 1) {
-      input.appendField(label);
-    }
-  },
-  handleMinus_: function () {
-    this.removeInputWithIndex_(this.argumentIds_.length);
-  },
-
-  mutationToDom: Blockly.ExtenderMutation.mutationToDom,
-  domToMutation: Blockly.ExtenderMutation.domToMutation,
-  updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
-
-  findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
-
-  insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
-  removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
-  disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
-  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
-  createAllInputs_: Blockly.ExtenderMutation.createAllInputs_,
-  deleteShadows_: Blockly.ExtenderMutation.deleteShadows_,
+  }
 };
 
 Blockly.Blocks['operator_round'] = {

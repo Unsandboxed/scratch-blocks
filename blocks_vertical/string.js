@@ -87,38 +87,33 @@ Blockly.Blocks['string_join_extends'] = { // usb
    */
   init: function () {
     this.jsonInit({
-      "message0": Blockly.Msg.STRING_JOIN_EXTENDS,
+      "message0": "",
       "category": Blockly.Categories.string,
       "extensions": ["colours_string", "output_string"]
     });
     this.extendCount_ = 0;
     this.argumentIds_ = [];
+    this.extenderLeadingSlots_ = 1;
+    this.minProceedGroups_ = 2;
     this.extendDefinitions_ = {
-       // for things like if/else or switch-case-default
       collapse: false,
-       // inputs and labels to always put at the start of a block
       starts: [
         Blockly.ExtenderMutation.defineNewInput(
-          Blockly.DUMMY_INPUT, // special case for labels
+          Blockly.DUMMY_INPUT,
           null,
-          "join" // label text
+          'join'
         )
       ],
-      // inputs and labels that extend and retract
       proceeds: [
         Blockly.ExtenderMutation.defineNewInput(
-          Blockly.VALUE_INPUT, // input type
-          "text", // shadow type, if applicable
-          "TEXT", // "field" for the shadow
-          null, // "check" for the input
+          Blockly.VALUE_INPUT,
+          'text',
+          'TEXT',
+          null
         )
       ],
-      // inputs and labels that are always at the end.
-      // if collapsed is true, it'll be collapsed every other extension.
-      ends: [
-        // nothing, this is a join block
-      ]
-    }
+      ends: []
+    };
     this.plusminus_ = new Blockly.FieldExtender(
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
@@ -126,13 +121,22 @@ Blockly.Blocks['string_join_extends'] = { // usb
       false
     );
     this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+
+    // Initialize default shape: "join" + two value inputs.
+    this.insertInputsAtIndex(0, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   // callback functions
   handlePlus_: function () {
-    this.insertInputsAtIndex(this.extendCount_ + 1, {});
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
   },
   handleMinus_: function () {
-    this.insertInputsAtIndex(this.extendCount_, {});
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    Blockly.ExtenderMutation.removeTailInputs_.call(this, removeCount, minInputs);
   },
 
   mutationToDom: Blockly.ExtenderMutation.mutationToDom,

@@ -31,9 +31,9 @@ goog.require('goog.dom');
 goog.require('goog.math');
 goog.require('goog.userAgent');
 
-Blockly.FieldExtender = function(handlePlus, handleMinus, opt_enablePlus, opt_enableMinus) {
+Blockly.FieldExtender = function(handlePlus, handleMinus, opt_enablePlus, opt_enableMinus, opt_iconLayout) {
   this.sourceBlock_ = null;
-  this.size_ = new goog.math.Size(45, 20);
+  this.size_ = new goog.math.Size(55, 20);
   this.handlePlus_ = handlePlus;
   this.handleMinus_ = handleMinus;
   this.wrappers_ = [];
@@ -51,12 +51,40 @@ Blockly.FieldExtender = function(handlePlus, handleMinus, opt_enablePlus, opt_en
   this.imgMinus_ = null;
   this.enablePlus_ = opt_enablePlus === undefined ? true : opt_enablePlus;
   this.enableMinus_ =  opt_enableMinus === undefined ? true : opt_enableMinus;
+  this.iconLayout_ = opt_iconLayout || 'horizontal';
+  /**
+   * One-shot pending action set by the most recent button down.
+   * @type {?boolean}
+   * @private
+   */
+  this.pendingIsPlus_ = null;
 };
 goog.inherits(Blockly.FieldExtender, Blockly.Field);
 
 Blockly.FieldExtender.prototype.CURSOR = 'pointer';
 Blockly.FieldExtender.prototype.EDITABLE = true;
 Blockly.FieldExtender.prototype.SERIALIZABLE = false;
+
+/**
+ * Fixed extender button size in px.
+ * @type {number}
+ * @const
+ */
+Blockly.FieldExtender.BUTTON_SIZE = 20;
+
+/**
+ * Horizontal inset before/after extender buttons in px.
+ * @type {number}
+ * @const
+ */
+Blockly.FieldExtender.HORIZONTAL_INSET = 5;
+
+/**
+ * Gap between minus and plus buttons in px.
+ * @type {number}
+ * @const
+ */
+Blockly.FieldExtender.BUTTON_GAP = 5;
 
 Blockly.FieldExtender.prototype.init = function() {
   if (this.fieldGroup_) {
@@ -77,7 +105,7 @@ Blockly.FieldExtender.prototype.init = function() {
       {
         'cursor': 'pointer',
         'class': 'blocklyExtender',
-        'transform': this.enableMinus_ ? 'translate(25)' : 'translate(0)',
+        'transform': 'translate(0)',
         'display': this.enablePlus_ ? '' : 'none',
         'transition-duration': '0.3s'
       },
@@ -129,9 +157,15 @@ Blockly.FieldExtender.prototype.init = function() {
       Blockly.mainWorkspace.options.pathToMedia + 'left.svg');
   this.imgPlus_.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href',
       Blockly.mainWorkspace.options.pathToMedia + 'right.svg');
+  if (this.iconLayout_ === 'vertical') {
+    // Rotate horizontal arrows so minus points up and plus points down.
+    this.imgMinus_.setAttribute('transform', 'rotate(90 10 10)');
+    this.imgPlus_.setAttribute('transform', 'rotate(90 10 10)');
+  }
   this.sourceBlock_.getSvgRoot().appendChild(this.fieldGroup_);
 
   this.calcSize_();
+  this.updateButtonLayout_();
 
   this.wrappers_ = [
     Blockly.bindEvent_(this.btnPlus_, 'mousedown', this, this.onMouseDown_.bind(this, true)),
@@ -167,17 +201,48 @@ Blockly.FieldExtender.prototype.dispose = function() {
   goog.dom.removeNode(this.fieldGroup_);
   this.fieldGroup_ = null;
   this.svgElement_ = null;
-  this.isPlus_ = false;
+  this.pendingIsPlus_ = null;
 };
 
 Blockly.FieldExtender.prototype.calcSize_ = function() {
-  if (this.enablePlus_ && this.enableMinus_) {
-    this.size_.width = 45;
-  } else if (!this.enablePlus_ && !this.enableMinus_) {
+  var visibleCount = (this.enablePlus_ ? 1 : 0) + (this.enableMinus_ ? 1 : 0);
+  if (visibleCount === 0) {
     this.size_.width = 0;
-  } else {
-    this.size_.width = 20;
+    return;
   }
+
+  this.size_.width =
+      (visibleCount * Blockly.FieldExtender.BUTTON_SIZE) +
+      ((visibleCount - 1) * Blockly.FieldExtender.BUTTON_GAP) +
+      (Blockly.FieldExtender.HORIZONTAL_INSET * 2);
+};
+
+/**
+ * Recompute button visibility and x positions.
+ * @private
+ */
+Blockly.FieldExtender.prototype.updateButtonLayout_ = function() {
+  if (!this.fieldGroup_) return;
+
+  this.btnPlus_.setAttribute('display', this.enablePlus_ ? '' : 'none');
+  this.btnMinus_.setAttribute('display', this.enableMinus_ ? '' : 'none');
+
+  var minusX = Blockly.FieldExtender.HORIZONTAL_INSET;
+  var plusX = this.enableMinus_
+      ? minusX + Blockly.FieldExtender.BUTTON_SIZE + Blockly.FieldExtender.BUTTON_GAP
+      : Blockly.FieldExtender.HORIZONTAL_INSET;
+
+  this.btnMinus_.setAttribute('transform', 'translate(' + minusX + ')');
+  this.btnPlus_.setAttribute('transform', 'translate(' + plusX + ')');
+};
+
+/**
+ * Update internal layout metrics when rendered.
+ * @private
+ */
+Blockly.FieldExtender.prototype.render_ = function() {
+  this.calcSize_();
+  this.updateButtonLayout_();
 };
 
 Blockly.FieldExtender.prototype.getSize = function() {
@@ -195,12 +260,12 @@ Blockly.FieldExtender.prototype.onMouseDown_ = function(isPlus, e) {
   if (!this.sourceBlock_ || !this.sourceBlock_.workspace) {
     return;
   }
-  this.isPlus_ = isPlus;
+  this.pendingIsPlus_ = isPlus;
   var gesture = this.sourceBlock_.workspace.getGesture(e);
   if (gesture) {
     gesture.setStartField(this);
   }
-  this.useTouchInteraction_ = Blockly.Touch.getTouchIdentifierFromEvent(event) !== 'mouse';
+  this.useTouchInteraction_ = Blockly.Touch.getTouchIdentifierFromEvent(e) !== 'mouse';
 };
 
 /**
@@ -208,7 +273,14 @@ Blockly.FieldExtender.prototype.onMouseDown_ = function(isPlus, e) {
  * @private
  */
 Blockly.FieldExtender.prototype.showEditor_ = function() {
-  if (this.isPlus_) {
+  // Use only the latest pointer-down action.
+  if (this.pendingIsPlus_ === null) {
+    return;
+  }
+  var isPlus = this.pendingIsPlus_;
+  this.pendingIsPlus_ = null;
+
+  if (isPlus) {
     this.handlePlus_();
   } else {
     this.handleMinus_();
@@ -228,37 +300,29 @@ Blockly.FieldExtender.prototype.handleHover_ = function(isEnter, obj) {
 };
 
 /**
- * Enable or disable the plus button. (need to call parent block's render)
+ * Enable or disable the plus button.
  * @param {boolean} enable true if enable.
  */
 Blockly.FieldExtender.prototype.setEnablePlus = function(enable) {
   if (this.enablePlus_ === enable) return;
   this.enablePlus_ = enable;
-  if (!this.fieldGroup_) return;
-  if (this.enablePlus_) {
-    this.btnPlus_.setAttribute('display', '');
-  } else {
-    this.btnPlus_.setAttribute('display', 'none');
-  }
   this.render_();
+  if (this.sourceBlock_ && this.sourceBlock_.rendered) {
+    this.sourceBlock_.render();
+  }
 };
 
 /**
- * Enable or disable the minus button. (need to call parent block's render)
+ * Enable or disable the minus button.
  * @param {boolean} enable true if enable.
  */
 Blockly.FieldExtender.prototype.setEnableMinus = function(enable) {
   if (this.enableMinus_ === enable) return;
   this.enableMinus_ = enable;
-  if (!this.fieldGroup_) return;
-  if (this.enableMinus_) {
-    this.btnMinus_.setAttribute('display', '');
-    this.btnPlus_.setAttribute('transform', 'translate(25)');
-  } else {
-    this.btnMinus_.setAttribute('display', 'none');
-    this.btnPlus_.setAttribute('transform', 'translate(0)');
-  }
   this.render_();
+  if (this.sourceBlock_ && this.sourceBlock_.rendered) {
+    this.sourceBlock_.render();
+  }
 };
 
 Blockly.Field.register('field_plus_minus', Blockly.FieldExtender);
