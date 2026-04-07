@@ -12,6 +12,7 @@ const PATH_OUTPUT = path.resolve(__dirname, '../msg/json/en.json');
 
 // Match function
 const match = function (str) {
+    str = str.trim();
     if (str.indexOf('Blockly.Msg.') !== 0) return false;
     assert.notStrictEqual(str.indexOf('";'), str.length - 2, `[${str}] uses double quoted string, should use single quotes.`);
     if (str.indexOf("';") !== str.length - 2) return false;
@@ -20,6 +21,7 @@ const match = function (str) {
 
 // Extract key and value from message definition
 const extract = function (str) {
+    str = str.trim();
     str = str.split('Blockly.Msg.')[1].split(' ');
     return {
         key: str[0],
