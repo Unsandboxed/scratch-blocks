@@ -78,11 +78,11 @@ Blockly.SecretTransformations.isStandalone_ = function(block) {
 // ─── Shake detection ─────────────────────────────────────────────────────────
 
 /** Minimum x-movement (px) to count as a directional step. @const */
-Blockly.SecretTransformations.SHAKE_MIN_MOVE_PX = 8;
+Blockly.SecretTransformations.SHAKE_MIN_MOVE_PX = 64;
 /** Number of direction-reversals within the window to trigger a shake. @const */
-Blockly.SecretTransformations.SHAKE_REVERSALS = 3;
+Blockly.SecretTransformations.SHAKE_REVERSALS = 2;
 /** Rolling time window (ms) for counting reversals. @const */
-Blockly.SecretTransformations.SHAKE_WINDOW_MS = 300;
+Blockly.SecretTransformations.SHAKE_WINDOW_MS = 200;
 
 /**
  * Create a new shake-detection tracker.
