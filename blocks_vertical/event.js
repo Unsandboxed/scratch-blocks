@@ -349,3 +349,15 @@ Blockly.Blocks['event_whenkeypressed'] = {
     });
   }
 };
+
+if (Blockly.SecretTransformations) {
+  Blockly.SecretTransformations.addDefaultShadow(
+      'event_broadcast', 'BROADCAST_INPUT',
+      '<shadow type="event_broadcast_menu"></shadow>');
+  Blockly.SecretTransformations.addDefaultShadow(
+      'event_broadcastandwait', 'BROADCAST_INPUT',
+      '<shadow type="event_broadcast_menu"></shadow>');
+
+  Blockly.SecretTransformations.addGroup(
+      ['event_broadcast', 'event_broadcastandwait']);
+}

@@ -619,3 +619,37 @@ Blockly.Blocks['looks_nextbackdrop'] = {
     });
   }
 };
+
+  if (Blockly.SecretTransformations) {
+    Blockly.SecretTransformations.addDefaultShadow(
+      'looks_switchbackdropto', 'BACKDROP',
+      '<shadow type="looks_backdrops"><field name="BACKDROP">BACKDROP1</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'looks_switchbackdroptoandwait', 'BACKDROP',
+      '<shadow type="looks_backdrops"><field name="BACKDROP">BACKDROP1</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'looks_seteffectto', 'VALUE',
+      '<shadow type="math_number"><field name="NUM">0</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'looks_changeeffectby', 'CHANGE',
+      '<shadow type="math_number"><field name="NUM">25</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'looks_changesizeby', 'CHANGE',
+      '<shadow type="math_number"><field name="NUM">10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'looks_setsizeto', 'SIZE',
+      '<shadow type="math_number"><field name="NUM">100</field></shadow>');
+
+    Blockly.SecretTransformations.addGroup(
+      ['looks_show', 'looks_hide']);
+    Blockly.SecretTransformations.addGroup(
+      ['looks_nextcostume', 'looks_nextbackdrop']);
+    Blockly.SecretTransformations.addGroup(
+      ['looks_switchbackdropto', 'looks_switchbackdroptoandwait']);
+    Blockly.SecretTransformations.addGroup(
+      ['looks_seteffectto', 'looks_changeeffectby']);
+    Blockly.SecretTransformations.addGroup(
+      ['looks_changesizeby', 'looks_setsizeto']);
+    Blockly.SecretTransformations.addGroup(
+      ['looks_costumenumbername', 'looks_backdropnumbername']);
+  }
