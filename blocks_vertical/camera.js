@@ -191,6 +191,148 @@ Blockly.Blocks['camera_changey'] = {
   }
 };
 
+Blockly.Blocks['camera_setzoom'] = {
+  /**
+   * Block to set the camera's zoom.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_SETZOOM,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "ZOOM"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_changezoom'] = {
+  /**
+   * Block to change the camera's zoom.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_CHANGEZOOM,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "ZOOM"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_turnright'] = {
+  /**
+   * Block to turn the camera right.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_TURNRIGHT,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "rotate-right.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "DEGREES"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_turnleft'] = {
+  /**
+   * Block to turn the camera left.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_TURNLEFT,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "rotate-left.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "DEGREES"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_pointindirection'] = {
+  /**
+   * Block to point the camera in a direction.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_POINTINDIRECTION,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        },
+        {
+          "type": "input_value",
+          "name": "DIRECTION"
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "extensions": ["colours_camera", "shape_statement"]
+    });
+  }
+};
+
 Blockly.Blocks['camera_xposition'] = {
   /**
    * Block to report camera's X.
@@ -222,6 +364,52 @@ Blockly.Blocks['camera_yposition'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.CAMERA_YPOSITION,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_camera", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_zoom'] = {
+  /**
+   * Block to report camera's zoom.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_ZOOM,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        }
+      ],
+      "category": Blockly.Categories.camera,
+      "checkboxInFlyout": true,
+      "extensions": ["colours_camera", "output_number"]
+    });
+  }
+};
+
+Blockly.Blocks['camera_rotation'] = {
+  /**
+   * Block to report camera's rotation.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_ROTATION,
       "args0": [
         {
           "type": "field_image",
