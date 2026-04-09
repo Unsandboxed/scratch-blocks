@@ -319,8 +319,15 @@ Blockly.Msg.CAMERA_SETX = 'set %1 x to %2';
 Blockly.Msg.CAMERA_CHANGEX = 'change %1 x by %2';
 Blockly.Msg.CAMERA_SETY = 'set %1 y to %2';
 Blockly.Msg.CAMERA_CHANGEY = 'change %1 y by %2';
+Blockly.Msg.CAMERA_SETZOOM = 'set %1 zoom to %2 %';
+Blockly.Msg.CAMERA_CHANGEZOOM = 'change %1 zoom by %2';
+Blockly.Msg.CAMERA_TURNRIGHT = 'turn %1 %2 degrees';
+Blockly.Msg.CAMERA_TURNLEFT = 'turn %1 %2 degrees';
+Blockly.Msg.CAMERA_POINTINDIRECTION = 'point %1 in direction %2';
 Blockly.Msg.CAMERA_XPOSITION = '%1 x position';
 Blockly.Msg.CAMERA_YPOSITION = '%1 y position';
+Blockly.Msg.CAMERA_ZOOM = '%1 zoom';
+Blockly.Msg.CAMERA_ROTATION = '%1 rotation';
 
 // Sound blocks
 Blockly.Msg.SOUND_PLAY = 'start sound %1';
