@@ -89,9 +89,24 @@ Blockly.FieldTextInput.ANIMATION_TIME = 0.25;
 Blockly.FieldTextInput.TEXT_MEASURE_PADDING_MAGIC = 45;
 
 /**
+ * Vertical padding around multiline text content, in px.
+ */
+Blockly.FieldTextInput.TEXT_VERTICAL_PADDING = 6;
+
+/**
+ * Minimum line height multiplier for multiline text.
+ */
+Blockly.FieldTextInput.LINE_HEIGHT_MULTIPLIER = 1.25;
+
+/**
+ * Horizontal padding inside the live text editor, in px.
+ */
+Blockly.FieldTextInput.EDITOR_HORIZONTAL_PADDING = 8;
+
+/**
  * The HTML input element for the user to type, or null if no FieldTextInput
  * editor is currently open.
- * @type {HTMLInputElement}
+ * @type {HTMLInputElement|HTMLTextAreaElement}
  * @private
  */
 Blockly.FieldTextInput.htmlInput_ = null;
@@ -211,6 +226,176 @@ Blockly.FieldTextInput.prototype.setRestrictor = function(restrictor) {
 };
 
 /**
+ * Whether this field should allow multiline editing.
+ * Restrictor-backed subclasses such as numbers should remain single-line.
+ * @return {boolean} True if multiline editing should be enabled.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.isMultilineEnabled_ = function() {
+  return !this.restrictor_;
+};
+
+/**
+ * Get the displayed lines for this field.
+ * @return {!Array<string>} The lines that should be rendered.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.getDisplayLines_ = function() {
+  var text = this.text_;
+  if (text.length > this.maxDisplayLength) {
+    text = text.substring(0, this.maxDisplayLength - 2) + '\u2026';
+  }
+  var lines = text.split(/\r?\n/);
+  if (!lines.length) {
+    lines = [''];
+  }
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].replace(/[\t \f\v]/g, Blockly.Field.NBSP);
+    if (this.sourceBlock_.RTL && line) {
+      if (this.sourceBlock_.editable_ && this.sourceBlock_.type === 'math_number') {
+        line = '\u202A' + line + '\u202C';
+      } else {
+        line = '\u202B' + line + '\u202C';
+      }
+    }
+    lines[i] = line || Blockly.Field.NBSP;
+  }
+  return lines;
+};
+
+/**
+ * Get font metrics for the rendered text.
+ * @return {{fontSize: string, fontFamily: string, fontWeight: string, lineHeight: number}}
+ *     The computed font metrics.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.getTextMetrics_ = function() {
+  var computedStyle = this.textElement_ ? window.getComputedStyle(this.textElement_) : null;
+  var fontSize = computedStyle && computedStyle.fontSize || '16px';
+  var fontFamily = computedStyle && computedStyle.fontFamily || '"Helvetica Neue", Helvetica, sans-serif';
+  var fontWeight = computedStyle && computedStyle.fontWeight || '500';
+  var fontSizePx = parseFloat(fontSize);
+  var lineHeight = Math.max(
+      Blockly.BlockSvg.FIELD_HEIGHT - 2 * Blockly.FieldTextInput.TEXT_VERTICAL_PADDING,
+      Math.round((isNaN(fontSizePx) ? 16 : fontSizePx) * Blockly.FieldTextInput.LINE_HEIGHT_MULTIPLIER));
+  return {
+    fontSize: fontSize,
+    fontFamily: fontFamily,
+    fontWeight: fontWeight,
+    lineHeight: lineHeight
+  };
+};
+
+/**
+ * Measure the widest rendered line in this field.
+ * @param {!Array<string>} lines The lines currently displayed in the field.
+ * @param {{fontSize: string, fontFamily: string, fontWeight: string}} metrics Font metrics.
+ * @return {number} The width of the widest line.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.getTextWidth_ = function(lines, metrics) {
+  var maxWidth = 0;
+  var tspans = this.textElement_ ? this.textElement_.getElementsByTagName('tspan') : [];
+  for (var i = 0; i < tspans.length; i++) {
+    try {
+      maxWidth = Math.max(maxWidth, tspans[i].getComputedTextLength());
+    } catch (e) {
+      maxWidth = Math.max(maxWidth, Blockly.scratchBlocksUtils.measureText(
+          metrics.fontSize,
+          metrics.fontFamily,
+          metrics.fontWeight,
+          lines[i].replace(new RegExp(Blockly.Field.NBSP, 'g'), ' ')));
+    }
+  }
+  return maxWidth;
+};
+
+/**
+ * Rewrite the SVG text node to render one tspan per line.
+ * @param {!Array<string>} lines The lines to render.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.updateMultilineTextNode_ = function(lines) {
+  goog.dom.removeChildren(/** @type {!Element} */ (this.textElement_));
+  for (var i = 0; i < lines.length; i++) {
+    var tspan = Blockly.utils.createSvgElement('tspan', {}, this.textElement_);
+    tspan.appendChild(document.createTextNode(lines[i]));
+  }
+  this.size_.width = 0;
+};
+
+/**
+ * Position rendered lines within the field.
+ * @param {number} centerTextX The horizontal center of the field's text.
+ * @param {number} lineHeight The line height in px.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.positionTextLines_ = function(centerTextX, lineHeight) {
+  var tspans = this.textElement_.getElementsByTagName('tspan');
+  var contentHeight = tspans.length * lineHeight;
+  var y = (this.size_.height - contentHeight) / 2 + lineHeight / 2 +
+      Blockly.BlockSvg.FIELD_TOP_PADDING;
+  this.textElement_.setAttribute('x', centerTextX);
+  this.textElement_.setAttribute('y', 0);
+  for (var i = 0; i < tspans.length; i++) {
+    tspans[i].setAttribute('x', centerTextX);
+    tspans[i].setAttribute('y', y + i * lineHeight);
+  }
+};
+
+/**
+ * Draws the border with the correct width and multiline-aware height.
+ * @private
+ */
+Blockly.FieldTextInput.prototype.render_ = function() {
+  if (this.visible_ && this.textElement_) {
+    var lines = this.getDisplayLines_();
+    var isTruncated = this.text_.length > this.maxDisplayLength;
+    if (isTruncated) {
+      this.textElement_.setAttribute('class', this.className_ + ' blocklyTextTruncated');
+    } else {
+      this.textElement_.setAttribute('class', this.className_);
+    }
+    var metrics = this.getTextMetrics_();
+    this.size_.height = Math.max(
+        Blockly.BlockSvg.FIELD_HEIGHT,
+        lines.length * metrics.lineHeight + 2 * Blockly.FieldTextInput.TEXT_VERTICAL_PADDING);
+    this.updateMultilineTextNode_(lines);
+
+    var width = this.getTextWidth_(lines, metrics);
+    this.arrowWidth_ = 0;
+    if (this.positionArrow) {
+      this.arrowWidth_ = this.positionArrow(width);
+      width += this.arrowWidth_;
+    }
+    if (this.box_) {
+      width += 2 * Blockly.BlockSvg.BOX_FIELD_PADDING;
+    }
+    this.size_.width = width;
+
+    var centerTextX = (this.size_.width - this.arrowWidth_) / 2;
+    if (this.sourceBlock_.RTL) {
+      centerTextX += this.arrowWidth_;
+    }
+    if (this.sourceBlock_.isShadow() && !this.positionArrow) {
+      var minOffset = Blockly.BlockSvg.FIELD_WIDTH / 2;
+      if (this.sourceBlock_.RTL) {
+        var minCenter = this.size_.width - minOffset;
+        centerTextX = Math.min(minCenter, centerTextX);
+      } else {
+        centerTextX = Math.max(minOffset, centerTextX);
+      }
+    }
+    this.positionTextLines_(centerTextX, metrics.lineHeight);
+  }
+
+  if (this.box_) {
+    this.box_.setAttribute('width', this.size_.width);
+    this.box_.setAttribute('height', this.size_.height);
+  }
+};
+
+/**
  * Show the inline free-text editor on top of the text.
  * @param {boolean=} opt_quietInput True if editor should be created without
  *     focus.  Defaults to false.
@@ -225,6 +410,8 @@ Blockly.FieldTextInput.prototype.showEditor_ = function(
   this.workspace_ = this.sourceBlock_.workspace;
   var quietInput = opt_quietInput || false;
   var readOnly = opt_readOnly || false;
+  var isMultiline = this.isMultilineEnabled_() && !opt_withArrow;
+  var textMetrics = this.getTextMetrics_();
   Blockly.WidgetDiv.show(this, this.sourceBlock_.RTL,
       this.widgetDispose_(), this.widgetDisposeAnimationFinished_(),
       Blockly.FieldTextInput.ANIMATION_TIME);
@@ -232,13 +419,34 @@ Blockly.FieldTextInput.prototype.showEditor_ = function(
   // Apply text-input-specific fixed CSS
   div.className += ' fieldTextInput';
   // Create the input.
-  var htmlInput =
-      goog.dom.createDom(goog.dom.TagName.INPUT, 'blocklyHtmlInput');
+  var htmlInput = goog.dom.createDom(
+      isMultiline ? goog.dom.TagName.TEXTAREA : goog.dom.TagName.INPUT,
+      'blocklyHtmlInput');
   htmlInput.setAttribute('spellcheck', this.spellcheck_);
   if (readOnly) {
     htmlInput.setAttribute('readonly', 'true');
   }
-  /** @type {!HTMLInputElement} */
+  if (!isMultiline) {
+    htmlInput.setAttribute('type', 'text');
+  } else {
+    htmlInput.setAttribute('rows', '1');
+    htmlInput.setAttribute('wrap', 'off');
+    htmlInput.style.resize = 'none';
+    htmlInput.style.overflow = 'hidden';
+  }
+  htmlInput.style.fontFamily = textMetrics.fontFamily;
+  htmlInput.style.fontWeight = textMetrics.fontWeight;
+  htmlInput.style.fontSize = textMetrics.fontSize;
+  htmlInput.style.textAlign = 'center';
+  htmlInput.style.paddingLeft = Blockly.FieldTextInput.EDITOR_HORIZONTAL_PADDING + 'px';
+  htmlInput.style.paddingRight = Blockly.FieldTextInput.EDITOR_HORIZONTAL_PADDING + 'px';
+  if (isMultiline) {
+    htmlInput.style.lineHeight = textMetrics.lineHeight + 'px';
+    htmlInput.style.paddingTop = Blockly.FieldTextInput.TEXT_VERTICAL_PADDING + 'px';
+    htmlInput.style.paddingBottom = Blockly.FieldTextInput.TEXT_VERTICAL_PADDING + 'px';
+  }
+  htmlInput.isMultiline_ = isMultiline;
+  /** @type {!HTMLInputElement|!HTMLTextAreaElement} */
   Blockly.FieldTextInput.htmlInput_ = htmlInput;
   div.appendChild(htmlInput);
 
@@ -295,14 +503,12 @@ Blockly.FieldTextInput.prototype.showEditor_ = function(
   }
   div.style.transition = transitionProperties;
   htmlInput.style.transition = 'font-size ' + Blockly.FieldTextInput.ANIMATION_TIME + 's';
-  // The animated properties themselves
-  htmlInput.style.fontSize = Blockly.BlockSvg.FIELD_TEXTINPUT_FONTSIZE_FINAL + 'pt';
   div.style.boxShadow = '0px 0px 0px 4px ' + Blockly.Colours.fieldShadow;
 };
 
 /**
  * Bind handlers for user input on this field and size changes on the workspace.
- * @param {!HTMLInputElement} htmlInput The htmlInput created in showEditor, to
+ * @param {!HTMLInputElement|!HTMLTextAreaElement} htmlInput The htmlInput created in showEditor, to
  *     which event handlers will be bound.
  * @param {boolean} bindGlobalKeypress Whether to bind a keypress listener to enable
  *     keyboard editing without focusing the field.
@@ -340,7 +546,7 @@ Blockly.FieldTextInput.prototype.bindEvents_ = function(
 
 /**
  * Unbind handlers for user input and workspace size changes.
- * @param {!HTMLInputElement} htmlInput The html for this text input.
+ * @param {!HTMLInputElement|!HTMLTextAreaElement} htmlInput The html for this text input.
  * @private
  */
 Blockly.FieldTextInput.prototype.unbindEvents_ = function(htmlInput) {
@@ -366,6 +572,9 @@ Blockly.FieldTextInput.prototype.onHtmlInputKeyDown_ = function(e) {
   var htmlInput = Blockly.FieldTextInput.htmlInput_;
   var tabKey = 9, enterKey = 13, escKey = 27;
   if (e.keyCode == enterKey) {
+    if (htmlInput && htmlInput.isMultiline_ && e.shiftKey) {
+      return;
+    }
     Blockly.WidgetDiv.hide();
     Blockly.DropDownDiv.hideWithoutAnimation();
   } else if (e.keyCode == escKey) {
@@ -480,6 +689,9 @@ Blockly.FieldTextInput.prototype.validate_ = function() {
 Blockly.FieldTextInput.prototype.resizeEditor_ = function() {
   var scale = this.sourceBlock_.workspace.scale;
   var div = Blockly.WidgetDiv.DIV;
+  var htmlInput = Blockly.FieldTextInput.htmlInput_;
+  var isMultiline = !!(htmlInput && htmlInput.isMultiline_);
+  var textMetrics = this.getTextMetrics_();
 
   var initialWidth;
   if (this.sourceBlock_.isShadow() && this.sourceBlock_.type !== "argument_editor_statement") {
@@ -491,14 +703,17 @@ Blockly.FieldTextInput.prototype.resizeEditor_ = function() {
   var width;
   if (Blockly.BlockSvg.FIELD_TEXTINPUT_EXPAND_PAST_TRUNCATION) {
     // Resize the box based on the measured width of the text, pre-truncation
-    var textWidth = Blockly.scratchBlocksUtils.measureText(
-        Blockly.FieldTextInput.htmlInput_.style.fontSize,
-        Blockly.FieldTextInput.htmlInput_.style.fontFamily,
-        Blockly.FieldTextInput.htmlInput_.style.fontWeight,
-        Blockly.FieldTextInput.htmlInput_.value
-    );
-    // Size drawn in the canvas needs padding and scaling
-    textWidth += Blockly.FieldTextInput.TEXT_MEASURE_PADDING_MAGIC;
+    var lines = htmlInput.value.split(/\r?\n/);
+    var textWidth = 0;
+    for (var i = 0; i < lines.length; i++) {
+      textWidth = Math.max(textWidth, Blockly.scratchBlocksUtils.measureText(
+          textMetrics.fontSize,
+          textMetrics.fontFamily,
+          textMetrics.fontWeight,
+          lines[i]));
+    }
+    // Match the editor's content box to the rendered field's padding.
+    textWidth += 2 * Blockly.FieldTextInput.EDITOR_HORIZONTAL_PADDING;
     textWidth *= scale;
     width = textWidth;
   } else {
@@ -507,10 +722,20 @@ Blockly.FieldTextInput.prototype.resizeEditor_ = function() {
   }
   // The width must be at least FIELD_WIDTH and at most FIELD_WIDTH_MAX_EDIT
   width = Math.max(width, Blockly.BlockSvg.FIELD_WIDTH_MIN_EDIT * scale);
-  width = Math.min(width, Blockly.BlockSvg.FIELD_WIDTH_MAX_EDIT * scale);
+  if (!isMultiline) {
+    width = Math.min(width, Blockly.BlockSvg.FIELD_WIDTH_MAX_EDIT * scale);
+  }
+  var editorHeight = this.size_.height;
+  if (isMultiline) {
+    var lineCount = Math.max(1, htmlInput.value.split(/\r?\n/).length);
+    editorHeight = Math.max(
+        this.size_.height,
+        lineCount * textMetrics.lineHeight + 2 * Blockly.FieldTextInput.TEXT_VERTICAL_PADDING);
+    htmlInput.style.height = editorHeight + 'px';
+  }
   // Add 1px to width and height to account for border (pre-scale)
   div.style.width = (width / scale + 1) + 'px';
-  div.style.height = (Blockly.BlockSvg.FIELD_HEIGHT_MAX_EDIT + 1) + 'px';
+  div.style.height = (editorHeight + 1) + 'px';
   div.style.transform = 'scale(' + scale + ')';
 
   // Use margin-left to animate repositioning of the box (value is unscaled).
@@ -594,7 +819,7 @@ Blockly.FieldTextInput.prototype.widgetDispose_ = function() {
         div.style.height = (size.height + 1) + 'px';
       } else {
         div.style.width = (thisField.size_.width + 1) + 'px';
-        div.style.height = (Blockly.BlockSvg.FIELD_HEIGHT_MAX_EDIT + 1) + 'px';
+        div.style.height = (thisField.size_.height + 1) + 'px';
       }
     }
     div.style.marginLeft = 0;
