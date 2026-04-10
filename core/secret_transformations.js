@@ -83,35 +83,70 @@ Blockly.SecretTransformations.SHAKE_MIN_MOVE_PX = 64;
 Blockly.SecretTransformations.SHAKE_REVERSALS = 2;
 /** Rolling time window (ms) for counting reversals. @const */
 Blockly.SecretTransformations.SHAKE_WINDOW_MS = 200;
+/** Max x-delta (px) considered "still" for unlocking. @const */
+Blockly.SecretTransformations.SHAKE_STOP_MOVE_PX = 3;
+/** Required still duration (ms) before unlocking another transform. @const */
+Blockly.SecretTransformations.SHAKE_STOP_WINDOW_MS = 120;
 
 /**
  * Create a new shake-detection tracker.
  * @return {{lastX: number, lastDir: number, times: !Array<number>}}
  */
 Blockly.SecretTransformations.createShakeTracker = function() {
-  return {lastX: 0, lastDir: 0, times: []};
+  return {
+    lastX: 0,
+    lastDir: 0,
+    times: [],
+    shakeLocked: false,
+    quietStartMs: 0
+  };
 };
 
 /**
  * Feed the latest drag delta into the tracker.
  * Returns true the moment a shake threshold is reached; the tracker then
  * resets so the NEXT shake can be detected (enabling repeated transforms).
- * @param {{lastX: number, lastDir: number, times: !Array<number>}} tracker
+ * @param {{lastX: number, lastDir: number, times: !Array<number>,
+ *     shakeLocked: boolean, quietStartMs: number}} tracker
  * @param {{x: number, y: number}} deltaXY  Drag delta in pixels from origin.
  * @return {boolean}
  */
 Blockly.SecretTransformations.updateShake = function(tracker, deltaXY) {
+  var now = Date.now();
   var dx = deltaXY.x - tracker.lastX;
+
+  // Once a transform fires, require the user to stop shaking before allowing
+  // another transform.
+  if (tracker.shakeLocked) {
+    if (Math.abs(dx) <= Blockly.SecretTransformations.SHAKE_STOP_MOVE_PX) {
+      if (!tracker.quietStartMs) {
+        tracker.quietStartMs = now;
+      }
+      if (now - tracker.quietStartMs >=
+          Blockly.SecretTransformations.SHAKE_STOP_WINDOW_MS) {
+        tracker.shakeLocked = false;
+        tracker.times = [];
+        tracker.lastDir = 0;
+      }
+    } else {
+      tracker.quietStartMs = 0;
+    }
+
+    tracker.lastX = deltaXY.x;
+    return false;
+  }
+
   if (Math.abs(dx) < Blockly.SecretTransformations.SHAKE_MIN_MOVE_PX) return false;
 
   var dir = dx > 0 ? 1 : -1;
   if (tracker.lastDir !== 0 && dir !== tracker.lastDir) {
-    var now = Date.now();
     var cutoff = now - Blockly.SecretTransformations.SHAKE_WINDOW_MS;
     tracker.times.push(now);
     tracker.times = tracker.times.filter(function(t) { return t >= cutoff; });
     if (tracker.times.length >= Blockly.SecretTransformations.SHAKE_REVERSALS) {
-      // Reset so the user can shake again for the next type.
+      // Latch until shaking stops.
+      tracker.shakeLocked = true;
+      tracker.quietStartMs = 0;
       tracker.times = [];
       tracker.lastDir = 0;
       tracker.lastX = deltaXY.x;
