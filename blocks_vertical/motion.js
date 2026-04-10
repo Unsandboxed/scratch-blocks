@@ -652,3 +652,58 @@ Blockly.Blocks['motion_yscroll'] = {
     });
   }
 };
+
+  if (Blockly.SecretTransformations) {
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_turnleft', 'DEGREES',
+      '<shadow type="math_number"><field name="NUM">15</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_turnright', 'DEGREES',
+      '<shadow type="math_number"><field name="NUM">15</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_pointindirection', 'DIRECTION',
+      '<shadow type="math_angle"><field name="NUM">90</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_pointtowards', 'TOWARDS',
+      '<shadow type="motion_pointtowards_menu"></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_goto', 'TO',
+      '<shadow type="motion_goto_menu"></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_gotoxy', 'X',
+      '<shadow type="math_number"><field name="NUM">0</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_gotoxy', 'Y',
+      '<shadow type="math_number"><field name="NUM">0</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_changebyxy', 'X',
+      '<shadow type="math_number"><field name="NUM">10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_changebyxy', 'Y',
+      '<shadow type="math_number"><field name="NUM">10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_changexby', 'DX',
+      '<shadow type="math_number"><field name="NUM">10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_changeyby', 'DY',
+      '<shadow type="math_number"><field name="NUM">10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_setx', 'X',
+      '<shadow type="math_number"><field name="NUM">0</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'motion_sety', 'Y',
+      '<shadow type="math_number"><field name="NUM">0</field></shadow>');
+
+    Blockly.SecretTransformations.addGroup(
+      ['motion_turnleft', 'motion_turnright']);
+    Blockly.SecretTransformations.addGroup(
+      ['motion_pointtowards', 'motion_pointindirection']);
+    Blockly.SecretTransformations.addGroup(
+      ['motion_gotoxy', 'motion_goto', 'motion_changebyxy']);
+    Blockly.SecretTransformations.addGroup(
+      ['motion_changexby', 'motion_changeyby']);
+    Blockly.SecretTransformations.addGroup(
+      ['motion_setx', 'motion_sety']);
+    Blockly.SecretTransformations.addGroup(
+      ['motion_xposition', 'motion_yposition']);
+  }
