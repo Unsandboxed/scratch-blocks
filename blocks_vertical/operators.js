@@ -550,3 +550,43 @@ Blockly.Blocks['operator_mathop'] = {
     });
   }
 };
+
+  if (Blockly.SecretTransformations) {
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_gt', 'OPERAND1',
+      '<shadow type="text"><field name="TEXT"></field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_gt', 'OPERAND2',
+      '<shadow type="text"><field name="TEXT">50</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_lt', 'OPERAND1',
+      '<shadow type="text"><field name="TEXT"></field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_lt', 'OPERAND2',
+      '<shadow type="text"><field name="TEXT">50</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_gt_equals', 'OPERAND1',
+      '<shadow type="text"><field name="TEXT"></field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_gt_equals', 'OPERAND2',
+      '<shadow type="text"><field name="TEXT">50</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_lt_equals', 'OPERAND1',
+      '<shadow type="text"><field name="TEXT"></field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'operator_lt_equals', 'OPERAND2',
+      '<shadow type="text"><field name="TEXT">50</field></shadow>');
+
+    Blockly.SecretTransformations.addGroup(
+      ['operator_add', 'operator_subtract']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_multiply', 'operator_divide']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_min', 'operator_max']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_gt', 'operator_lt']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_gt_equals', 'operator_lt_equals']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_and', 'operator_or']);
+  }

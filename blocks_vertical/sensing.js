@@ -556,3 +556,8 @@ Blockly.Blocks['sensing_online'] = {
     });
   }
 };
+
+if (Blockly.SecretTransformations) {
+  Blockly.SecretTransformations.addGroup(
+      ['sensing_mousex', 'sensing_mousey']);
+}
