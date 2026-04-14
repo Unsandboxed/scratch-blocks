@@ -244,3 +244,31 @@ Blockly.Blocks['sound_volume'] = {
     });
   }
 };
+
+  if (Blockly.SecretTransformations) {
+    Blockly.SecretTransformations.addDefaultShadow(
+      'sound_play', 'SOUND_MENU',
+      '<shadow type="sound_sounds_menu"><field name="SOUND_MENU">sound1</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'sound_playuntildone', 'SOUND_MENU',
+      '<shadow type="sound_sounds_menu"><field name="SOUND_MENU">sound1</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'sound_changeeffectby', 'VALUE',
+      '<shadow type="math_number"><field name="NUM">10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'sound_seteffectto', 'VALUE',
+      '<shadow type="math_number"><field name="NUM">100</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'sound_changevolumeby', 'VOLUME',
+      '<shadow type="math_number"><field name="NUM">-10</field></shadow>');
+    Blockly.SecretTransformations.addDefaultShadow(
+      'sound_setvolumeto', 'VOLUME',
+      '<shadow type="math_number"><field name="NUM">100</field></shadow>');
+
+    Blockly.SecretTransformations.addGroup(
+      ['sound_play', 'sound_playuntildone']);
+    Blockly.SecretTransformations.addGroup(
+      ['sound_changeeffectby', 'sound_seteffectto']);
+    Blockly.SecretTransformations.addGroup(
+      ['sound_changevolumeby', 'sound_setvolumeto']);
+  }

@@ -70,12 +70,14 @@ goog.require('Blockly.Touch');
 goog.require('Blockly.WidgetDiv');
 goog.require('Blockly.WorkspaceSvg');
 goog.require('Blockly.CustomShapes');
+goog.require('Blockly.SecretTransformations');
 goog.require('Blockly.Shpr');
 goog.require('Blockly.Highlight');
 goog.require('Blockly.constants');
 goog.require('Blockly.inject');
 goog.require('Blockly.utils');
 goog.require('goog.color');
+goog.require('Blockly.SecretTransformations');
 
 // Turn off debugging when compiled.
 /* eslint-disable no-unused-vars */

@@ -623,69 +623,111 @@ Blockly.BlockSvg.prototype.computeOutputPadding_ = function(inputRows) {
   if (inputRows.length > 1) {
     return;
   }
+  var maxAdditionalPadding = this.hasStatementInput ?
+      Blockly.BlockSvg.MAX_INLINE_BLOCK_EDGE_SHAPE_WIDTH :
+      Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH;
+  var clampAdditionalPadding = function(padding) {
+    if (!isFinite(maxAdditionalPadding)) {
+      return padding;
+    }
+    return Math.min(padding, maxAdditionalPadding);
+  };
+  var getConnectionShape = function(input) {
+    var inputConnection = input.connection;
+    if (!inputConnection.targetConnection) {
+      return inputConnection.getOutputShape();
+    }
+    return inputConnection.targetConnection.getSourceBlock().getOutputShape();
+  };
+  var getTallFieldPadding = function(field, shape) {
+    if (!field || shape == Blockly.OUTPUT_SHAPE_SQUARE) {
+      return 0;
+    }
+    var isMultiline = field.getText && field.getText().indexOf('\n') !== -1;
+    if (!isMultiline) {
+      return 0;
+    }
+    var extra = Math.max(0,
+        field.getSize().height - Blockly.BlockSvg.MIN_BLOCK_Y_REPORTER) / 2;
+    return clampAdditionalPadding(extra);
+  };
+  var getTallInputPadding = function(input, shape) {
+    if (!input || !input.connection) {
+      return 0;
+    }
+    if (shape == Blockly.OUTPUT_SHAPE_SQUARE) {
+      return 0;
+    }
+    var extra = Math.max(0,
+        input.renderHeight - Blockly.BlockSvg.MIN_BLOCK_Y_REPORTER) / 2;
+    return clampAdditionalPadding(extra);
+  };
   var row = inputRows[0];
   var shape = this.getOutputShape();
+  var tallestConnectedInputPadding = 0;
+  for (var inputPadIndex = 0; inputPadIndex < row.length; inputPadIndex++) {
+    tallestConnectedInputPadding = Math.max(
+        tallestConnectedInputPadding,
+        getTallInputPadding(row[inputPadIndex], shape));
+  }
   // Reset any padding: it's about to be set.
   row.paddingStart = 0;
   row.paddingEnd = 0;
   // Start row padding: based on first input or first field.
   var firstInput = row[0];
   var firstField = firstInput.fieldRow[0];
+  var firstConnectedInput = null;
+  for (var startIndex = 0; startIndex < row.length; startIndex++) {
+    if (row[startIndex].connection) {
+      firstConnectedInput = row[startIndex];
+      break;
+    }
+  }
   var otherShape;
   // In checking the left/start side, a field takes precedence over any input.
   // That's because a field will be rendered before any value input.
   if (firstField) {
     otherShape = 0; // Field comes first in the row.
+    row.paddingStart += getTallFieldPadding(firstField, shape);
   } else {
     // Value input comes first in the row.
-    var inputConnection = firstInput.connection;
-    if (!inputConnection.targetConnection) {
-      // Not connected: use the drawn shape.
-      otherShape = inputConnection.getOutputShape();
-    } else {
-      // Connected: use the connected block's output shape.
-      otherShape = inputConnection.targetConnection.getSourceBlock().getOutputShape();
-    }
-    // Special case for hexagonal output: if the connection is larger height
-    // than a standard reporter, add some start padding.
-    // https://github.com/LLK/scratch-blocks/issues/376
-    if (shape == Blockly.OUTPUT_SHAPE_HEXAGONAL &&
-        otherShape != Blockly.OUTPUT_SHAPE_HEXAGONAL) {
-      var deltaHeight = firstInput.renderHeight - Blockly.BlockSvg.MIN_BLOCK_Y_REPORTER;
-      // One grid unit per level of nesting.
-      row.paddingStart += deltaHeight / 2;
-    }
+    otherShape = getConnectionShape(firstInput);
+    row.paddingStart += getTallInputPadding(firstInput, shape);
+  }
+  if (firstConnectedInput && firstConnectedInput !== firstInput) {
+    row.paddingStart += getTallInputPadding(firstConnectedInput, shape);
   }
   row.paddingStart += Blockly.BlockSvg.SHAPE_IN_SHAPE_PADDING[shape][otherShape];
   // End row padding: based on last input or last field.
   var lastInput = row[row.length - 1];
+  var lastField = lastInput.fieldRow[lastInput.fieldRow.length - 1];
+  var lastConnectedInput = null;
+  for (var i = row.length - 1; i >= 0; i--) {
+    if (row[i].connection) {
+      lastConnectedInput = row[i];
+      break;
+    }
+  }
   // In checking the right/end side, any value input takes precedence over any field.
   // That's because fields are rendered before inputs...the last item
   // in the row will be an input, if one exists.
   if (lastInput.connection) {
     // Value input last in the row.
-    var inputConnection = lastInput.connection;
-    if (!inputConnection.targetConnection) {
-      // Not connected: use the drawn shape.
-      otherShape = inputConnection.getOutputShape();
-    } else {
-      // Connected: use the connected block's output shape.
-      otherShape = inputConnection.targetConnection.getSourceBlock().getOutputShape();
-    }
-    // Special case for hexagonal output: if the connection is larger height
-    // than a standard reporter, add some end padding.
-    // https://github.com/LLK/scratch-blocks/issues/376
-    if (shape == Blockly.OUTPUT_SHAPE_HEXAGONAL &&
-        otherShape != Blockly.OUTPUT_SHAPE_HEXAGONAL) {
-      var deltaHeight = lastInput.renderHeight - Blockly.BlockSvg.MIN_BLOCK_Y_REPORTER;
-      // One grid unit per level of nesting.
-      row.paddingEnd += deltaHeight / 2;
-    }
+    otherShape = getConnectionShape(lastInput);
+    row.paddingEnd += getTallInputPadding(lastInput, shape);
   } else {
     // No input in this row - mark as field.
     otherShape = 0;
+    row.paddingEnd += getTallFieldPadding(lastField, shape);
+  }
+  if (lastConnectedInput && lastConnectedInput !== lastInput) {
+    row.paddingEnd += getTallInputPadding(lastConnectedInput, shape);
   }
   row.paddingEnd += Blockly.BlockSvg.SHAPE_IN_SHAPE_PADDING[shape][otherShape];
+
+  // Keep both sides large enough for the tallest connected input.
+  row.paddingStart = Math.max(row.paddingStart, tallestConnectedInputPadding);
+  row.paddingEnd = Math.max(row.paddingEnd, tallestConnectedInputPadding);
 };
 
 /**

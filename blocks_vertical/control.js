@@ -1091,3 +1091,26 @@ Blockly.Blocks['control_all_at_once'] = {
     });
   }
 };
+
+// Secret transformation group: control_repeat_until <-> control_while
+// Guard is needed because blocks_compressed_vertical.js is compiled
+// standalone without the full Blockly core.
+if (Blockly.SecretTransformations) {
+  Blockly.SecretTransformations.addDefaultShadow(
+    'control_wait', 'DURATION',
+    '<shadow type="math_positive_number"><field name="NUM">1</field></shadow>');
+  Blockly.SecretTransformations.addDefaultShadow(
+    'control_repeat', 'TIMES',
+    '<shadow type="math_whole_number"><field name="NUM">10</field></shadow>');
+
+  Blockly.SecretTransformations.addGroup(
+    ['control_repeat', 'control_forever']);
+  Blockly.SecretTransformations.addGroup(
+      ['control_repeat_until', 'control_while']);
+  Blockly.SecretTransformations.addGroup(
+      ['control_wait', 'control_wait_until']);
+  Blockly.SecretTransformations.addGroup(
+      ['control_if', 'control_if_else']);
+  Blockly.SecretTransformations.addGroup(
+      ['control_break', 'control_continue']);
+}

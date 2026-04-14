@@ -741,3 +741,10 @@ Blockly.Constants.Data.DELETE_OPTION_CALLBACK_FACTORY = function(block,
     workspace.deleteVariableById(variable.getId());
   };
 };
+
+if (Blockly.SecretTransformations) {
+  Blockly.SecretTransformations.addGroup(
+    ['data_setvariableto', 'data_changevariableby']);
+  Blockly.SecretTransformations.addGroup(
+    ['data_showvariable', 'data_hidevariable']);
+}
