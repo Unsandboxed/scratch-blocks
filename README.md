@@ -28,7 +28,36 @@ To re-build compressed versions, run:
 npm run prepublish
 ```
 
-scratch-gui development server must be restarted to update linked scratch-blocks.
+## Editing scratch-blocks while running scratch-gui
+
+If `scratch-gui` depends on `scratch-blocks` via GitHub refs, you can still develop locally without re-publishing:
+
+1. In `scratch-blocks`:
+
+```sh
+npm ci
+npm run build:dist
+npm link
+```
+
+2. In `scratch-gui`:
+
+```sh
+npm ci
+npm link scratch-blocks
+```
+
+3. For live editing, run these in separate terminals:
+
+```sh
+# scratch-blocks
+npm run watch:dist
+
+# scratch-gui
+npm start
+```
+
+With this setup, changes that affect `dist/vertical.js` update in the GUI without running `npm run prepublish`.
 
 <!--
 #### Scratch Blocks is a library for building creative computing interfaces.

@@ -38,7 +38,7 @@ goog.require('Blockly.CustomShapes');
 Blockly.BlockSvg.prototype.updateColour = function() {
   var strokeColour = this.getColourTertiary();
   var renderShadowed = this.isShadow() &&
-      !Blockly.scratchBlocksUtils.isShadowArgumentReporter(this);
+  !Blockly.scratchBlocksUtils.isShadowArgumentReporter(this);
 
   if (renderShadowed && this.parentBlock_) {
     // Pull shadow block stroke colour from parent block's tertiary if possible.
@@ -302,6 +302,7 @@ Blockly.BlockSvg.prototype.renderFields_ = function(fieldList, cursorX,
       scale = 'scale(-1 1)';
       translateX += field.renderWidth;
     }
+
     root.setAttribute('transform',
         'translate(' + translateX + ', ' + translateY + ') ' + scale);
 
@@ -343,20 +344,22 @@ Blockly.BlockSvg.prototype.renderCompute_ = function(iconWidth) {
 
   // Previously created row, for special-casing row heights on C- and E- shaped blocks.
   var previousRow;
+  var forceSeparateRows = !this.getInputsInline();
   for (var i = 0, input; input = inputList[i]; i++) {
     if (!input.isVisible()) {
       continue;
     }
     var isSecondInputOnProcedure = this.type == 'procedures_definition' &&
         lastType && lastType == Blockly.NEXT_STATEMENT;
+    var startsNewInlineRow = !!input.forceNewRow && inputRows.length > 0;
     var row;
     // Don't create a new row for the second dummy input on a procedure block.
     // See github.com/LLK/scratch-blocks/issues/1658
     // In all other cases, statement and value inputs catch all preceding dummy
     // inputs, and cause a line break before following inputs.
-    if (!isSecondInputOnProcedure &&
+    if (forceSeparateRows || (!isSecondInputOnProcedure &&
         (!lastType || lastType == Blockly.NEXT_STATEMENT ||
-        input.type == Blockly.NEXT_STATEMENT)) {
+        input.type == Blockly.NEXT_STATEMENT || startsNewInlineRow))) {
       lastType = input.type;
       row = this.createRowForInput_(input);
       inputRows.push(row);
@@ -976,22 +979,44 @@ Blockly.BlockSvg.prototype.renderDrawRight_ = function(steps,
       // Move to the right edge
       cursorX = Math.max(cursorX, inputRows.rightEdge);
       this.width = Math.max(this.width, cursorX);
+      var hasRoundedRight = !this.edgeShape_ ||
+          (this.edgeShape_ && (this.hasStatementInput || this.hasStackConnection));
+      var previousRow = y > 0 ? inputRows[y - 1] : null;
+      var nextRow = y < inputRows.length - 1 ? inputRows[y + 1] : null;
+      var startsAfterStatement = previousRow && previousRow.type == Blockly.NEXT_STATEMENT;
+      var endsBeforeStatement = nextRow && nextRow.type == Blockly.NEXT_STATEMENT;
+      var needsTopCorner = y == 0 || startsAfterStatement;
+      var needsBottomCorner = y == inputRows.length - 1 || endsBeforeStatement;
+
       if (!this.edgeShape_) {
-        // Include corner radius in drawing the horizontal line.
-        steps.push('H', cursorX - Blockly.BlockSvg.CORNER_RADIUS - this.edgeShapeWidth_);
-        steps.push(this.makeTopRightCorner());
+        if (hasRoundedRight && needsTopCorner) {
+          // Draw a top-right corner at the start of each rounded vertical segment.
+          steps.push('H', cursorX - Blockly.BlockSvg.CORNER_RADIUS - this.edgeShapeWidth_);
+          steps.push(this.makeTopRightCorner());
+        } else {
+          steps.push('H', cursorX - this.edgeShapeWidth_);
+        }
       } else if (this.hasStatementInput || this.hasStackConnection) {
-        // Include corner radius in drawing the horizontal line.
-        steps.push('H', cursorX - Blockly.BlockSvg.CORNER_RADIUS);
-        steps.push(this.makeTopRightCorner());
-       } else {
+        if (needsTopCorner) {
+          // Draw a top-right corner at the start of each rounded vertical segment.
+          steps.push('H', cursorX - Blockly.BlockSvg.CORNER_RADIUS);
+          steps.push(this.makeTopRightCorner());
+        } else {
+          steps.push('H', cursorX);
+        }
+      } else {
         // Don't include corner radius - no corner (edge shape drawn).
         steps.push('H', cursorX - this.edgeShapeWidth_);
       }
-      // Subtract CORNER_RADIUS * 2 to account for the top right corner
-      // and also the bottom right corner. Only move vertically the non-corner length.
-      if (!this.edgeShape_ || (this.edgeShape_ && (this.hasStatementInput || this.hasStackConnection))) {
-        steps.push('v', row.height - Blockly.BlockSvg.CORNER_RADIUS * 2); // marker
+
+      if (hasRoundedRight) {
+        // Consume corner height at row boundaries where corners are actually drawn.
+        var verticalStep = row.height;
+        if (needsTopCorner) verticalStep -= Blockly.BlockSvg.CORNER_RADIUS;
+        if (needsBottomCorner) verticalStep -= Blockly.BlockSvg.CORNER_RADIUS;
+        if (verticalStep > 0) {
+          steps.push('v', verticalStep);
+        }
       }
     } else if (row.type == Blockly.NEXT_STATEMENT) {
       // Nested statement.

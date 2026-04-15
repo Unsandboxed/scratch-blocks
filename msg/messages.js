@@ -193,25 +193,39 @@ Blockly.Msg.MOTION_STAGE_SELECTED = 'Stage selected: no motion blocks';
 
 // Operators blocks
 Blockly.Msg.OPERATORS_ADD = '%1 + %2';
+Blockly.Msg.OPERATORS_ADD_EXTENDS = ''; // usb
 Blockly.Msg.OPERATORS_SUBTRACT = '%1 - %2';
+Blockly.Msg.OPERATORS_SUBTRACT_EXTENDS = ''; // usb
 Blockly.Msg.OPERATORS_MULTIPLY = '%1 * %2';
+Blockly.Msg.OPERATORS_MULTIPLY_EXTENDS = ''; // usb
 Blockly.Msg.OPERATORS_DIVIDE = '%1 / %2';
+Blockly.Msg.OPERATORS_DIVIDE_EXTENDS = ''; // usb
 Blockly.Msg.OPERATORS_EXPONENT = '%1 ^ %2'; // usb
 Blockly.Msg.OPERATORS_RANDOM = 'pick random %1 to %2';
 Blockly.Msg.OPERATORS_CLAMP = 'clamp %1 between %2 and %3'; // usb
 Blockly.Msg.OPERATORS_GT = '%1 > %2';
+Blockly.Msg.OPERATORS_GT_EXTENDS = '>'; // usb
 Blockly.Msg.OPERATORS_GT_EQUALS = '%1 >= %2'; // usb
+Blockly.Msg.OPERATORS_GT_EQUALS_EXTENDS = '>='; // usb
 Blockly.Msg.OPERATORS_LT = '%1 < %2';
+Blockly.Msg.OPERATORS_LT_EXTENDS = '<'; // usb
 Blockly.Msg.OPERATORS_LT_EQUALS = '%1 <= %2'; // usb
+Blockly.Msg.OPERATORS_LT_EQUALS_EXTENDS = '<='; // usb
 Blockly.Msg.OPERATORS_EQUALS = '%1 = %2';
+Blockly.Msg.OPERATORS_EQUALS_EXTENDS = '='; // usb
 Blockly.Msg.OPERATORS_AND = '%1 and %2';
+Blockly.Msg.OPERATORS_AND_EXTENDS = 'and';
 Blockly.Msg.OPERATORS_OR = '%1 or %2';
+Blockly.Msg.OPERATORS_OR_EXTENDS = 'or';
 Blockly.Msg.OPERATORS_XOR = '%1 xor %2';
+Blockly.Msg.OPERATORS_XOR_EXTENDS = 'xor';
 Blockly.Msg.OPERATORS_NOT = 'not %1';
 Blockly.Msg.OPERATORS_CONTAINS = '%1 contains %2?';
 Blockly.Msg.OPERATORS_MOD = '%1 mod %2';
 Blockly.Msg.OPERATORS_MIN = '%1 min %2'; // usb
+Blockly.Msg.OPERATORS_MIN_EXTENDS = 'min %1'; // usb
 Blockly.Msg.OPERATORS_MAX = '%1 max %2'; // usb
+Blockly.Msg.OPERATORS_MAX_EXTENDS = 'max %1'; // usb
 Blockly.Msg.OPERATORS_ROUND = 'round %1';
 Blockly.Msg.OPERATORS_MATHOP = '%1 of %2';
 Blockly.Msg.OPERATORS_MATHOP_ABS = 'abs';
@@ -230,6 +244,7 @@ Blockly.Msg.OPERATORS_MATHOP_EEXP = 'e ^';
 Blockly.Msg.OPERATORS_MATHOP_10EXP = '10 ^';
 
 // String blocks
+Blockly.Msg.STRING_JOIN_EXTENDS = 'join';
 Blockly.Msg.STRING_REVERSE = 'reverse %1'; // usb
 Blockly.Msg.STRING_REPEAT = 'repeat %1 %2 times'; // usb
 Blockly.Msg.STRING_REPLACE = 'replace %1 with %2 in %3'; // usb
@@ -362,10 +377,12 @@ Blockly.Msg.DELETE = 'Delete';
 Blockly.Msg.ADD_COMMENT = 'Add Comment';
 Blockly.Msg.REMOVE_COMMENT = 'Remove Comment';
 Blockly.Msg.DELETE_BLOCK = 'Delete Block';
+Blockly.Msg.DELETE_INPUT = 'Delete this Input';
 Blockly.Msg.DELETE_X_BLOCKS = 'Delete %1 Blocks';
 Blockly.Msg.DELETE_ALL_BLOCKS = 'Delete all %1 blocks?';
 Blockly.Msg.CLEAN_UP = 'Clean up Blocks';
 Blockly.Msg.HELP = 'Help';
+Blockly.Msg.INSERT_INPUT = 'Insert an Input';
 Blockly.Msg.UNDO = 'Undo';
 Blockly.Msg.REDO = 'Redo';
 Blockly.Msg.EDIT_PROCEDURE = 'Edit';

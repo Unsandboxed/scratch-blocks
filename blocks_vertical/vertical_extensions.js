@@ -284,6 +284,119 @@ Blockly.ScratchBlocks.VerticalExtensions.SCRATCH_EXTENSION = function() {
   this.isScratchExtension = true;
 };
 
+Blockly.ScratchBlocks.VerticalExtensions.EXTENSION_EXTENDER = {
+  mutationToDom: function() {
+    var container = Blockly.ExtenderMutation.mutationToDom.call(this);
+    container.setAttribute('extenddefs', JSON.stringify(this.extendDefinitions_ || {}));
+    var minProceedGroups = typeof this.minProceedGroups_ === 'number' ? this.minProceedGroups_ : 1;
+    container.setAttribute('minProceedGroups', JSON.stringify(minProceedGroups));
+    return container;
+  },
+  domToMutation: function(xmlElement) {
+    var rawDefinitions = xmlElement.getAttribute('extenddefs');
+    var minProceedGroupsAttr = xmlElement.getAttribute('minProceedGroups');
+    var minProceedGroups = null;
+    if (minProceedGroupsAttr !== null) {
+      minProceedGroups = JSON.parse(minProceedGroupsAttr);
+    }
+
+    var parseType = function(type) {
+      if (type === Blockly.DUMMY_INPUT) return Blockly.DUMMY_INPUT;
+      if (type === Blockly.NEXT_STATEMENT) return Blockly.NEXT_STATEMENT;
+      if (type === Blockly.VALUE_INPUT) return Blockly.VALUE_INPUT;
+      var normalized = (type || '').toString().toLowerCase();
+      if (normalized === 'input_dummy' || normalized === 'dummy') return Blockly.DUMMY_INPUT;
+      if (normalized === 'input_statement' || normalized === 'statement') return Blockly.NEXT_STATEMENT;
+      return Blockly.VALUE_INPUT;
+    };
+
+    var normalizeDefinitions = function(definitions) {
+      if (!Array.isArray(definitions)) {
+        return [];
+      }
+      return definitions.map(function(definition) {
+        var parsedType = parseType(definition.type);
+        var fieldLabel = definition.fieldLabel || null;
+        if (!fieldLabel && parsedType === Blockly.DUMMY_INPUT && definition.field) {
+          fieldLabel = definition.field;
+        }
+        return {
+          id: definition.id,
+          type: parsedType,
+          shadow: definition.shadow || null,
+          field: definition.field || null,
+          argument: definition.argument || null,
+          check: definition.check || null,
+          defaultValue: Object.prototype.hasOwnProperty.call(definition, 'defaultValue') ? definition.defaultValue : null,
+          menuOptions: definition.menuOptions || null,
+          menuArgument: definition.menuArgument || null,
+          transient: !!definition.transient,
+          forceNewRow: !!definition.forceNewRow,
+          fieldLabel: fieldLabel
+        };
+      });
+    };
+
+    var extendDefinitions = {starts: [], proceeds: [], ends: [], collapse: false};
+    if (rawDefinitions) {
+      try {
+        var parsed = JSON.parse(rawDefinitions);
+        extendDefinitions = {
+          starts: normalizeDefinitions(parsed.starts),
+          proceeds: normalizeDefinitions(parsed.proceeds),
+          ends: normalizeDefinitions(parsed.ends),
+          collapse: !!parsed.collapse
+        };
+        if (minProceedGroups === null && Number.isInteger(parsed.minProceedGroups) && parsed.minProceedGroups >= 0) {
+          minProceedGroups = parsed.minProceedGroups;
+        }
+      } catch (e) {
+        extendDefinitions = {starts: [], proceeds: [], ends: [], collapse: false};
+      }
+    }
+    this.minProceedGroups_ = Number.isInteger(minProceedGroups) && minProceedGroups >= 0 ? minProceedGroups : 1;
+    this.extendDefinitions_ = extendDefinitions;
+
+    Blockly.ExtenderMutation.domToMutation.call(this, xmlElement);
+  },
+  handlePlus_: function () {
+    this.insertInputsAtIndex(this.argumentIds_.length + 1, {});
+  },
+  handleMinus_: function () {
+    var minInputs = (this.extendDefinitions_ && this.extendDefinitions_.starts ? this.extendDefinitions_.starts.length : 0) +
+      ((this.extendDefinitions_ && this.extendDefinitions_.proceeds ? this.extendDefinitions_.proceeds.length : 0) * this.minProceedGroups_);
+    var removeCount = (this.extendDefinitions_ && this.extendDefinitions_.proceeds) ? this.extendDefinitions_.proceeds.length : 1;
+    if (this.argumentIds_.length <= minInputs) return;
+    Blockly.ExtenderMutation.removeTailInputs_.call(this, removeCount, minInputs);
+  },
+  updateDisplay_: Blockly.ExtenderMutation.updateDisplay_,
+  customContextMenu: Blockly.ExtenderMutation.customContextMenu,
+  findBlockIndex_: Blockly.ExtenderMutation.findBlockIndex_,
+  getInputDefinitionsFromIndex_: Blockly.ExtenderMutation.getInputDefinitionsFromIndex_,
+  getInputDefinitionFromIndex_: Blockly.ExtenderMutation.getInputDefinitionFromIndex_,
+  insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  insertInputsAtIndex: Blockly.ExtenderMutation.insertInputsAtIndex,
+  removeInputWithIndex_: Blockly.ExtenderMutation.removeInputWithIndex_,
+  disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
+  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
+  createAllInputs_: Blockly.ExtenderMutation.createAllInputs_,
+  deleteShadows_: Blockly.ExtenderMutation.deleteShadows_
+};
+
+Blockly.ScratchBlocks.VerticalExtensions.extensionExtenderInit = function() {
+  this.extendCount_ = 0;
+  this.argumentIds_ = [];
+  this.minProceedGroups_ = 1;
+  this.extendDefinitions_ = {starts: [], proceeds: [], ends: [], collapse: false};
+  this.plusminus_ = new Blockly.FieldExtender(
+    this.handlePlus_.bind(this),
+    this.handleMinus_.bind(this),
+    true,
+    false
+  );
+  this.appendDummyInput('DUMMY_INPUT').appendField(this.plusminus_, 'PLUS_MINUS');
+};
+
 /**
  * Register all extensions for scratch-blocks.
  * @package
@@ -340,6 +453,12 @@ Blockly.ScratchBlocks.VerticalExtensions.registerAll = function() {
   // Misleading name. Given to blocks that have an extension icon.
   Blockly.Extensions.register('scratch_extension',
       Blockly.ScratchBlocks.VerticalExtensions.SCRATCH_EXTENSION);
+
+    Blockly.Extensions.registerMutator(
+      'extension_extender',
+      Blockly.ScratchBlocks.VerticalExtensions.EXTENSION_EXTENDER,
+      Blockly.ScratchBlocks.VerticalExtensions.extensionExtenderInit
+    );
 };
 
 Blockly.ScratchBlocks.VerticalExtensions.registerAll();
