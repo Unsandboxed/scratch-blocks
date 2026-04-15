@@ -297,7 +297,8 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
     '</block>' +
     '<block type="control_forever" id="control_forever"></block>' +
     '<block type="control_if" id="control_if"></block>' +
-    '<block type="control_if_else" id="control_if_else"></block>' +
+    '<block type="control_if_else_extends" id="control_if_else"></block>' +
+    '<block type="control_switch_case_extends" id="control_switch_case"></block>' +
     '<block type="control_wait_until" id="control_wait_until"></block>' +
     '<block type="control_repeat_until" id="control_repeat_until"></block>' +
     '<block type="control_stop" id="control_stop"></block>' +
@@ -356,51 +357,41 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
     '<block type="sensing_username" id="sensing_username"></block>' +
   '</category>' +
   '<category name="%{BKY_CATEGORY_OPERATORS}" id="operators" colour="#40BF4A" secondaryColour="#389438">' +
-    '<block type="operator_add" id="operator_add">' +
-      '<value name="NUM1">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="NUM2">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
-        '</shadow>' +
-      '</value>' +
-    '</block>' +
-    '<block type="operator_subtract" id="operator_subtract">' +
-      '<value name="NUM1">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="NUM2">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
+    '<block type="operator_add_extends" id="operator_add"></block>' +
+    '<block type="operator_subtract_extends" id="operator_subtract"></block>' +
+    '<block type="operator_multiply_extends" id="operator_multiply"></block>' +
+    '<block type="operator_divide_extends" id="operator_divide"></block>' +
+    '<block type="operator_min_extends">' +
+      '<value name="ARRAY">' +
+        '<shadow type="operator_number_array_extends">' +
+          '<mutation argumentids="[&quot;NUM&quot;,&quot;NUM2&quot;]" extendcount="2"></mutation>' +
+          '<value name="NUM">' +
+            '<shadow type="math_number">' +
+              '<field name="NUM">0</field>' +
+            '</shadow>' +
+          '</value>' +
+          '<value name="NUM2">' +
+            '<shadow type="math_number">' +
+              '<field name="NUM">0</field>' +
+            '</shadow>' +
+          '</value>' +
         '</shadow>' +
       '</value>' +
     '</block>' +
-    '<block type="operator_multiply" id="operator_multiply">' +
-      '<value name="NUM1">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="NUM2">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
-        '</shadow>' +
-      '</value>' +
-    '</block>' +
-    '<block type="operator_divide" id="operator_divide">' +
-      '<value name="NUM1">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="NUM2">' +
-        '<shadow type="math_number">' +
-          '<field name="NUM"></field>' +
+    '<block type="operator_max_extends">' +
+      '<value name="ARRAY">' +
+        '<shadow type="operator_number_array_extends">' +
+          '<mutation argumentids="[&quot;NUM&quot;,&quot;NUM2&quot;]" extendcount="2"></mutation>' +
+          '<value name="NUM">' +
+            '<shadow type="math_number">' +
+              '<field name="NUM">0</field>' +
+            '</shadow>' +
+          '</value>' +
+          '<value name="NUM2">' +
+            '<shadow type="math_number">' +
+              '<field name="NUM">0</field>' +
+            '</shadow>' +
+          '</value>' +
         '</shadow>' +
       '</value>' +
     '</block>' +
@@ -416,57 +407,13 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
         '</shadow>' +
       '</value>' +
     '</block>' +
-    '<block type="operator_lt" id="operator_lt">' +
-      '<value name="OPERAND1">' +
-        '<shadow type="text">' +
-          '<field name="TEXT"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="OPERAND2">' +
-        '<shadow type="text">' +
-          '<field name="TEXT"></field>' +
-        '</shadow>' +
-      '</value>' +
-    '</block>' +
-    '<block type="operator_equals" id="operator_equals">' +
-      '<value name="OPERAND1">' +
-        '<shadow type="text">' +
-          '<field name="TEXT"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="OPERAND2">' +
-        '<shadow type="text">' +
-          '<field name="TEXT"></field>' +
-        '</shadow>' +
-      '</value>' +
-    '</block>' +
-    '<block type="operator_gt" id="operator_gt">' +
-      '<value name="OPERAND1">' +
-        '<shadow type="text">' +
-          '<field name="TEXT"></field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="OPERAND2">' +
-        '<shadow type="text">' +
-          '<field name="TEXT"></field>' +
-        '</shadow>' +
-      '</value>' +
-    '</block>' +
-    '<block type="operator_and" id="operator_and"></block>' +
-    '<block type="operator_or" id="operator_or"></block>' +
+    '<block type="operator_lt_extends" id="operator_lt"></block>' +
+    '<block type="operator_equals_extends" id="operator_equals"></block>' +
+    '<block type="operator_gt_extends" id="operator_gt"></block>' +
+    '<block type="operator_and_extends" id="operator_and"></block>' +
+    '<block type="operator_or_extends" id="operator_or"></block>' +
     '<block type="operator_not" id="operator_not"></block>' +
-    '<block type="operator_join" id="operator_join">' +
-      '<value name="STRING1">' +
-        '<shadow type="text">' +
-          '<field name="TEXT">hello</field>' +
-        '</shadow>' +
-      '</value>' +
-      '<value name="STRING2">' +
-        '<shadow type="text">' +
-          '<field name="TEXT">world</field>' +
-        '</shadow>' +
-      '</value>' +
-    '</block>' +
+    '<block type="string_join_extends" id="operator_join"></block>' +
     '<block type="operator_letter_of" id="operator_letter_of">' +
       '<value name="LETTER">' +
         '<shadow type="math_whole_number">' +
@@ -531,6 +478,9 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
   '</category>' +
   '<category name="Extensions" id="extensions" colour="#FF6680" secondaryColour="#FF4D6A" ' +
     'iconURI="../media/extensions/wedo2-block-icon.svg" showStatusButton="true">' +
+    '<block type="operator_and_extends"/>'+
+    '<block type="operator_add_extends"/>'+
+    '<block type="string_join_extends"/>'+
     '<block type="extension_checkbox_test">' + // enabled
       '<value name="CHECKBOX">' +
         '<shadow type="checkbox"></shadow>' +

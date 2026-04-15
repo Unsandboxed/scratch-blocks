@@ -169,6 +169,523 @@ Blockly.Blocks['control_if_else'] = {
   }
 };
 
+Blockly.Blocks['control_if_else_extends'] = {
+  /**
+   * Block for if-else.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "",
+      "category": Blockly.Categories.control,
+      "extensions": ["colours_control", "shape_statement"]
+    });
+    this.branchKinds_ = ['if'];
+    this.branchStates_ = this.createDefaultBranchStates_();
+    this.argumentIds_ = this.flattenBranchStates_(this.branchStates_);
+    this.plusminus_ = new Blockly.FieldExtender(
+      this.handlePlus_.bind(this),
+      this.handleMinus_.bind(this),
+      true,
+      false,
+      'vertical'
+    );
+
+    this.appendDummyInput('DUMMY_INPUT')
+      .appendField(this.plusminus_, 'PLUS_MINUS')
+      .setAlign(Blockly.ALIGN_RIGHT);
+    this.rebuildShape_();
+  },
+
+  createBranchState_: function(kind, opt_existingState, opt_branchIndex) {
+    var existingState = opt_existingState || {};
+    var branchIndex = opt_branchIndex || ((this.branchStates_ ? this.branchStates_.length : 0) + 1);
+    return {
+      kind: kind,
+      labelId: existingState.labelId || ('LABEL' + branchIndex),
+      conditionId: kind === 'else' ? null : (existingState.conditionId || (branchIndex === 1 ? 'CONDITION' : ('CONDITION' + branchIndex))),
+      thenId: kind === 'else' ? null : (existingState.thenId || ('THEN' + branchIndex)),
+      substackId: existingState.substackId || (branchIndex === 1 ? 'SUBSTACK' : ('SUBSTACK' + branchIndex))
+    };
+  },
+
+  createDefaultBranchStates_: function() {
+    return [
+      this.createBranchState_('if', null, 1)
+    ];
+  },
+
+  flattenBranchStates_: function(branchStates) {
+    var argumentIds = [];
+    for (var i = 0; i < branchStates.length; i++) {
+      var branchState = branchStates[i];
+      argumentIds.push(branchState.labelId);
+      if (branchState.kind !== 'else') {
+        argumentIds.push(branchState.conditionId);
+        argumentIds.push(branchState.thenId);
+      }
+      argumentIds.push(branchState.substackId);
+    }
+    return argumentIds;
+  },
+
+  flattenAllIds_: function() {
+    return this.flattenBranchStates_(this.branchStates_);
+  },
+
+  loadBranchStates_: function(branchKinds, argumentIds) {
+    var cursor = 0;
+    var branchStates = [];
+
+    for (var i = 0; i < branchKinds.length; i++) {
+      var kind = branchKinds[i];
+      var branchState = this.createBranchState_(kind, {
+        labelId: argumentIds[cursor++]
+      });
+
+      if (kind !== 'else') {
+        branchState.conditionId = argumentIds[cursor++] || branchState.conditionId;
+        branchState.thenId = argumentIds[cursor++] || branchState.thenId;
+      }
+
+      branchState.substackId = argumentIds[cursor++] || branchState.substackId;
+      branchStates.push(branchState);
+    }
+
+    if (!branchStates.length) {
+      branchStates = this.createDefaultBranchStates_();
+    }
+
+    this.branchStates_ = branchStates;
+    this.branchKinds_ = branchStates.map(function(branchState) {
+      return branchState.kind;
+    });
+    this.argumentIds_ = this.flattenBranchStates_(this.branchStates_);
+  },
+
+  getBranchDefinitions_: function(branchState) {
+    var kind = branchState.kind;
+    if (kind === 'else') {
+      return [
+        {id: branchState.labelId, type: Blockly.DUMMY_INPUT, shadow: null, field: 'else', check: null, forceNewRow: true},
+        {id: branchState.substackId, type: Blockly.NEXT_STATEMENT, shadow: null, field: null, check: null}
+      ];
+    }
+
+    return [
+      {id: branchState.labelId, type: Blockly.DUMMY_INPUT, shadow: null, field: kind === 'if' ? 'if' : 'else if', check: null, forceNewRow: true},
+      {id: branchState.conditionId, type: Blockly.VALUE_INPUT, shadow: null, field: null, check: 'Boolean'},
+      {id: branchState.thenId, type: Blockly.DUMMY_INPUT, shadow: null, field: 'then', check: null},
+      {id: branchState.substackId, type: Blockly.NEXT_STATEMENT, shadow: null, field: null, check: null}
+    ];
+  },
+
+  getActiveDefinitions_: function() {
+    var definitions = [];
+    for (var i = 0; i < this.branchStates_.length; i++) {
+      definitions = definitions.concat(this.getBranchDefinitions_(this.branchStates_[i]));
+    }
+    return definitions;
+  },
+
+  canRemove_: function() {
+    return this.branchKinds_.length > 1;
+  },
+
+  syncBranchKinds_: function() {
+    Blockly.ExtenderMutation.syncBranchKinds_.call(this, this.flattenAllIds_);
+  },
+
+  updateButtons_: function() {
+    Blockly.ExtenderMutation.updateBranchButtons_.call(this);
+  },
+
+  rebuildShape_: function() {
+    Blockly.ExtenderMutation.rebuildFromDefinitions_.call(this);
+  },
+
+  // callback functions
+  handlePlus_: function () {
+    Blockly.Events.setGroup(true);
+    try {
+      var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
+      var tailState = this.branchStates_[this.branchStates_.length - 1];
+      if (this.branchStates_.length === 1) {
+        this.branchStates_.push(this.createBranchState_('else', null, this.branchStates_.length + 1));
+      } else if (tailState.kind === 'else') {
+        this.branchStates_[this.branchStates_.length - 1] = this.createBranchState_('elseif', tailState, this.branchStates_.length);
+      } else {
+        this.branchStates_.push(this.createBranchState_('else', null, this.branchStates_.length + 1));
+      }
+      this.syncBranchKinds_();
+      this.rebuildShape_();
+      var newMutation = Blockly.Xml.domToText(this.mutationToDom());
+      Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
+    } finally {
+      Blockly.Events.setGroup(false);
+    }
+  },
+  handleMinus_: function () {
+    if (!this.canRemove_()) return;
+    Blockly.Events.setGroup(true);
+    try {
+      var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
+      var tailState = this.branchStates_[this.branchStates_.length - 1];
+      if (tailState.kind === 'else') {
+        this.branchStates_.pop();
+      } else {
+        this.branchStates_[this.branchStates_.length - 1] = this.createBranchState_('else', tailState, this.branchStates_.length);
+      }
+      this.syncBranchKinds_();
+      this.rebuildShape_();
+      var newMutation = Blockly.Xml.domToText(this.mutationToDom());
+      Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
+    } finally {
+      Blockly.Events.setGroup(false);
+    }
+  },
+
+  mutationToDom: Blockly.ExtenderMutation.branchMutationToDom,
+  domToMutation: function(xmlElement) {
+    Blockly.ExtenderMutation.branchDomToMutation.call(this, xmlElement, '["if"]');
+  },
+
+  insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
+  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
+  deleteShadows_: Blockly.ExtenderMutation.deleteShadows_,
+};
+
+Blockly.Blocks['control_switch_case_extends'] = {
+  /**
+   * Extendable switch/case/default test block.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "",
+      "category": Blockly.Categories.control,
+      "extensions": ["colours_control", "shape_statement"]
+    });
+    this.switchLabelId_ = 'SWITCH_LABEL';
+    this.switchValueId_ = 'SWITCH_VALUE';
+    this.branchKinds_ = ['case'];
+    this.branchStates_ = this.createDefaultBranchStates_();
+    this.argumentIds_ = this.flattenAllIds_();
+    this.plusminus_ = new Blockly.FieldExtender(
+      this.handlePlus_.bind(this),
+      this.handleMinus_.bind(this),
+      true,
+      false,
+      'vertical'
+    );
+    // Inline flow keeps "case" + first value input on one row.
+    this.setInputsInline(true);
+    // Keep the branch-level extender in a persistent bottom row so it does
+    // not get rebound during dynamic shape rebuilds.
+    this.appendDummyInput('DUMMY_INPUT')
+      .appendField(this.plusminus_, 'PLUS_MINUS')
+      .setAlign(Blockly.ALIGN_RIGHT);
+    this.rebuildShape_();
+  },
+
+  createBranchState_: function(kind, opt_existingState, opt_branchIndex) {
+    var existingState = opt_existingState || {};
+    var branchIndex = opt_branchIndex || ((this.branchStates_ ? this.branchStates_.length : 0) + 1);
+    var valueIds = [];
+    if (kind === 'case') {
+      if (existingState.valueIds && existingState.valueIds.length) {
+        valueIds = existingState.valueIds.slice();
+      } else if (existingState.caseValueId) {
+        valueIds = [existingState.caseValueId];
+      } else {
+        valueIds = [branchIndex === 1 ? 'CASE_VALUE' : ('CASE_VALUE' + branchIndex)];
+      }
+    }
+    return {
+      kind: kind,
+      labelId: existingState.labelId || ('CASE_LABEL' + branchIndex),
+      valueIds: valueIds,
+      substackId: existingState.substackId || (branchIndex === 1 ? 'SUBSTACK' : ('SUBSTACK' + branchIndex))
+    };
+  },
+
+  createDefaultBranchStates_: function() {
+    return [
+      this.createBranchState_('case', null, 1)
+    ];
+  },
+
+  flattenBranchStates_: function(branchStates) {
+    var argumentIds = [];
+    for (var i = 0; i < branchStates.length; i++) {
+      var branchState = branchStates[i];
+      argumentIds.push(branchState.labelId);
+      if (branchState.kind === 'case') {
+        for (var j = 0; j < branchState.valueIds.length; j++) {
+          argumentIds.push(branchState.valueIds[j]);
+        }
+      }
+      argumentIds.push(branchState.substackId);
+    }
+    return argumentIds;
+  },
+
+  getCaseValueCounts_: function() {
+    return this.branchStates_.map(function(branchState) {
+      return branchState.kind === 'case' ? branchState.valueIds.length : 0;
+    });
+  },
+
+  flattenAllIds_: function() {
+    return [this.switchLabelId_, this.switchValueId_].concat(this.flattenBranchStates_(this.branchStates_));
+  },
+
+  loadBranchStates_: function(branchKinds, argumentIds, caseValueCounts) {
+    var cursor = 0;
+
+    this.switchLabelId_ = argumentIds[cursor++] || this.switchLabelId_ || Blockly.utils.genUid();
+    this.switchValueId_ = argumentIds[cursor++] || this.switchValueId_ || Blockly.utils.genUid();
+
+    var branchStates = [];
+    for (var i = 0; i < branchKinds.length; i++) {
+      var kind = branchKinds[i];
+      var branchState = this.createBranchState_(kind, {
+        labelId: argumentIds[cursor++]
+      });
+
+      if (kind === 'case') {
+        var caseCount = 1;
+        if (caseValueCounts && typeof caseValueCounts[i] === 'number' && caseValueCounts[i] > 0) {
+          caseCount = caseValueCounts[i];
+        }
+        branchState.valueIds = [];
+        for (var j = 0; j < caseCount; j++) {
+          branchState.valueIds.push(argumentIds[cursor++] || this.generateCaseValueId_(branchState));
+        }
+      }
+
+      branchState.substackId = argumentIds[cursor++] || branchState.substackId;
+      branchStates.push(branchState);
+    }
+
+    if (!branchStates.length) {
+      branchStates = this.createDefaultBranchStates_();
+    }
+
+    this.branchStates_ = branchStates;
+    this.syncBranchKinds_();
+  },
+
+  findBranchByLabelId_: function(labelId) {
+    for (var i = 0; i < this.branchStates_.length; i++) {
+      var branchState = this.branchStates_[i];
+      if (branchState.labelId === labelId) {
+        return branchState;
+      }
+    }
+    return null;
+  },
+
+  generateCaseValueId_: function(branchState) {
+    var prefix = 'CASE_VALUE_' + branchState.labelId + '_';
+    var existing = this.flattenAllIds_();
+    var counter = 1;
+    var candidate = prefix + counter;
+    while (existing.indexOf(candidate) !== -1) {
+      counter++;
+      candidate = prefix + counter;
+    }
+    return candidate;
+  },
+
+  canRemoveCaseValue_: function(labelId) {
+    var branchState = this.findBranchByLabelId_(labelId);
+    return !!(branchState && branchState.kind === 'case' && branchState.valueIds.length > 1);
+  },
+
+  createCaseValueExtender_: function(labelId) {
+    return new Blockly.FieldExtender(
+      this.handleCaseValuePlus_.bind(this, labelId),
+      this.handleCaseValueMinus_.bind(this, labelId),
+      true,
+      this.canRemoveCaseValue_(labelId)
+    );
+  },
+
+  handleCaseValuePlus_: function(labelId) {
+    var branchState = this.findBranchByLabelId_(labelId);
+    if (!branchState || branchState.kind !== 'case') return;
+    Blockly.Events.setGroup(true);
+    try {
+      var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
+      branchState.valueIds.push(this.generateCaseValueId_(branchState));
+      this.syncBranchKinds_();
+      this.rebuildShape_();
+      var newMutation = Blockly.Xml.domToText(this.mutationToDom());
+      Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
+    } finally {
+      Blockly.Events.setGroup(false);
+    }
+  },
+
+  handleCaseValueMinus_: function(labelId) {
+    var branchState = this.findBranchByLabelId_(labelId);
+    if (!branchState || branchState.kind !== 'case' || branchState.valueIds.length <= 1) return;
+    Blockly.Events.setGroup(true);
+    try {
+      var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
+      branchState.valueIds.pop();
+      this.syncBranchKinds_();
+      this.rebuildShape_();
+      var newMutation = Blockly.Xml.domToText(this.mutationToDom());
+      Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
+    } finally {
+      Blockly.Events.setGroup(false);
+    }
+  },
+
+  getBranchDefinitions_: function(branchState) {
+    if (branchState.kind === 'default') {
+      return [
+        {id: branchState.labelId, type: Blockly.DUMMY_INPUT, shadow: null, field: 'default', check: null, forceNewRow: true},
+        {id: branchState.substackId, type: Blockly.NEXT_STATEMENT, shadow: null, field: null, check: null}
+      ];
+    }
+
+    var definitions = [
+      {
+        id: branchState.labelId,
+        type: Blockly.DUMMY_INPUT,
+        shadow: null,
+        field: 'case',
+        check: null,
+        forceNewRow: true
+      }
+    ];
+
+    for (var i = 0; i < branchState.valueIds.length; i++) {
+      var valueDefinition = {
+        id: branchState.valueIds[i],
+        type: Blockly.VALUE_INPUT,
+        shadow: 'text',
+        field: 'TEXT',
+        check: null,
+        forceNewRow: i > 0
+      };
+      if (i > 0) {
+        valueDefinition.fieldLabel = 'or';
+      } else {
+        // Keep first case value on same row as "case".
+        valueDefinition.forceNewRow = false;
+      }
+      definitions.push(valueDefinition);
+    }
+
+    definitions.push({
+      id: 'CASE_EXTENDER_ROW_' + branchState.labelId,
+      type: Blockly.DUMMY_INPUT,
+      shadow: null,
+      field: null,
+      check: null,
+      transient: true,
+      extraField: this.createCaseValueExtender_(branchState.labelId),
+      extraFieldName: 'CASE_EXTENDER'
+    });
+
+    definitions.push({id: branchState.substackId, type: Blockly.NEXT_STATEMENT, shadow: null, field: null, check: null});
+    return definitions;
+  },
+
+  getActiveDefinitions_: function() {
+    var definitions = [
+      {id: this.switchLabelId_, type: Blockly.DUMMY_INPUT, shadow: null, field: 'switch', check: null, forceNewRow: true},
+      {id: this.switchValueId_, type: Blockly.VALUE_INPUT, shadow: 'text', field: 'TEXT', check: null}
+    ];
+
+    for (var i = 0; i < this.branchStates_.length; i++) {
+      definitions = definitions.concat(this.getBranchDefinitions_(this.branchStates_[i]));
+    }
+    return definitions;
+  },
+
+  canRemove_: function() {
+    return this.branchStates_.length > 1;
+  },
+
+  syncBranchKinds_: function() {
+    Blockly.ExtenderMutation.syncBranchKinds_.call(this, this.flattenAllIds_);
+  },
+
+  updateButtons_: function() {
+    Blockly.ExtenderMutation.updateBranchButtons_.call(this);
+  },
+
+  rebuildShape_: function() {
+    Blockly.ExtenderMutation.rebuildFromDefinitions_.call(this);
+  },
+
+  handlePlus_: function () {
+    Blockly.Events.setGroup(true);
+    try {
+      var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
+      var tailState = this.branchStates_[this.branchStates_.length - 1];
+      if (tailState.kind === 'default') {
+        this.branchStates_[this.branchStates_.length - 1] = this.createBranchState_('case', tailState, this.branchStates_.length);
+      } else {
+        this.branchStates_.push(this.createBranchState_('default', null, this.branchStates_.length + 1));
+      }
+      this.syncBranchKinds_();
+      this.rebuildShape_();
+      var newMutation = Blockly.Xml.domToText(this.mutationToDom());
+      Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
+    } finally {
+      Blockly.Events.setGroup(false);
+    }
+  },
+
+  handleMinus_: function () {
+    if (!this.canRemove_()) return;
+    Blockly.Events.setGroup(true);
+    try {
+      var oldMutation = Blockly.Xml.domToText(this.mutationToDom());
+      var tailState = this.branchStates_[this.branchStates_.length - 1];
+      if (tailState.kind === 'default') {
+        this.branchStates_.pop();
+      } else {
+        this.branchStates_[this.branchStates_.length - 1] = this.createBranchState_('default', tailState, this.branchStates_.length);
+      }
+      this.syncBranchKinds_();
+      this.rebuildShape_();
+      var newMutation = Blockly.Xml.domToText(this.mutationToDom());
+      Blockly.Events.fire(new Blockly.Events.BlockChange(this, 'mutation', null, oldMutation, newMutation));
+    } finally {
+      Blockly.Events.setGroup(false);
+    }
+  },
+
+  mutationToDom: function() {
+    var container = document.createElement('mutation');
+    container.setAttribute('argumentids', JSON.stringify(this.argumentIds_));
+    container.setAttribute('branchkinds', JSON.stringify(this.branchKinds_));
+    container.setAttribute('casevaluecounts', JSON.stringify(this.getCaseValueCounts_()));
+    return container;
+  },
+
+  domToMutation: function(xmlElement) {
+    var argumentIds = JSON.parse(xmlElement.getAttribute('argumentids') || '[]');
+    var branchKinds = JSON.parse(xmlElement.getAttribute('branchkinds') || '["case"]');
+    var caseValueCounts = JSON.parse(xmlElement.getAttribute('casevaluecounts') || '[]');
+    this.loadBranchStates_(branchKinds, argumentIds, caseValueCounts);
+    this.rebuildShape_();
+  },
+
+  insertInputWithIndex_: Blockly.ExtenderMutation.insertInputWithIndex_,
+  disconnectOldBlocks_: Blockly.ExtenderMutation.disconnectOldBlocks_,
+  removeAllInputs_: Blockly.ExtenderMutation.removeAllInputs_,
+  deleteShadows_: Blockly.ExtenderMutation.deleteShadows_
+};
+
 Blockly.Blocks['control_stop'] = {
   /**
    * Block for stop all scripts.
