@@ -131,16 +131,20 @@ Blockly.ExtenderMutation.branchDomToMutation = function(xmlElement, defaultBranc
 Blockly.ExtenderMutation.domToMutation = function(xmlElement) {
   var argumentIds = xmlElement.getAttribute('argumentids');
   var extendCount = xmlElement.getAttribute('extendCount');
+  var parsedExtendCount = JSON.parse(extendCount || '0');
 
-  // don't update if args are not changed
-  if (JSON.stringify(this.argumentIds_) === argumentIds) {
+  // Even if argument IDs are unchanged, we may still need to refresh shape
+  // because extend definitions/minProceed settings can change independently.
+  if (JSON.stringify(this.argumentIds_) === argumentIds && this.extendCount_ === parsedExtendCount) {
+    Blockly.ExtenderMutation.updateMinusEnabled_(this);
+    this.updateDisplay_();
     return;
   }
 
   // The number of times it's been extended. This is not the same as the number
   // of argument IDs or inputs/fields on the block, as multiple inputs can be
   // applied or removed at will.
-  this.extendCount_ = JSON.parse(extendCount);
+  this.extendCount_ = parsedExtendCount;
 
   this.argumentIds_ = JSON.parse(argumentIds);
   Blockly.ExtenderMutation.updateMinusEnabled_(this);
@@ -441,6 +445,10 @@ Blockly.ExtenderMutation.getInputDefinitionsFromIndex_ = function (index, block)
 Blockly.ExtenderMutation.getIdPrefixForDefinition_ = function(definition) {
   if (!definition) return 'INPUT';
 
+  if (typeof definition.menuArgument === 'string' && definition.menuArgument.length > 0) {
+    return definition.menuArgument;
+  }
+
   if (definition.type === Blockly.NEXT_STATEMENT) {
     return 'SUBSTACK';
   }
@@ -633,12 +641,28 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
   var input;
   if (definition.type === Blockly.DUMMY_INPUT) {
     input = this.insertDummyInput(insertAt, definition.id);
-    if (definition.field) {
-      var label = new Blockly.FieldLabel(definition.field);
+    var labelText = definition.fieldLabel;
+    if (typeof labelText !== 'string') {
+      labelText = definition.field;
+    }
+    if (labelText) {
+      var label = new Blockly.FieldLabel(labelText);
       input.appendField(label);
     }
     if (definition.extraField) {
       input.appendField(definition.extraField, definition.extraFieldName);
+    }
+    if (definition.menuOptions) {
+      var dropdown = new Blockly.FieldDropdown(definition.menuOptions);
+      var dropdownName = definition.id;
+      input.appendField(dropdown, dropdownName);
+      if (definition.defaultValue !== null && typeof definition.defaultValue !== 'undefined') {
+        try {
+          dropdown.setValue(String(definition.defaultValue));
+        } catch (e) {
+          // Ignore invalid defaults not present in current menu options.
+        }
+      }
     }
   } else if (definition.type === Blockly.NEXT_STATEMENT) {
     input = this.insertStatementInput(
@@ -667,7 +691,10 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
         try {
           var newBlock = this.workspace.newBlock(definition.shadow);
           if (definition.field) {
-            var defaultValue = Blockly.ExtenderMutation.getShadowFieldDefault_(definition.shadow, definition.field);
+            var defaultValue = definition.defaultValue;
+            if (defaultValue === null || typeof defaultValue === 'undefined') {
+              defaultValue = Blockly.ExtenderMutation.getShadowFieldDefault_(definition.shadow, definition.field);
+            }
             newBlock.setFieldValue(defaultValue, definition.field);
           }
           newBlock.setShadow(true);
