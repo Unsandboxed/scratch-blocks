@@ -64,12 +64,17 @@ Blockly.Blocks['array'] = {
       this.handlePlus_.bind(this),
       this.handleMinus_.bind(this),
       true,
-      false
+      false,
+      null,
+      true
     );
+    // TODO: It'd be fun if the list was vertical like in Scratch,
+    // but it looks really awkward. For now, just make it horizontal.
+    this.setInputsInline(true);
     this.appendDummyInput('ARRAY_END')
       .appendField(this.plusminus_, 'PLUS_MINUS');
 
-    this.setOnChange(this.updateParentShadowStyle_.bind(this));
+    this.setOnChange(this.onChange_.bind(this));
     this.updateParentShadowStyle_();
 
     // Creation/connection can happen after init; resync once on next tick
@@ -116,6 +121,16 @@ Blockly.Blocks['array'] = {
       this.clearShadowColour();
     }
     if (this.plusminus_ && this.plusminus_.render_) this.plusminus_.render_();
+  },
+
+  onChange_: function(e) {
+    this.updateParentShadowStyle_();
+
+    // For an empty array shadow, clicking the block body should add the first slot.
+    if (!e || e.type !== 'ui' || e.element !== 'click' || e.blockId !== this.id) return;
+    if (!this.isShadow || !this.isShadow()) return;
+    if (!Array.isArray(this.argumentIds_) || this.argumentIds_.length !== 0) return;
+    this.handlePlus_();
   },
 
   handlePlus_: function () {

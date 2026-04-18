@@ -31,7 +31,8 @@ goog.require('goog.dom');
 goog.require('goog.math');
 goog.require('goog.userAgent');
 
-Blockly.FieldExtender = function(handlePlus, handleMinus, opt_enablePlus, opt_enableMinus, opt_iconLayout) {
+Blockly.FieldExtender = function(handlePlus, handleMinus, opt_enablePlus, opt_enableMinus, opt_iconLayout,
+  opt_autoHideWhenEmptyShadow) {
   this.sourceBlock_ = null;
   this.size_ = new goog.math.Size(55, 20);
   this.handlePlus_ = handlePlus;
@@ -49,6 +50,10 @@ Blockly.FieldExtender = function(handlePlus, handleMinus, opt_enablePlus, opt_en
   this.imgPlus_ = null;
   /** @type {SVGElement} */
   this.imgMinus_ = null;
+  /** @type {boolean} */
+  this.autoHideWhenEmptyShadow_ = !!opt_autoHideWhenEmptyShadow;
+  /** @type {boolean} */
+  this.extendersVisible_ = true;
   this.enablePlus_ = opt_enablePlus === undefined ? true : opt_enablePlus;
   this.enableMinus_ =  opt_enableMinus === undefined ? true : opt_enableMinus;
   this.iconLayout_ = opt_iconLayout || 'horizontal';
@@ -85,6 +90,13 @@ Blockly.FieldExtender.HORIZONTAL_INSET = 5;
  * @const
  */
 Blockly.FieldExtender.BUTTON_GAP = 5;
+
+/**
+ * Padding around parent/shadow block path used for reveal.
+ * @type {number}
+ * @const
+ */
+Blockly.FieldExtender.HOVER_REVEAL_PADDING = 10;
 
 /**
  * Resolve the block that should provide extender colors.
@@ -198,6 +210,17 @@ Blockly.FieldExtender.prototype.init = function() {
     Blockly.bindEvent_(this.btnMinus_, 'mouseleave', this, this.handleHover_.bind(this, false, this.rectMinus_))
   ];
 
+  if (this.autoHideWhenEmptyShadow_) {
+    var workspaceSvg = this.sourceBlock_ && this.sourceBlock_.workspace && this.sourceBlock_.workspace.getParentSvg &&
+        this.sourceBlock_.workspace.getParentSvg();
+    if (workspaceSvg) {
+      this.wrappers_.push(
+        Blockly.bindEvent_(workspaceSvg, 'mousemove', this, this.onWorkspaceMouseMove_),
+        Blockly.bindEvent_(workspaceSvg, 'mouseleave', this, this.onWorkspaceMouseLeave_)
+      );
+    }
+  }
+
   this.render_();
 };
 
@@ -256,6 +279,88 @@ Blockly.FieldExtender.prototype.updateButtonLayout_ = function() {
 
   this.btnMinus_.setAttribute('transform', 'translate(' + minusX + ')');
   this.btnPlus_.setAttribute('transform', 'translate(' + plusX + ')');
+  this.applyVisibility_();
+};
+
+/**
+ * Returns true when auto-hide mode should be active for this field.
+ * @return {boolean}
+ * @private
+ */
+Blockly.FieldExtender.prototype.shouldAutoHide_ = function() {
+  if (!this.autoHideWhenEmptyShadow_) return false;
+  var block = this.sourceBlock_;
+  if (!block || !block.isShadow || !block.isShadow()) return false;
+  if (!Array.isArray(block.argumentIds_)) return false;
+  return block.argumentIds_.length === 0;
+};
+
+/**
+ * Apply visibility and pointer state to extender buttons.
+ * @private
+ */
+Blockly.FieldExtender.prototype.applyVisibility_ = function() {
+  if (!this.btnPlus_ || !this.btnMinus_) return;
+  var visible = this.shouldAutoHide_() ? this.extendersVisible_ : true;
+  var opacity = visible ? '1' : '0';
+  var pointerEvents = visible ? 'auto' : 'none';
+  this.btnPlus_.setAttribute('opacity', opacity);
+  this.btnMinus_.setAttribute('opacity', opacity);
+  this.btnPlus_.setAttribute('pointer-events', pointerEvents);
+  this.btnMinus_.setAttribute('pointer-events', pointerEvents);
+};
+
+/**
+ * Set extender visibility in auto-hide mode.
+ * @param {boolean} visible Whether extenders should be visible.
+ * @private
+ */
+Blockly.FieldExtender.prototype.setExtendersVisible_ = function(visible) {
+  if (this.extendersVisible_ === visible) return;
+  this.extendersVisible_ = visible;
+  this.applyVisibility_();
+};
+
+/**
+ * Check whether client pointer is near the provided block path.
+ * @param {?Blockly.Block} block Block to test.
+ * @param {number} clientX Pointer x in client coordinates.
+ * @param {number} clientY Pointer y in client coordinates.
+ * @return {boolean}
+ * @private
+ */
+Blockly.FieldExtender.prototype.isMouseNearBlockPath_ = function(block, clientX, clientY) {
+  if (!block || !block.svgPath_) return false;
+  var rect = block.svgPath_.getBoundingClientRect();
+  var pad = Blockly.FieldExtender.HOVER_REVEAL_PADDING;
+  return clientX >= rect.left - pad && clientX <= rect.right + pad &&
+      clientY >= rect.top - pad && clientY <= rect.bottom + pad;
+};
+
+/**
+ * Workspace mousemove handler for auto-hide mode.
+ * @param {!MouseEvent} e Mouse move event.
+ * @private
+ */
+Blockly.FieldExtender.prototype.onWorkspaceMouseMove_ = function(e) {
+  if (!this.shouldAutoHide_()) {
+    this.setExtendersVisible_(true);
+    return;
+  }
+  var block = this.sourceBlock_;
+  var parent = block && block.getParent && block.getParent();
+  var visible = this.isMouseNearBlockPath_(block, e.clientX, e.clientY) ||
+      this.isMouseNearBlockPath_(parent, e.clientX, e.clientY);
+  this.setExtendersVisible_(visible);
+};
+
+/**
+ * Workspace mouseleave handler for auto-hide mode.
+ * @private
+ */
+Blockly.FieldExtender.prototype.onWorkspaceMouseLeave_ = function() {
+  if (!this.shouldAutoHide_()) return;
+  this.setExtendersVisible_(false);
 };
 
 /**
@@ -274,6 +379,11 @@ Blockly.FieldExtender.prototype.render_ = function() {
   }
   this.calcSize_();
   this.updateButtonLayout_();
+  if (this.shouldAutoHide_()) {
+    this.setExtendersVisible_(false);
+  } else {
+    this.setExtendersVisible_(true);
+  }
 };
 
 Blockly.FieldExtender.prototype.getSize = function() {
