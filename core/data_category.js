@@ -318,7 +318,7 @@ Blockly.DataCategory.addReplaceItemOfList = function(xmlList, variable) {
  */
 Blockly.DataCategory.addSetList = function(xmlList, variable) {
   Blockly.DataCategory.addBlock(xmlList, variable, 'data_setlist',
-      'LIST', 'ARRAY');
+  'LIST', ['ARRAY', 'array', '']);
 };
 
 /**
@@ -488,7 +488,11 @@ Blockly.DataCategory.addBlock = function(xmlList, variable, blockType,
 Blockly.DataCategory.createValue = function(valueName, type, value) {
   var fieldName;
   if (valueName === 'ARRAY') {
-    return '<value name="' + valueName + '"></value>';
+    var arrayShadowType = (type && Blockly.Blocks[type]) ? type :
+        (Blockly.Blocks['array'] ? 'array' : 'operator_number_array_extends');
+    return '<value name="' + valueName + '">' +
+        '<shadow type="' + arrayShadowType + '"></shadow>' +
+        '</value>';
   }
   switch (valueName) {
     case 'ITEM':
