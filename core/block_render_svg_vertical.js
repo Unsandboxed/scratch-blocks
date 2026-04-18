@@ -656,11 +656,36 @@ Blockly.BlockSvg.prototype.computeOutputPadding_ = function(inputRows) {
         field.getSize().height - Blockly.BlockSvg.MIN_BLOCK_Y_REPORTER) / 2;
     return clampAdditionalPadding(extra);
   };
+  var blockHasMultilineTextField = function(block) {
+    if (!block || !block.inputList) {
+      return false;
+    }
+    for (var inputIndex = 0; inputIndex < block.inputList.length; inputIndex++) {
+      var input = block.inputList[inputIndex];
+      if (!input || !input.fieldRow) {
+        continue;
+      }
+      for (var fieldIndex = 0; fieldIndex < input.fieldRow.length; fieldIndex++) {
+        var field = input.fieldRow[fieldIndex];
+        if (field && field.getText && field.getText().indexOf('\n') !== -1) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
   var getTallInputPadding = function(input, shape) {
     if (!input || !input.connection) {
       return 0;
     }
     if (shape == Blockly.OUTPUT_SHAPE_SQUARE) {
+      return 0;
+    }
+    if (!input.connection.targetConnection) {
+      return 0;
+    }
+    var connectedBlock = input.connection.targetConnection.getSourceBlock();
+    if (!blockHasMultilineTextField(connectedBlock)) {
       return 0;
     }
     var extra = Math.max(0,
