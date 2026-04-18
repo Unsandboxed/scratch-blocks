@@ -86,6 +86,26 @@ Blockly.FieldExtender.HORIZONTAL_INSET = 5;
  */
 Blockly.FieldExtender.BUTTON_GAP = 5;
 
+/**
+ * Resolve the block that should provide extender colors.
+ * Shadow reporters should use parent colors when available.
+ * @return {?Blockly.Block}
+ * @private
+ */
+Blockly.FieldExtender.prototype.getColorSourceBlock_ = function() {
+  var block = this.sourceBlock_;
+  if (!block) return null;
+  if (block.isShadow && block.isShadow()) {
+    var parent = block.getParent && block.getParent();
+    if (parent) return parent;
+    if (block.outputConnection && block.outputConnection.targetConnection) {
+      var source = block.outputConnection.targetConnection.getSourceBlock();
+      if (source) return source;
+    }
+  }
+  return block;
+};
+
 Blockly.FieldExtender.prototype.init = function() {
   if (this.fieldGroup_) {
     return;
@@ -118,9 +138,10 @@ Blockly.FieldExtender.prototype.init = function() {
         'height': 20,
         'rx': Blockly.BlockSvg.CORNER_RADIUS,
         'ry': Blockly.BlockSvg.CORNER_RADIUS,
-        'stroke': this.sourceBlock_.getColourTertiary(),
-        'fill': this.sourceBlock_.getColour(),
+        'stroke': this.getColorSourceBlock_().getColourTertiary(),
+        'fill': this.getColorSourceBlock_().getColour(),
         'fill-opacity': 1,
+        'style': 'transition: fill 0.15s ease-in, stroke 0.15s ease-in;'
       },
       this.btnMinus_
   );
@@ -133,9 +154,10 @@ Blockly.FieldExtender.prototype.init = function() {
         'y': 0,
         'rx': Blockly.BlockSvg.CORNER_RADIUS,
         'ry': Blockly.BlockSvg.CORNER_RADIUS,
-        'stroke': this.sourceBlock_.getColourTertiary(),
-        'fill': this.sourceBlock_.getColour(),
+        'stroke': this.getColorSourceBlock_().getColourTertiary(),
+        'fill': this.getColorSourceBlock_().getColour(),
         'fill-opacity': 1,
+        'style': 'transition: fill 0.15s ease-in, stroke 0.15s ease-in;'
       },
       this.btnPlus_
   );
@@ -241,6 +263,15 @@ Blockly.FieldExtender.prototype.updateButtonLayout_ = function() {
  * @private
  */
 Blockly.FieldExtender.prototype.render_ = function() {
+  if (this.sourceBlock_ && this.rectMinus_ && this.rectPlus_) {
+    var colorSource = this.getColorSourceBlock_();
+    var stroke = colorSource.getColourTertiary();
+    var fill = colorSource.getColour();
+    this.rectMinus_.setAttribute('stroke', stroke);
+    this.rectPlus_.setAttribute('stroke', stroke);
+    this.rectMinus_.setAttribute('fill', fill);
+    this.rectPlus_.setAttribute('fill', fill);
+  }
   this.calcSize_();
   this.updateButtonLayout_();
 };
@@ -294,9 +325,9 @@ Blockly.FieldExtender.prototype.showEditor_ = function() {
  * @private
  */
 Blockly.FieldExtender.prototype.handleHover_ = function(isEnter, obj) {
+  var colorSource = this.getColorSourceBlock_();
   obj.setAttribute('fill', isEnter
-      ? this.sourceBlock_.getColourTertiary() : this.sourceBlock_.getColour());
-  this.render_();
+  ? colorSource.getColourTertiary() : colorSource.getColour());
 };
 
 /**
