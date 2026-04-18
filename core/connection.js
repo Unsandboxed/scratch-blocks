@@ -715,6 +715,15 @@ Blockly.Connection.prototype.setCheck = function(check) {
  * @return {number} Enum representing shape.
  */
 Blockly.Connection.prototype.getOutputShape = function() {
+  if (this.outputShape_ != null) {
+    return this.outputShape_;
+  }
+  if (this.sourceBlock_ && this.sourceBlock_.outputConnection === this) {
+    var explicitShape = this.sourceBlock_.getOutputShape();
+    if (explicitShape != null) {
+      return explicitShape;
+    }
+  }
   if (!this.check_) return Blockly.OUTPUT_SHAPE_ROUND;
   if (this.check_.indexOf('Boolean') !== -1) {
     return Blockly.OUTPUT_SHAPE_HEXAGONAL;

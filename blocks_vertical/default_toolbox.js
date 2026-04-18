@@ -539,6 +539,8 @@ Blockly.Blocks.defaultToolbox = '<xml id="toolbox-categories" style="display: no
         '</shadow>' +
       '</value>' +
     '</block>' +
+    '<block type="extension_vector_test_value" id="extension_vector_test_value"></block>' +
+    '<block type="extension_vector_test_input" id="extension_vector_test_input"></block>' +
     '<block type="extension_inlineblock_test_boolean" id="extension_inlineblock_test_boolean"></block>' +
     '<block type="extension_inlineblock_test_object" id="extension_inlineblock_test_object"></block>' +
     '<block type="extension_inlineblock_test_square" id="extension_inlineblock_test_square"></block>' +

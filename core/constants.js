@@ -261,6 +261,12 @@ Blockly.OUTPUT_SHAPE_SQUARE = 3;
 Blockly.OUTPUT_SHAPE_OBJECT = 4;
 
 /**
+ * ENUM for output shape: vector (custom internal vector reporters).
+ * @const
+ */
+Blockly.OUTPUT_SHAPE_VECTOR = 5;
+
+/**
  * ENUM for categories.
  * @const
  */

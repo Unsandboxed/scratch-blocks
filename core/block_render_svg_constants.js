@@ -562,28 +562,40 @@ Blockly.BlockSvg.SHAPE_IN_SHAPE_PADDING = {
     1: 2 * Blockly.BlockSvg.GRID_UNIT, // Hexagon in hexagon.
     2: 5 * Blockly.BlockSvg.GRID_UNIT, // Round in hexagon.
     3: 5 * Blockly.BlockSvg.GRID_UNIT, // Square in hexagon.
-    4: 2 * Blockly.BlockSvg.GRID_UNIT // Object in hexagon.
+    4: 2 * Blockly.BlockSvg.GRID_UNIT, // Object in hexagon.
+    5: 2 * Blockly.BlockSvg.GRID_UNIT // Vector in hexagon.
   },
   2: { // Outer shape: round.
     0: 3 * Blockly.BlockSvg.GRID_UNIT, // Field in round.
     1: 3 * Blockly.BlockSvg.GRID_UNIT, // Hexagon in round.
     2: 1 * Blockly.BlockSvg.GRID_UNIT, // Round in round.
     3: 2 * Blockly.BlockSvg.GRID_UNIT, // Square in round.
-    4: 3 * Blockly.BlockSvg.GRID_UNIT // Object in hexagon.
+    4: 3 * Blockly.BlockSvg.GRID_UNIT, // Object in hexagon.
+    5: 3 * Blockly.BlockSvg.GRID_UNIT // Vector in round.
   },
   3: { // Outer shape: square.
     0: 2 * Blockly.BlockSvg.GRID_UNIT, // Field in square.
     1: 2 * Blockly.BlockSvg.GRID_UNIT, // Hexagon in square.
     2: 2 * Blockly.BlockSvg.GRID_UNIT, // Round in square.
     3: 2 * Blockly.BlockSvg.GRID_UNIT, // Square in square.
-    4: 2 * Blockly.BlockSvg.GRID_UNIT // Object in hexagon.
+    4: 2 * Blockly.BlockSvg.GRID_UNIT, // Object in hexagon.
+    5: 2 * Blockly.BlockSvg.GRID_UNIT // Vector in square.
   },
   4: { // Outer shape: object.
     0: 5 * Blockly.BlockSvg.GRID_UNIT, // Field in square.
     1: 2 * Blockly.BlockSvg.GRID_UNIT, // Hexagon in square.
     2: 5 * Blockly.BlockSvg.GRID_UNIT, // Round in square.
     3: 5 * Blockly.BlockSvg.GRID_UNIT, // Square in square.
-    4: 2 * Blockly.BlockSvg.GRID_UNIT // Object in hexagon.
+    4: 2 * Blockly.BlockSvg.GRID_UNIT, // Object in hexagon.
+    5: 2 * Blockly.BlockSvg.GRID_UNIT // Vector in object.
+  },
+  5: { // Outer shape: vector.
+    0: 3 * Blockly.BlockSvg.GRID_UNIT, // Field in vector.
+    1: 3 * Blockly.BlockSvg.GRID_UNIT, // Hexagon in vector.
+    2: 1 * Blockly.BlockSvg.GRID_UNIT, // Round in vector.
+    3: 2 * Blockly.BlockSvg.GRID_UNIT, // Square in vector.
+    4: 3 * Blockly.BlockSvg.GRID_UNIT, // Object in vector.
+    5: 1 * Blockly.BlockSvg.GRID_UNIT // Vector in vector.
   }
 };
 

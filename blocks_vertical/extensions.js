@@ -42,6 +42,56 @@ Blockly.Blocks['extension_reporter_test_next'] = {
   }
 };
 
+Blockly.Blocks['extension_vector_test_value'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "vector output test %1 + %2",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VECTOR_A",
+          "check": "Array"
+        },
+        {
+          "type": "input_value",
+          "name": "VECTOR_B",
+          "check": "Array"
+        }
+      ],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more"]
+    });
+    this.setOutput(true, 'Array');
+    this.setOutputShape(Blockly.OUTPUT_SHAPE_VECTOR);
+    this.getInput('VECTOR_A').connection.outputShape_ = Blockly.OUTPUT_SHAPE_VECTOR;
+    this.getInput('VECTOR_B').connection.outputShape_ = Blockly.OUTPUT_SHAPE_VECTOR;
+  }
+};
+
+Blockly.Blocks['extension_vector_test_input'] = {
+  /**
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "vector input test %1",
+      "args0": [
+        {
+          "type": "input_value",
+          "name": "VECTOR",
+          "check": "Array"
+        }
+      ],
+      "category": Blockly.Categories.more,
+      "extensions": ["colours_more", "shape_statement"]
+    });
+    this.getInput('VECTOR').connection.outputShape_ = Blockly.OUTPUT_SHAPE_VECTOR;
+  }
+};
+
 Blockly.Blocks['extension_inlineblock_test_square'] = {
   /**
    * @this Blockly.Block
