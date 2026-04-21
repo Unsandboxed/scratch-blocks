@@ -180,6 +180,16 @@
         }
       };
 
+      Blockly.Blocks['field_test_position'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "position %1",
+            "args0": [{"type": "field_position", "name": "POS", "value": "0, 0"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
       Blockly.Blocks['field_test_duration'] = {
         init: function() {
           this.jsonInit({
@@ -228,6 +238,7 @@
           'field_test_note',
           'field_test_matrix',
           'field_test_vec2',
+          'field_test_position',
           'field_test_duration',
           'field_test_range'
         ];
