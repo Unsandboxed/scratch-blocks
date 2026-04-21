@@ -356,10 +356,44 @@ Blockly.BlockDragger.prototype.endBlockDrag = function(e, currentDragDeltaXY) {
  * @private
  */
 Blockly.BlockDragger.prototype.isAutoExtendCandidate_ = function(block) {
-  return !!(block &&
+  return !!((block &&
       block.extendDefinitions_ &&
       Array.isArray(block.argumentIds_) &&
-      typeof block.insertInputsAtIndex === 'function');
+      typeof block.insertInputsAtIndex === 'function') ||
+      this.isBranchAutoExtendCandidate_(block));
+};
+
+/**
+ * Whether this block supports branch-level plus/minus mutation operations.
+ * @param {!Blockly.BlockSvg} block The block to test.
+ * @return {boolean} True if the block supports branch auto-extension.
+ * @private
+ */
+Blockly.BlockDragger.prototype.isBranchAutoExtendCandidate_ = function(block) {
+  return !!(block &&
+      Array.isArray(block.branchStates_) &&
+      Array.isArray(block.argumentIds_) &&
+      typeof block.handlePlus_ === 'function' &&
+      typeof block.handleMinus_ === 'function');
+};
+
+/**
+ * Whether a target block should count as a real occupied tail target.
+ * @param {?Blockly.BlockSvg} target The connected target block.
+ * @return {boolean} True when target is non-shadow and not an insertion marker.
+ * @private
+ */
+Blockly.BlockDragger.prototype.isRealTailTarget_ = function(target) {
+  if (!target) {
+    return false;
+  }
+  if (target.isShadow && target.isShadow()) {
+    return false;
+  }
+  if (target.isInsertionMarker && target.isInsertionMarker()) {
+    return false;
+  }
+  return true;
 };
 
 /**
@@ -393,11 +427,7 @@ Blockly.BlockDragger.prototype.getLastRealTailTarget_ = function(block) {
   }
 
   var target = input.connection.targetBlock();
-  if (!target) {
-    return null;
-  }
-
-  return (target.isShadow && target.isShadow()) ? null : target;
+  return this.isRealTailTarget_(target) ? target : null;
 };
 
 /**
@@ -417,6 +447,10 @@ Blockly.BlockDragger.prototype.getClosestPreviewConnection_ = function() {
  */
 Blockly.BlockDragger.prototype.maybeRegisterPreviewAutoExtendCandidate_ = function(previewConnection) {
   if (!previewConnection || !previewConnection.sourceBlock_) {
+    return;
+  }
+  if (previewConnection.sourceBlock_.isInsertionMarker &&
+      previewConnection.sourceBlock_.isInsertionMarker()) {
     return;
   }
   if (this.isInDraggedStack_(previewConnection.sourceBlock_)) {
@@ -453,9 +487,78 @@ Blockly.BlockDragger.prototype.isLastDynamicInputConnection_ = function(block, c
  */
 Blockly.BlockDragger.prototype.shouldAutoExtendHostBlock_ = function(hostBlock) {
   return !!(this.isAutoExtendCandidate_(hostBlock) &&
+  !(hostBlock.isInsertionMarker && hostBlock.isInsertionMarker()) &&
   !this.isInDraggedStack_(hostBlock) &&
       !hostBlock.autoExtendDidInsert_ &&
       this.getLastRealTailTarget_(hostBlock));
+};
+
+/**
+ * Perform one auto-extension step on a host block.
+ * @param {!Blockly.BlockSvg} hostBlock The block to extend.
+ * @return {number} Number of dynamic ids added (at least 1 when shape changed).
+ * @private
+ */
+Blockly.BlockDragger.prototype.autoExtendHostBlock_ = function(hostBlock) {
+  if (!this.isAutoExtendCandidate_(hostBlock)) {
+    return 0;
+  }
+
+  if (hostBlock.extendDefinitions_ && typeof hostBlock.insertInputsAtIndex === 'function') {
+    var beforeLen = hostBlock.argumentIds_.length;
+    hostBlock.insertInputsAtIndex(hostBlock.argumentIds_.length + 1, {});
+    return hostBlock.argumentIds_.length - beforeLen;
+  }
+
+  if (this.isBranchAutoExtendCandidate_(hostBlock)) {
+    var beforeIdsLen = hostBlock.argumentIds_.length;
+    var beforeTailKind = null;
+    if (Array.isArray(hostBlock.branchKinds_) && hostBlock.branchKinds_.length) {
+      beforeTailKind = hostBlock.branchKinds_[hostBlock.branchKinds_.length - 1];
+    }
+    var beforeMutation = null;
+    if (typeof hostBlock.mutationToDom === 'function') {
+      beforeMutation = Blockly.Xml.domToText(hostBlock.mutationToDom());
+    }
+
+    hostBlock.handlePlus_();
+    var branchSteps = 1;
+
+    // For branch mutators that use collapsible tail toggling, a single plus can
+    // switch tail kind (e.g., end<->proceed). If a second plus restores the
+    // prior tail kind, keep it so auto-extend behaves like grouped insertion.
+    var tailAfterOne = null;
+    if (Array.isArray(hostBlock.branchKinds_) && hostBlock.branchKinds_.length) {
+      tailAfterOne = hostBlock.branchKinds_[hostBlock.branchKinds_.length - 1];
+    }
+    if (beforeTailKind !== null && tailAfterOne !== beforeTailKind) {
+      hostBlock.handlePlus_();
+      var tailAfterTwo = null;
+      if (Array.isArray(hostBlock.branchKinds_) && hostBlock.branchKinds_.length) {
+        tailAfterTwo = hostBlock.branchKinds_[hostBlock.branchKinds_.length - 1];
+      }
+      if (tailAfterTwo === beforeTailKind) {
+        branchSteps = 2;
+      } else {
+        // Not a collapsible-tail toggle pair; keep the original single-step add.
+        hostBlock.handleMinus_();
+      }
+    }
+
+    var afterIdsLen = Array.isArray(hostBlock.argumentIds_) ? hostBlock.argumentIds_.length : beforeIdsLen;
+    if (afterIdsLen > beforeIdsLen) {
+      return branchSteps;
+    }
+
+    if (beforeMutation !== null && typeof hostBlock.mutationToDom === 'function') {
+      var afterMutation = Blockly.Xml.domToText(hostBlock.mutationToDom());
+      if (afterMutation !== beforeMutation) {
+        return branchSteps;
+      }
+    }
+  }
+
+  return 0;
 };
 
 /**
@@ -477,16 +580,15 @@ Blockly.BlockDragger.prototype.maybeAutoExtendTailFromPreviewConnection_ = funct
     return;
   }
 
-  var beforeLen = hostBlock.argumentIds_.length;
-  hostBlock.insertInputsAtIndex(hostBlock.argumentIds_.length + 1, {});
-  var delta = hostBlock.argumentIds_.length - beforeLen;
+  var delta = this.autoExtendHostBlock_(hostBlock);
   if (delta > 0) {
     if (!Array.isArray(hostBlock.autoExtendDragDeltas_)) {
       hostBlock.autoExtendDragDeltas_ = [];
     }
     hostBlock.autoExtendDragDeltas_.push(delta);
     hostBlock.autoExtendDidInsert_ = true;
-    this.ensureTailShadowIfNeeded_(hostBlock);
+    hostBlock.autoExtendLastInsertMs_ = Date.now();
+      this.ensureDynamicShadowsIfNeeded_(hostBlock);
   }
 };
 
@@ -498,7 +600,12 @@ Blockly.BlockDragger.prototype.maybeAutoExtendTailFromPreviewConnection_ = funct
  * @private
  */
 Blockly.BlockDragger.prototype.isNearLastDynamicInput_ = function(hostBlock) {
-  if (!hostBlock || !this.draggingBlock_ || !this.draggingBlock_.outputConnection) {
+  if (!hostBlock || !this.draggingBlock_) {
+    return false;
+  }
+
+  var draggedConnection = this.draggingBlock_.outputConnection || this.draggingBlock_.previousConnection;
+  if (!draggedConnection) {
     return false;
   }
 
@@ -512,34 +619,80 @@ Blockly.BlockDragger.prototype.isNearLastDynamicInput_ = function(hostBlock) {
     return false;
   }
 
+  if (!draggedConnection.checkType_(input.connection)) {
+    return false;
+  }
+
   // Dragged block anchor: edge that faces the host extension side.
   var draggedBounds = this.draggingBlock_.getBoundingRectangle && this.draggingBlock_.getBoundingRectangle();
   if (!draggedBounds || !draggedBounds.topLeft || !draggedBounds.bottomRight) {
     return false;
   }
 
-  // Host reference: extending edge center (right in LTR, left in RTL).
+  var isStatementTail = input.connection.type === Blockly.NEXT_STATEMENT;
+
+  // Host reference: for statement tails, prefer exact input-connection
+  // coordinates. For reporter/value tails, keep the previous edge-center
+  // model to preserve existing extension behavior.
   var hostBounds = hostBlock.getBoundingRectangle && hostBlock.getBoundingRectangle();
   if (!hostBounds || !hostBounds.topLeft || !hostBounds.bottomRight) {
     return false;
   }
 
-  var hostEdgeX = this.workspace_.RTL ? hostBounds.topLeft.x : hostBounds.bottomRight.x;
-  var hostEdgeY = (hostBounds.topLeft.y + hostBounds.bottomRight.y) / 2;
+  var hostEdgeX;
+  var hostEdgeY;
+  if (isStatementTail &&
+      typeof input.connection.x_ === 'number' && typeof input.connection.y_ === 'number') {
+    hostEdgeX = input.connection.x_;
+    hostEdgeY = input.connection.y_;
+  } else {
+    hostEdgeX = this.workspace_.RTL ? hostBounds.topLeft.x : hostBounds.bottomRight.x;
+    hostEdgeY = (hostBounds.topLeft.y + hostBounds.bottomRight.y) / 2;
+  }
 
   var draggedCenterX = (draggedBounds.topLeft.x + draggedBounds.bottomRight.x) / 2;
   var anchorX = hostEdgeX >= draggedCenterX ? draggedBounds.bottomRight.x : draggedBounds.topLeft.x;
   var anchorY = (draggedBounds.topLeft.y + draggedBounds.bottomRight.y) / 2;
 
   // Padded vicinity box around host extending edge.
+  // Statement sockets need a larger target area so dragging near the lower
+  // interior branch region still triggers extension.
   var halfW = Math.max(34, (Blockly.SNAP_RADIUS * 2.4));
   var halfH = Math.max(24, (Blockly.SNAP_RADIUS * 1.6));
+  var upReach = halfH;
+  var downReach = halfH;
+  if (isStatementTail) {
+    halfW = Math.max(58, (Blockly.SNAP_RADIUS * 3.5));
+    // Bias reach downward so a block can stay lower and move horizontally
+    // into the branch auto-extend zone without losing the preview.
+    upReach = Math.max(36, (Blockly.SNAP_RADIUS * 1.35));
+    downReach = Math.max(96, (Blockly.SNAP_RADIUS * 4.2));
+  }
   var minX = hostEdgeX - halfW;
   var maxX = hostEdgeX + halfW;
-  var minY = hostEdgeY - halfH;
-  var maxY = hostEdgeY + halfH;
+  var minY = hostEdgeY - upReach;
+  var maxY = hostEdgeY + downReach;
 
-  return anchorX >= minX && anchorX <= maxX && anchorY >= minY && anchorY <= maxY;
+  var isNearTail = anchorX >= minX && anchorX <= maxX && anchorY >= minY && anchorY <= maxY;
+  if (!isNearTail) {
+    return false;
+  }
+
+  // Avoid treating the block-bottom stack notch as a tail-proximity hit.
+  if (isStatementTail && hostBlock.nextConnection &&
+      typeof hostBlock.nextConnection.x_ === 'number' &&
+      typeof hostBlock.nextConnection.y_ === 'number') {
+    var dxBottom = anchorX - hostBlock.nextConnection.x_;
+    var dyBottom = anchorY - hostBlock.nextConnection.y_;
+    // Keep only a tight exclusion around the notch itself.
+    var bottomAvoidRadius = Math.max(18, Blockly.SNAP_RADIUS * 0.55);
+    if ((dxBottom * dxBottom) + (dyBottom * dyBottom) <=
+        (bottomAvoidRadius * bottomAvoidRadius)) {
+      return false;
+    }
+  }
+
+  return true;
 };
 
 /**
@@ -561,18 +714,53 @@ Blockly.BlockDragger.prototype.maybeAutoExtendTailFromGeneralProximity_ = functi
 
     this.registerAutoExtendCandidateForDrag_(hostBlock);
 
-    var beforeLen = hostBlock.argumentIds_.length;
-    hostBlock.insertInputsAtIndex(hostBlock.argumentIds_.length + 1, {});
-    var delta = hostBlock.argumentIds_.length - beforeLen;
+    var delta = this.autoExtendHostBlock_(hostBlock);
     if (delta > 0) {
       if (!Array.isArray(hostBlock.autoExtendDragDeltas_)) {
         hostBlock.autoExtendDragDeltas_ = [];
       }
       hostBlock.autoExtendDragDeltas_.push(delta);
       hostBlock.autoExtendDidInsert_ = true;
-      this.ensureTailShadowIfNeeded_(hostBlock);
+      hostBlock.autoExtendLastInsertMs_ = Date.now();
+      this.ensureDynamicShadowsIfNeeded_(hostBlock);
     }
   }
+};
+
+/**
+ * Retract one auto-added step from a host block.
+ * @param {!Blockly.BlockSvg} block The host block.
+ * @param {*} removeRecord Recorded insertion info for this step.
+ * @return {boolean} True if a retraction step was applied.
+ * @private
+ */
+Blockly.BlockDragger.prototype.retractOneAutoExtendStep_ = function(block, removeRecord) {
+  if (this.isBranchAutoExtendCandidate_(block)) {
+    var branchStepCount = (typeof removeRecord === 'number' && removeRecord > 0) ?
+        removeRecord : 1;
+    var didRetract = false;
+    for (var i = 0; i < branchStepCount; i++) {
+      if (typeof block.canRemove_ === 'function' && !block.canRemove_()) {
+        break;
+      }
+      block.handleMinus_();
+      didRetract = true;
+    }
+    return didRetract;
+  }
+
+  if (!block.extendDefinitions_) {
+    return false;
+  }
+
+  var removeCount = typeof removeRecord === 'number' ? removeRecord : 0;
+  if (removeCount <= 0) {
+    return false;
+  }
+
+  var minInputs = Blockly.ExtenderMutation.getMinInputCount_(block);
+  Blockly.ExtenderMutation.removeTailInputs_.call(block, removeCount, minInputs);
+  return true;
 };
 
 /**
@@ -585,6 +773,8 @@ Blockly.BlockDragger.prototype.maybeRetractTailWhenLeavingProximity_ = function(
   if (typeof Blockly.ExtenderMutation === 'undefined') {
     return;
   }
+
+  var retractGraceMs = 550;
 
   for (var i = 0; i < this.autoExtendCandidates_.length; i++) {
     var block = this.autoExtendCandidates_[i];
@@ -599,14 +789,17 @@ Blockly.BlockDragger.prototype.maybeRetractTailWhenLeavingProximity_ = function(
         previewConnection.sourceBlock_ === block &&
         this.isLastDynamicInputConnection_(block, previewConnection));
     var stillNear = this.isNearLastDynamicInput_(block) || previewTargetsBlock;
-    if (stillNear || this.getLastRealTailTarget_(block)) {
+    var insertedRecently = !!(block.autoExtendLastInsertMs_ &&
+      (Date.now() - block.autoExtendLastInsertMs_) < retractGraceMs);
+    if (stillNear || insertedRecently || this.getLastRealTailTarget_(block)) {
       continue;
     }
 
-    var removeCount = block.autoExtendDragDeltas_.pop();
-    var minInputs = Blockly.ExtenderMutation.getMinInputCount_(block);
-    Blockly.ExtenderMutation.removeTailInputs_.call(block, removeCount, minInputs);
-    block.autoExtendDidInsert_ = false;
+    var removeRecord = block.autoExtendDragDeltas_.pop();
+    this.retractOneAutoExtendStep_(block, removeRecord);
+    if (!block.autoExtendDragDeltas_.length) {
+      block.autoExtendDidInsert_ = false;
+    }
   }
 };
 
@@ -633,9 +826,10 @@ Blockly.BlockDragger.prototype.maybeRetractUnusedAutoTailAfterDrag_ = function()
         break;
       }
 
-      var removeCount = block.autoExtendDragDeltas_.pop();
-      var minInputs = Blockly.ExtenderMutation.getMinInputCount_(block);
-      Blockly.ExtenderMutation.removeTailInputs_.call(block, removeCount, minInputs);
+      var removeRecord = block.autoExtendDragDeltas_.pop();
+      if (!this.retractOneAutoExtendStep_(block, removeRecord)) {
+        break;
+      }
     }
   }
 };
@@ -678,8 +872,10 @@ Blockly.BlockDragger.prototype.scheduleAutoExtendedTailShadowReconcile_ = functi
       }
       if (typeof block.updateDisplay_ === 'function') {
         block.updateDisplay_();
+      } else if (typeof block.rebuildShape_ === 'function') {
+        block.rebuildShape_();
       }
-      self.ensureTailShadowIfNeeded_(block);
+      self.ensureDynamicShadowsIfNeeded_(block);
     }
   };
 
@@ -737,6 +933,97 @@ Blockly.BlockDragger.prototype.ensureTailShadowIfNeeded_ = function(block) {
 };
 
 /**
+ * Attach a shadow block to an input using a definition object.
+ * @param {!Blockly.BlockSvg} block Host block.
+ * @param {!Blockly.Input} input Input that should receive the shadow.
+ * @param {!Object} definition Input definition containing shadow metadata.
+ * @private
+ */
+Blockly.BlockDragger.prototype.attachShadowForDefinition_ = function(block, input, definition) {
+  if (!block || !input || !input.connection || !definition || !definition.shadow) {
+    return;
+  }
+  if (input.connection.targetBlock()) {
+    return;
+  }
+
+  var prevRecordUndo = Blockly.Events.recordUndo;
+  Blockly.Events.recordUndo = false;
+  try {
+    var shadowBlock = block.workspace.newBlock(definition.shadow);
+    if (definition.field) {
+      var defaultValue = definition.defaultValue;
+      if (defaultValue === null || typeof defaultValue === 'undefined') {
+        defaultValue = Blockly.ExtenderMutation.getShadowFieldDefault_(definition.shadow, definition.field);
+      }
+      shadowBlock.setFieldValue(defaultValue, definition.field);
+    }
+    shadowBlock.setShadow(true);
+    shadowBlock.initSvg();
+    shadowBlock.render(false);
+    if (shadowBlock.outputConnection) {
+      shadowBlock.outputConnection.connect(input.connection);
+    }
+    if (!input.connection.targetConnection) {
+      shadowBlock.dispose();
+    } else {
+      input.connection.setShadowDom(Blockly.Xml.blockToDom(shadowBlock));
+    }
+  } finally {
+    Blockly.Events.recordUndo = prevRecordUndo;
+  }
+};
+
+/**
+ * Ensure dynamic inputs that define shadows have a live shadow during drag.
+ * For classic extenders this means the current tail; for branch mutators it
+ * backfills any unresolved value shadow defined by active definitions.
+ * @param {!Blockly.BlockSvg} block The extendable host block.
+ * @private
+ */
+Blockly.BlockDragger.prototype.ensureDynamicShadowsIfNeeded_ = function(block) {
+  if (!this.isAutoExtendCandidate_(block) || !block.argumentIds_.length) {
+    return;
+  }
+
+  if (block.extendDefinitions_) {
+    this.ensureTailShadowIfNeeded_(block);
+    return;
+  }
+
+  if (!this.isBranchAutoExtendCandidate_(block) ||
+      typeof block.getActiveDefinitions_ !== 'function') {
+    return;
+  }
+
+  var definitions = block.getActiveDefinitions_();
+  if (!Array.isArray(definitions) || !definitions.length) {
+    return;
+  }
+
+  var definitionById = Object.create(null);
+  for (var i = 0; i < definitions.length; i++) {
+    var definition = definitions[i];
+    if (definition && definition.id && definition.shadow) {
+      definitionById[definition.id] = definition;
+    }
+  }
+
+  for (var j = 0; j < block.argumentIds_.length; j++) {
+    var inputId = block.argumentIds_[j];
+    var shadowDefinition = definitionById[inputId];
+    if (!shadowDefinition) {
+      continue;
+    }
+    var input = block.getInput(inputId);
+    if (!input || !input.connection || input.connection.targetBlock()) {
+      continue;
+    }
+    this.attachShadowForDefinition_(block, input, shadowDefinition);
+  }
+};
+
+/**
  * Clear temporary per-drag auto-extend bookkeeping state.
  * @private
  */
@@ -744,6 +1031,7 @@ Blockly.BlockDragger.prototype.clearAutoExtendDragState_ = function() {
   for (var i = 0; i < this.autoExtendCandidates_.length; i++) {
     this.autoExtendCandidates_[i].autoExtendDragDeltas_ = null;
     this.autoExtendCandidates_[i].autoExtendDidInsert_ = null;
+    this.autoExtendCandidates_[i].autoExtendLastInsertMs_ = null;
   }
   this.autoExtendCandidates_ = [];
 };
@@ -762,6 +1050,7 @@ Blockly.BlockDragger.prototype.registerAutoExtendCandidateForDrag_ = function(bl
   }
   block.autoExtendDragDeltas_ = [];
   block.autoExtendDidInsert_ = false;
+  block.autoExtendLastInsertMs_ = null;
   this.autoExtendCandidates_.push(block);
 };
 
