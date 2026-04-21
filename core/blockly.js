@@ -83,6 +83,7 @@ goog.require('Blockly.Highlight.RendererVector');
 goog.require('Blockly.Highlight.RendererPosition');
 goog.require('Blockly.Highlight.RendererColor');
 goog.require('Blockly.Highlight.RendererImage');
+goog.require('Blockly.Highlight.RendererSprite');
 goog.require('Blockly.constants');
 goog.require('Blockly.inject');
 goog.require('Blockly.utils');
