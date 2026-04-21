@@ -114,7 +114,35 @@ Blockly.BlockDragger = function(block, workspace) {
    * @private
    */
   this.autoExtendCandidates_ = [];
+
+  /**
+   * Whether the auto-extend modifier key is currently pressed.
+   * Updated during drag events.
+   * @type {boolean}
+   * @private
+   */
+  this.autoExtendModifierPressed_ = false;
 };
+
+/**
+ * Whether reporter-style auto-extension is enabled.
+ * Reporter-style hosts are blocks that use extendDefinitions_/argumentIds_.
+ * @type {boolean}
+ */
+Blockly.BlockDragger.AUTO_EXTEND_REPORTERS = true;
+
+/**
+ * Whether branch-style auto-extension is enabled.
+ * Branch-style hosts are mutators that expose branchStates_/handlePlus_.
+ * @type {boolean}
+ */
+Blockly.BlockDragger.AUTO_EXTEND_BRANCHES = true;
+
+/**
+ * Whether auto-extension requires holding CTRL while dragging.
+ * @type {boolean}
+ */
+Blockly.BlockDragger.AUTO_EXTEND_REQUIRE_CTRL_KEY = true;
 
 /**
  * Sever all links from this object.
@@ -173,6 +201,7 @@ Blockly.BlockDragger.prototype.startBlockDrag = function(currentDragDeltaXY) {
 
   this.workspace_.setResizesEnabled(false);
   Blockly.BlockAnimations.disconnectUiStop();
+  this.autoExtendModifierPressed_ = false;
 
   this.autoExtendCandidates_ = [];
   this.registerAutoExtendCandidateForDrag_(this.draggingBlock_);
@@ -224,6 +253,7 @@ Blockly.BlockDragger.prototype.dragBlock = function(e, currentDragDeltaXY) {
   this.deleteArea_ = this.workspace_.isDeleteArea(e);
   var isOutside = !this.workspace_.isInsideBlocksArea(e);
   this.draggedConnectionManager_.update(delta, this.deleteArea_, isOutside);
+  this.autoExtendModifierPressed_ = !!(e && e.ctrlKey);
 
   var previewClosestConnection = this.getClosestPreviewConnection_();
   this.maybeRegisterPreviewAutoExtendCandidate_(previewClosestConnection);
@@ -237,6 +267,18 @@ Blockly.BlockDragger.prototype.dragBlock = function(e, currentDragDeltaXY) {
 
   this.updateCursorDuringBlockDrag_(isOutside);
   return isOutside;
+};
+
+/**
+ * Whether auto-extension is currently allowed for this drag step.
+ * @return {boolean} True when modifier requirements are satisfied.
+ * @private
+ */
+Blockly.BlockDragger.prototype.shouldAllowAutoExtendNow_ = function() {
+  if (!Blockly.BlockDragger.AUTO_EXTEND_REQUIRE_CTRL_KEY) {
+    return true;
+  }
+  return !!this.autoExtendModifierPressed_;
 };
 
 /**
@@ -356,11 +398,24 @@ Blockly.BlockDragger.prototype.endBlockDrag = function(e, currentDragDeltaXY) {
  * @private
  */
 Blockly.BlockDragger.prototype.isAutoExtendCandidate_ = function(block) {
-  return !!((block &&
+  var reporterEnabled = Blockly.BlockDragger.AUTO_EXTEND_REPORTERS;
+  var branchEnabled = Blockly.BlockDragger.AUTO_EXTEND_BRANCHES;
+
+  return !!((reporterEnabled && this.isReporterAutoExtendCandidate_(block)) ||
+      (branchEnabled && this.isBranchAutoExtendCandidate_(block)));
+};
+
+/**
+ * Whether this block supports reporter-style tail mutation operations.
+ * @param {!Blockly.BlockSvg} block The block to test.
+ * @return {boolean} True if the block supports reporter auto-extension.
+ * @private
+ */
+Blockly.BlockDragger.prototype.isReporterAutoExtendCandidate_ = function(block) {
+  return !!(block &&
       block.extendDefinitions_ &&
       Array.isArray(block.argumentIds_) &&
-      typeof block.insertInputsAtIndex === 'function') ||
-      this.isBranchAutoExtendCandidate_(block));
+      typeof block.insertInputsAtIndex === 'function');
 };
 
 /**
@@ -567,6 +622,10 @@ Blockly.BlockDragger.prototype.autoExtendHostBlock_ = function(hostBlock) {
  * @private
  */
 Blockly.BlockDragger.prototype.maybeAutoExtendTailFromPreviewConnection_ = function(previewConnection) {
+  if (!this.shouldAllowAutoExtendNow_()) {
+    return;
+  }
+
   if (!previewConnection || !previewConnection.sourceBlock_) {
     return;
   }
@@ -702,6 +761,10 @@ Blockly.BlockDragger.prototype.isNearLastDynamicInput_ = function(hostBlock) {
 Blockly.BlockDragger.prototype.maybeAutoExtendTailFromGeneralProximity_ = function(previewConnection) {
   this.maybeRetractTailWhenLeavingProximity_(previewConnection);
 
+  if (!this.shouldAllowAutoExtendNow_()) {
+    return;
+  }
+
   var blocks = this.workspace_.getAllBlocks(false);
   for (var i = 0; i < blocks.length; i++) {
     var hostBlock = blocks[i];
@@ -789,7 +852,8 @@ Blockly.BlockDragger.prototype.maybeRetractTailWhenLeavingProximity_ = function(
         previewConnection.sourceBlock_ === block &&
         this.isLastDynamicInputConnection_(block, previewConnection));
     var stillNear = this.isNearLastDynamicInput_(block) || previewTargetsBlock;
-    var insertedRecently = !!(block.autoExtendLastInsertMs_ &&
+    var insertedRecently = !!(this.shouldAllowAutoExtendNow_() &&
+      block.autoExtendLastInsertMs_ &&
       (Date.now() - block.autoExtendLastInsertMs_) < retractGraceMs);
     if (stillNear || insertedRecently || this.getLastRealTailTarget_(block)) {
       continue;
