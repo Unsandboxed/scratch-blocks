@@ -145,6 +145,19 @@ Blockly.Highlight.parsePair_ = function(value) {
 };
 
 /**
+ * Return true when the string is an image Data URI.
+ * @param {*} value Candidate value.
+ * @return {boolean} True when image data URI.
+ * @private
+ */
+Blockly.Highlight.isImageDataUri_ = function(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return /^data:image\/[a-zA-Z0-9.+-]+(?:;[a-zA-Z0-9=._:+-]+)*,/.test(value.trim());
+};
+
+/**
  * Read a Blockly colour token with fallback.
  * @param {string} name Colour token name.
  * @param {string} fallback Fallback colour.
@@ -508,6 +521,13 @@ Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
  * @param {type} The type of the value
  */
 Blockly.Highlight.highlight = function highlight(value, type) {
+  if ((type === 'string' || typeof type === 'undefined') && Blockly.Highlight.isImageDataUri_(value)) {
+    var imageNode = Blockly.Highlight.renderSemantic_(value, 'image');
+    if (imageNode) {
+      return imageNode;
+    }
+  }
+
   var semanticNode = Blockly.Highlight.renderSemantic_(value, type);
   if (semanticNode) {
     return semanticNode;
@@ -631,5 +651,36 @@ Blockly.Highlight.registerRenderer('array', function(value) {
     return null;
   }
   return Blockly.Highlight.makeListMonitor_(value);
+});
+
+Blockly.Highlight.registerRenderer('image', function(value) {
+  if (!Blockly.Highlight.isImageDataUri_(value)) {
+    return null;
+  }
+
+  var panelBackground = Blockly.Highlight.getColour_('valueReportBackground', '#FFFFFF');
+  var panelBorder = Blockly.Highlight.getColour_('valueReportBorder', '#AAAAAA');
+
+  var wrapper = goog.dom.createElement('div');
+  wrapper.style.display = 'inline-block';
+  wrapper.style.maxWidth = '60vw';
+  wrapper.style.background = panelBackground;
+  wrapper.style.border = '1px solid ' + panelBorder;
+  wrapper.style.borderRadius = '6px';
+  wrapper.style.padding = '4px';
+  wrapper.style.overflow = 'hidden';
+
+  var img = goog.dom.createElement('img');
+  img.src = value;
+  img.alt = 'visual report image';
+  img.draggable = false;
+  img.style.display = 'block';
+  img.style.maxWidth = 'min(420px, 60vw)';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  img.style.objectFit = 'contain';
+  img.style.borderRadius = '4px';
+  wrapper.appendChild(img);
+  return wrapper;
 });
 
