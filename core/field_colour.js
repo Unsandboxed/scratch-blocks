@@ -235,6 +235,36 @@ Blockly.FieldColour.prototype.createWidget_ = function() {
   picker.setColors(this.colours_ || Blockly.FieldColour.COLOURS);
   var div = Blockly.WidgetDiv.DIV;
   picker.render(div);
+
+  // In some builds, Closure palette CSS is not loaded. Provide a minimal
+  // inline fallback so the colour grid is still visible and clickable.
+  var pickerElement = picker.getElement();
+  var pickerSize = goog.style.getSize(pickerElement);
+  if (pickerSize.width === 0 || pickerSize.height === 0) {
+    pickerElement.style.background = '#ffffff';
+    pickerElement.style.border = '1px solid #d9d9d9';
+    pickerElement.style.borderRadius = '4px';
+    pickerElement.style.padding = '6px';
+    pickerElement.style.boxSizing = 'border-box';
+
+    var cells = pickerElement.querySelectorAll('td');
+    for (var i = 0; i < cells.length; i++) {
+      var cell = cells[i];
+      cell.style.width = '18px';
+      cell.style.height = '18px';
+      cell.style.padding = '0';
+      cell.style.border = '1px solid rgba(0, 0, 0, 0.12)';
+      cell.style.cursor = 'pointer';
+      cell.style.boxSizing = 'border-box';
+    }
+
+    var swatches = pickerElement.querySelectorAll('td div');
+    for (var j = 0; j < swatches.length; j++) {
+      swatches[j].style.width = '100%';
+      swatches[j].style.height = '100%';
+    }
+  }
+
   picker.setSelectedColor(this.getValue());
   return picker;
 };
