@@ -157,3 +157,28 @@ Blockly.Blocks['math_angle'] = {
     });
   }
 };
+
+Blockly.Blocks['math_vector2'] = {
+  /**
+   * Block for vector2 value.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_vec2",
+          "name": "VEC",
+          "value": "0, 0"
+        }
+      ],
+      "output": "Array",
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "colour": Blockly.Colours.textField,
+      "colourSecondary": Blockly.Colours.textField,
+      "colourTertiary": Blockly.Colours.textField,
+      "colourQuaternary": Blockly.Colours.textField
+    });
+  }
+};

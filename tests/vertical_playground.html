@@ -170,6 +170,36 @@
         }
       };
 
+      Blockly.Blocks['field_test_vec2'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "vec2 %1",
+            "args0": [{"type": "field_vec2", "name": "VEC", "value": "0, 0"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_duration'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "duration %1",
+            "args0": [{"type": "field_duration", "name": "DURATION", "value": "1 s"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_range'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "range %1",
+            "args0": [{"type": "field_range", "name": "RANGE", "value": "0..100"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
       function buildFieldTestsToolbox_(toolboxName) {
         if (toolboxName !== 'categories') {
           return document.getElementById('toolbox-' + toolboxName);
@@ -196,7 +226,10 @@
           'field_test_image',
           'field_test_vertical_separator',
           'field_test_note',
-          'field_test_matrix'
+          'field_test_matrix',
+          'field_test_vec2',
+          'field_test_duration',
+          'field_test_range'
         ];
 
         for (var i = 0; i < fieldTypes.length; i++) {
