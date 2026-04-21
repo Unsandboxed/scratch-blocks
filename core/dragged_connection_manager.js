@@ -249,6 +249,9 @@ Blockly.DraggedConnectionManager.prototype.updateClosest_ = function(dxy) {
   this.radiusConnection_ = Blockly.SNAP_RADIUS;
   for (var i = 0; i < this.availableConnections_.length; i++) {
     var myConnection = this.availableConnections_[i];
+    if (!myConnection) {
+      continue;
+    }
     var neighbour = myConnection.closest(this.radiusConnection_, dxy);
     if (neighbour.connection) {
       this.closestConnection_ = neighbour.connection;

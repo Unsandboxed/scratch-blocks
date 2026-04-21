@@ -219,6 +219,12 @@ Blockly.onKeyDown_ = function(e) {
     return;
   }
   var deleteBlock = false;
+  if (Blockly.mainWorkspace.isDragging() && !e.altKey && !e.ctrlKey && !e.metaKey &&
+      (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)) {
+    // Disable extender keyboard adjustments while dragging.
+    return;
+  }
+
   if (e.keyCode == 27) {
     // Pressing esc closes the context menu and any drop-down
     Blockly.hideChaff();
@@ -241,6 +247,20 @@ Blockly.onKeyDown_ = function(e) {
     if (Blockly.mainWorkspace.isDragging()) {
       return;
     }
+
+    if (e.ctrlKey && !e.altKey && !e.metaKey &&
+        (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)) {
+      // Ctrl + Arrows adjust focused extendable block.
+      // Branch blocks use Down/Up; reporter blocks use Left/Right.
+      e.preventDefault();
+      var didAdjust = Blockly.ExtenderMutation.applyKeyboardAdjustForKeyCode(e.keyCode);
+      if (didAdjust) {
+        Blockly.hideChaff();
+      }
+      return;
+    }
+
+    Blockly.ExtenderMutation.rememberFocusedExtendableBlock(Blockly.selected);
     if (Blockly.selected &&
         Blockly.selected.isDeletable() && Blockly.selected.isMovable()) {
       // Don't allow copying immovable or undeletable blocks. The next step

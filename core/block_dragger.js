@@ -982,14 +982,17 @@ Blockly.BlockDragger.prototype.ensureTailShadowIfNeeded_ = function(block) {
     }
     shadowBlock.setShadow(true);
     shadowBlock.initSvg();
-    shadowBlock.render(false);
     if (shadowBlock.outputConnection) {
       shadowBlock.outputConnection.connect(input.connection);
     }
     if (!input.connection.targetConnection) {
       shadowBlock.dispose();
     } else {
+      shadowBlock.render(false);
       input.connection.setShadowDom(Blockly.Xml.blockToDom(shadowBlock));
+      if (block.rendered && typeof block.render === 'function') {
+        block.render(false);
+      }
     }
   } finally {
     Blockly.Events.recordUndo = prevRecordUndo;
@@ -1024,14 +1027,17 @@ Blockly.BlockDragger.prototype.attachShadowForDefinition_ = function(block, inpu
     }
     shadowBlock.setShadow(true);
     shadowBlock.initSvg();
-    shadowBlock.render(false);
     if (shadowBlock.outputConnection) {
       shadowBlock.outputConnection.connect(input.connection);
     }
     if (!input.connection.targetConnection) {
       shadowBlock.dispose();
     } else {
+      shadowBlock.render(false);
       input.connection.setShadowDom(Blockly.Xml.blockToDom(shadowBlock));
+      if (block.rendered && typeof block.render === 'function') {
+        block.render(false);
+      }
     }
   } finally {
     Blockly.Events.recordUndo = prevRecordUndo;

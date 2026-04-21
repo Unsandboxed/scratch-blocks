@@ -14,6 +14,164 @@ goog.provide('Blockly.ExtenderMutation');
  */
 Blockly.ExtenderMutation.PREPEND_EXTENDER = false;
 
+/**
+ * Most recently focused extendable block.
+ * @type {?Blockly.BlockSvg}
+ * @private
+ */
+Blockly.ExtenderMutation.lastFocusedExtendableBlock_ = null;
+
+/**
+ * Whether a block supports extender keyboard operations.
+ * @param {?Blockly.BlockSvg} block Candidate block.
+ * @return {boolean} True if block supports plus/minus extension controls.
+ * @private
+ */
+Blockly.ExtenderMutation.isKeyboardExtendableBlock_ = function(block) {
+  return !!(block &&
+      !(block.isInsertionMarker && block.isInsertionMarker()) &&
+      block.workspace && !block.workspace.isFlyout &&
+      typeof block.handlePlus_ === 'function' &&
+      typeof block.handleMinus_ === 'function');
+};
+
+/**
+ * Whether a focused extendable block is branch-style.
+ * @param {?Blockly.BlockSvg} block Candidate block.
+ * @return {boolean} True when block uses branch states.
+ * @private
+ */
+Blockly.ExtenderMutation.isKeyboardBranchBlock_ = function(block) {
+  return !!(Blockly.ExtenderMutation.isKeyboardExtendableBlock_(block) &&
+      Array.isArray(block.branchStates_));
+};
+
+/**
+ * Map key code to extend/retract intent for a specific block type.
+ * Branch blocks: Up/Down.
+ * Reporter blocks: Left/Right.
+ * @param {!Blockly.BlockSvg} block Focused extendable block.
+ * @param {number} keyCode Keyboard event key code.
+ * @return {?boolean} True extend, false retract, null for unrelated keys.
+ * @private
+ */
+Blockly.ExtenderMutation.getKeyboardIntentForKeyCode_ = function(block, keyCode) {
+  if (Blockly.ExtenderMutation.isKeyboardBranchBlock_(block)) {
+    if (keyCode == 40) {
+      return true;
+    }
+    if (keyCode == 38) {
+      return false;
+    }
+    return null;
+  }
+
+  if (keyCode == 39) {
+    return true;
+  }
+  if (keyCode == 37) {
+    return false;
+  }
+  return null;
+};
+
+/**
+ * Remember the latest extendable block focus target.
+ * @param {?Blockly.BlockSvg} block Block to store.
+ */
+Blockly.ExtenderMutation.rememberFocusedExtendableBlock = function(block) {
+  if (!Blockly.ExtenderMutation.isKeyboardExtendableBlock_(block)) {
+    return;
+  }
+  Blockly.ExtenderMutation.lastFocusedExtendableBlock_ = block;
+};
+
+/**
+ * Get the most recently focused extendable block.
+ * Prefers current Blockly.selected when extendable.
+ * @return {?Blockly.BlockSvg} Extendable target block.
+ * @private
+ */
+Blockly.ExtenderMutation.getFocusedExtendableBlock_ = function() {
+  if (Blockly.ExtenderMutation.isKeyboardExtendableBlock_(Blockly.selected)) {
+    Blockly.ExtenderMutation.lastFocusedExtendableBlock_ = Blockly.selected;
+    return Blockly.selected;
+  }
+
+  if (Blockly.ExtenderMutation.isKeyboardExtendableBlock_(
+      Blockly.ExtenderMutation.lastFocusedExtendableBlock_)) {
+    return Blockly.ExtenderMutation.lastFocusedExtendableBlock_;
+  }
+
+  Blockly.ExtenderMutation.lastFocusedExtendableBlock_ = null;
+  return null;
+};
+
+/**
+ * Apply keyboard extension/retraction to the focused extendable block.
+ * @param {boolean} shouldExtend True to extend, false to retract.
+ * @return {boolean} True if an operation was applied.
+ */
+Blockly.ExtenderMutation.applyKeyboardAdjustToFocusedBlock = function(shouldExtend) {
+  var block = Blockly.ExtenderMutation.getFocusedExtendableBlock_();
+  if (!block) {
+    return false;
+  }
+
+  if (block.workspace && block.workspace.isDragging && block.workspace.isDragging()) {
+    return false;
+  }
+
+  if (!shouldExtend && typeof block.canRemove_ === 'function' && !block.canRemove_()) {
+    return false;
+  }
+
+  var didApply = false;
+  Blockly.Events.setGroup(true);
+  try {
+    var oldMutation = null;
+    if (typeof block.mutationToDom === 'function') {
+      oldMutation = Blockly.Xml.domToText(block.mutationToDom());
+    }
+
+    if (shouldExtend) {
+      block.handlePlus_();
+    } else {
+      block.handleMinus_();
+    }
+
+    if (oldMutation !== null && typeof block.mutationToDom === 'function') {
+      var newMutation = Blockly.Xml.domToText(block.mutationToDom());
+      didApply = oldMutation !== newMutation;
+    } else {
+      didApply = true;
+    }
+  } finally {
+    Blockly.Events.setGroup(false);
+  }
+
+  return didApply;
+};
+
+/**
+ * Apply key-based extension/retraction for the focused extendable block.
+ * @param {number} keyCode Keyboard event key code.
+ * @return {boolean} True if an operation was applied.
+ */
+Blockly.ExtenderMutation.applyKeyboardAdjustForKeyCode = function(keyCode) {
+  var block = Blockly.ExtenderMutation.getFocusedExtendableBlock_();
+  if (!block) {
+    return false;
+  }
+
+  var shouldExtend = Blockly.ExtenderMutation.getKeyboardIntentForKeyCode_(block, keyCode);
+  if (shouldExtend === null) {
+    return false;
+  }
+
+  return Blockly.ExtenderMutation.applyKeyboardAdjustToFocusedBlock(shouldExtend);
+};
+
 Blockly.ExtenderMutation.mutationToDom = function() {
   var container = document.createElement('mutation');
   container.setAttribute('argumentids', JSON.stringify(this.argumentIds_));
@@ -183,7 +341,8 @@ Blockly.ExtenderMutation.cleanupTopLevelShadows_ = function(workspace) {
 };
 
 Blockly.ExtenderMutation.shouldDeferShadowCreation_ = function(block) {
-  return !!(block && block.workspace && block.workspace.isDragging && block.workspace.isDragging());
+  return !!(block &&
+      block.workspace && block.workspace.isDragging && block.workspace.isDragging());
 };
 
 Blockly.ExtenderMutation.canUseStartExtender_ = function(block) {
@@ -700,7 +859,6 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
           newBlock.setShadow(true);
 
           newBlock.initSvg();
-          newBlock.render(false);
 
           if (newBlock.outputConnection) {
             newBlock.outputConnection.connect(input.connection);
@@ -710,6 +868,7 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
           if (!input.connection.targetConnection) {
             newBlock.dispose();
           } else {
+            newBlock.render(false);
             // Persist shadow DOM on the connection so Blockly can respawn/dispose correctly.
             input.connection.setShadowDom(Blockly.Xml.blockToDom(newBlock));
           }
@@ -1052,3 +1211,4 @@ Blockly.ExtenderMutation.deleteShadows_ = function(connectionMap) {
     }
   }
 };
+
