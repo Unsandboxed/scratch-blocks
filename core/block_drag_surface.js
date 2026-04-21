@@ -279,15 +279,15 @@ Blockly.BlockDragSurfaceSvg.prototype.getCurrentBlock = function() {
  *     being moved to a different surface.
  */
 Blockly.BlockDragSurfaceSvg.prototype.clearAndHide = function(opt_newSurface) {
-  if (opt_newSurface) {
+  var currentBlock = this.getCurrentBlock();
+  if (currentBlock && opt_newSurface) {
     // appendChild removes the node from this.dragGroup_
-    opt_newSurface.appendChild(this.getCurrentBlock());
-  } else {
-    this.dragGroup_.removeChild(this.getCurrentBlock());
+    opt_newSurface.appendChild(currentBlock);
+  }
+  while (this.dragGroup_.firstChild) {
+    this.dragGroup_.removeChild(this.dragGroup_.firstChild);
   }
   this.SVG_.style.display = 'none';
-  goog.asserts.assert(
-      this.dragGroup_.childNodes.length == 0, 'Drag group was not cleared.');
   this.surfaceXY_ = null;
 
   // Reset the overflow property back to hidden so that nothing appears outside

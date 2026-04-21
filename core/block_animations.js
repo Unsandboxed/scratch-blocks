@@ -37,6 +37,26 @@ Blockly.BlockAnimations.disposeUiEffect = function(block) {
   var svgGroup = block.getSvgRoot();
   // workspace.getAudioManager().play('delete');
 
+  var blockDragSurface =
+      workspace.getBlockDragSurface && workspace.getBlockDragSurface();
+  var dragSurfaceGroup =
+      blockDragSurface && blockDragSurface.getGroup && blockDragSurface.getGroup();
+  var isOnDragSurface = !!dragSurfaceGroup && svgGroup.parentNode == dragSurfaceGroup;
+
+  if (isOnDragSurface) {
+    // When deleting while over the flyout/toolbox, animate in the drag surface
+    // so the effect stays above flyout layers.
+    var dragClone = svgGroup.cloneNode(true);
+    dragClone.translateX_ = 0;
+    dragClone.translateY_ = 0;
+    dragClone.setAttribute('transform', 'translate(0,0)');
+    dragSurfaceGroup.appendChild(dragClone);
+    dragClone.bBox_ = dragClone.getBBox();
+    Blockly.BlockAnimations.disposeUiStepOnDragSurface_(
+        dragClone, workspace.RTL, new Date());
+    return;
+  }
+
   var xy = workspace.getSvgXY(svgGroup);
   // Deeply clone the current block.
   var clone = svgGroup.cloneNode(true);
@@ -48,6 +68,31 @@ Blockly.BlockAnimations.disposeUiEffect = function(block) {
   // Start the animation.
   Blockly.BlockAnimations.disposeUiStep_(clone, workspace.RTL, new Date,
       workspace.scale);
+};
+
+/**
+ * Animate a cloned block on the drag surface and eventually dispose of it.
+ * @param {!Element} clone SVG element to animate and dispose of.
+ * @param {boolean} rtl True if RTL, false if LTR.
+ * @param {!Date} start Date of animation's start.
+ * @private
+ */
+Blockly.BlockAnimations.disposeUiStepOnDragSurface_ = function(clone, rtl,
+    start) {
+  var ms = new Date - start;
+  var percent = ms / 175;
+  if (percent > 1) {
+    goog.dom.removeNode(clone);
+  } else {
+    var x = clone.translateX_ +
+        (rtl ? -1 : 1) * clone.bBox_.width / 2 * percent;
+    var y = clone.translateY_ + clone.bBox_.height / 2 * percent;
+    var scale = (1 - percent);
+    clone.setAttribute('transform', 'translate(' + x + ',' + y + ')' +
+        ' scale(' + scale + ')');
+    setTimeout(Blockly.BlockAnimations.disposeUiStepOnDragSurface_, 10, clone,
+        rtl, start);
+  }
 };
 
 /**
@@ -69,7 +114,8 @@ Blockly.BlockAnimations.disposeUiStep_ = function(clone, rtl, start,
   } else {
     var x = clone.translateX_ +
         (rtl ? -1 : 1) * clone.bBox_.width * workspaceScale / 2 * percent;
-    var y = clone.translateY_ + clone.bBox_.height * workspaceScale * percent;
+    var y = clone.translateY_ +
+      clone.bBox_.height * workspaceScale / 2 * percent;
     var scale = (1 - percent) * workspaceScale;
     clone.setAttribute('transform', 'translate(' + x + ',' + y + ')' +
         ' scale(' + scale + ')');

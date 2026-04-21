@@ -234,7 +234,11 @@ Blockly.BlockDragger.prototype.endBlockDrag = function(e, currentDragDeltaXY) {
 
   var delta = this.pixelsToWorkspaceUnits_(currentDragDeltaXY);
   var newLoc = goog.math.Coordinate.sum(this.startXY_, delta);
-  this.draggingBlock_.moveOffDragSurface_(newLoc);
+  // Keep blocks on the drag surface while deleting so the disposal animation
+  // renders above the flyout/toolbox layer.
+  if (!this.wouldDeleteBlock_) {
+    this.draggingBlock_.moveOffDragSurface_(newLoc);
+  }
 
   // Scratch-specific: note possible illegal definition deletion for rollback below.
   var isDeletingProcDef = this.wouldDeleteBlock_ &&
@@ -244,6 +248,15 @@ Blockly.BlockDragger.prototype.endBlockDrag = function(e, currentDragDeltaXY) {
   }
 
   var deleted = this.maybeDeleteBlock_();
+  if (deleted) {
+    var blockDragSurface = this.workspace_.getBlockDragSurface();
+    if (blockDragSurface) {
+      // Allow delete UI animation to complete before clearing drag surface.
+      goog.Timer.callOnce(function() {
+        blockDragSurface.clearAndHide();
+      }, 180);
+    }
+  }
   if (!deleted) {
     // These are expensive and don't need to be done if we're deleting.
     this.draggingBlock_.moveConnections_(delta.x, delta.y);
