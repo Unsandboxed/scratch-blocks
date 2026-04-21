@@ -184,7 +184,6 @@ Blockly.BlockDragger.prototype.startBlockDrag = function(currentDragDeltaXY) {
     var newLoc = goog.math.Coordinate.sum(this.startXY_, delta);
 
     this.draggingBlock_.translate(newLoc.x, newLoc.y);
-    Blockly.BlockAnimations.disconnectUiEffect(this.draggingBlock_);
   }
   this.registerAutoExtendCandidateForDrag_(parentBeforeUnplug);
   this.draggingBlock_.setDragging(true);
@@ -193,6 +192,10 @@ Blockly.BlockDragger.prototype.startBlockDrag = function(currentDragDeltaXY) {
   // the block dragger, which would also let the block not track the block drag
   // surface.
   this.draggingBlock_.moveToDragSurface_();
+
+  if (parentBeforeUnplug) {
+    Blockly.BlockAnimations.disconnectUiEffect(this.draggingBlock_);
+  }
 
   var toolbox = this.workspace_.getToolbox();
   if (toolbox) {

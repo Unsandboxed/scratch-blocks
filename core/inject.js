@@ -463,6 +463,13 @@ Blockly.inject.loadSounds_ = function(pathToMedia, workspace) {
         pathToMedia + 'delete.wav'
       ],
       'delete');
+  audioMgr.load(
+      [
+        pathToMedia + 'disconnect.mp3',
+        pathToMedia + 'disconnect.ogg',
+        pathToMedia + 'disconnect.wav'
+      ],
+      'disconnect');
 
   // Bind temporary hooks that preload the sounds.
   var soundBinds = [];

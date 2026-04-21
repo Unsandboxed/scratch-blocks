@@ -98,6 +98,20 @@ Blockly.mainWorkspace = null;
 Blockly.selected = null;
 
 /**
+ * Master toggle for workspace sound effects.
+ * Set to false to disable all Blockly workspace sounds.
+ * @type {boolean}
+ */
+Blockly.WORKSPACE_SOUNDS_ENABLED = false;
+
+/**
+ * Master toggle for connect/disconnect visual flares.
+ * Set to false to disable ripple and wiggle animations.
+ * @type {boolean}
+ */
+Blockly.SPORK_FLARES = true;
+
+/**
  * All of the connections on blocks that are currently being dragged.
  * @type {!Array.<!Blockly.Connection>}
  * @private
