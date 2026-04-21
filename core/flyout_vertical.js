@@ -538,7 +538,7 @@ Blockly.VerticalFlyout.prototype.layout_ = function(contents, gaps) {
   var margin = this.MARGIN;
   var flyoutWidth = this.getWidth() / this.workspace_.scale;
   var cursorX = margin;
-  var cursorY = margin;
+  var cursorY = 0;
 
   for (var i = 0, item; item = contents[i]; i++) {
     if (item.type == 'block') {

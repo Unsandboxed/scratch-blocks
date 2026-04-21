@@ -641,7 +641,7 @@ Blockly.Flyout.prototype.recordCategoryScrollPositions_ = function() {
 Blockly.Flyout.prototype.selectCategoryByScrollPosition = function(pos) {
   // If we are currently auto-scrolling, due to selecting a category by clicking on it,
   // do not update the category selection.
-  if (this.scrollTarget) {
+  if (this.scrollTarget !== null) {
     return;
   }
   var workspacePos = Math.round(pos / this.workspace_.scale);
@@ -668,7 +668,7 @@ Blockly.Flyout.prototype.startScrollAnimation = function() {
  * @package
  */
 Blockly.Flyout.prototype.stepScrollAnimation = function(time) {
-  if (!this.scrollTarget) {
+  if (this.scrollTarget === null) {
     return;
   }
   if (this.scrollTime === -1) {
