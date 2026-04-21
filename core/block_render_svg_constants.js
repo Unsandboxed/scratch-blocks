@@ -299,7 +299,7 @@ Blockly.BlockSvg.prototype.makeInnerBottomLeftCorner = function(radius) {
  * Minimum width of the edge shape of a reporter.
  * @const
  */
-Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH = Infinity;
+Blockly.BlockSvg.MAX_EDGE_SHAPE_WIDTH = 48; // "spork" squares the edges.
 
 /**
  * Minimum width of the edge shape of an "Inline Block".

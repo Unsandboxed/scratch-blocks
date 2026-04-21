@@ -280,6 +280,9 @@ Blockly.Toolbox.prototype.showAll_ = function() {
 
     allContents.push(labelXML.firstChild);
 
+    // "That's right, we're gonna cheat!" - AVGN
+    allContents.push(Blockly.Xml.textToDom('<xml><sep gap="4"/></xml>').firstChild);
+
     allContents = allContents.concat(category.getContents());
   }
   this.flyout_.show(allContents);
