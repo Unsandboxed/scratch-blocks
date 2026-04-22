@@ -1,0 +1,460 @@
+goog.provide('Blockly.Highlight.RendererScript');
+
+goog.require('Blockly.Css');
+goog.require('Blockly.Highlight');
+goog.require('Blockly.inject');
+goog.require('goog.dom');
+
+/**
+ * Resolve Blockly media path for image-backed fields/icons.
+ * @return {string} Media path.
+ * @private
+ */
+Blockly.Highlight.getMediaPath_ = function() {
+  if (Blockly.mainWorkspace && Blockly.mainWorkspace.options &&
+      typeof Blockly.mainWorkspace.options.pathToMedia === 'string') {
+    return Blockly.mainWorkspace.options.pathToMedia;
+  }
+  if (Blockly.Css && typeof Blockly.Css.mediaPath_ === 'string' && Blockly.Css.mediaPath_) {
+    return Blockly.Css.mediaPath_;
+  }
+  if (typeof Blockly.mediaPath_ === 'string') {
+    return Blockly.mediaPath_;
+  }
+  return '';
+};
+
+/**
+ * Build a truncated traversal that descends into nested stacks before next.
+ * @param {*} serialized Serialized stack payload.
+ * @param {number} limit Maximum number of blocks.
+ * @return {{order: !Array<string>, byId: !Object<string, Object>}} Traversal result.
+ * @private
+ */
+Blockly.Highlight.extractScriptTraversal_ = function(serialized, limit) {
+  var output = {
+    order: [],
+    byId: Object.create(null)
+  };
+  if (!serialized || typeof serialized !== 'object') {
+    return output;
+  }
+
+  var blocks = Array.isArray(serialized.blocks) ? serialized.blocks : [];
+  if (!blocks.length) {
+    return output;
+  }
+
+  for (var i = 0; i < blocks.length; i++) {
+    var block = blocks[i];
+    if (!block || typeof block !== 'object') {
+      continue;
+    }
+    var id = typeof block.id === 'string' ? block.id : '';
+    if (id) {
+      output.byId[id] = block;
+    }
+  }
+
+  var visited = Object.create(null);
+  var walk = function(blockId) {
+    if (!blockId || output.order.length >= limit || visited[blockId]) {
+      return;
+    }
+    var current = output.byId[blockId];
+    if (!current) {
+      return;
+    }
+    visited[blockId] = true;
+    output.order.push(blockId);
+
+    var inputs = (current.inputs && typeof current.inputs === 'object') ? current.inputs : null;
+    if (inputs) {
+      var inputNames = Object.keys(inputs);
+      for (var j = 0; j < inputNames.length && output.order.length < limit; j++) {
+        var inputData = inputs[inputNames[j]];
+        if (!inputData || typeof inputData !== 'object') {
+          continue;
+        }
+        var child = typeof inputData.block === 'string' ? inputData.block : '';
+        if (!child && typeof inputData.shadow === 'string') {
+          child = inputData.shadow;
+        }
+        if (child) {
+          walk(child);
+        }
+      }
+    }
+
+    if (output.order.length < limit && typeof current.next === 'string') {
+      walk(current.next);
+    }
+  };
+
+  var topId = typeof serialized.top === 'string' ? serialized.top : '';
+  if (topId) {
+    walk(topId);
+  }
+
+  if (!output.order.length) {
+    for (var k = 0; k < blocks.length && output.order.length < limit; k++) {
+      var fallback = blocks[k];
+      if (fallback && typeof fallback.id === 'string' && fallback.id) {
+        output.order.push(fallback.id);
+      }
+    }
+  }
+  return output;
+};
+
+/**
+ * Apply serialized field values when possible.
+ * @param {!Blockly.BlockSvg} block Blockly block.
+ * @param {!Object} fieldMap Serialized fields map.
+ * @return {void}
+ * @private
+ */
+Blockly.Highlight.applySerializedFields_ = function(block, fieldMap) {
+  if (!fieldMap || typeof fieldMap !== 'object') {
+    return;
+  }
+  var names = Object.keys(fieldMap);
+  for (var i = 0; i < names.length; i++) {
+    var name = names[i];
+    var raw = fieldMap[name];
+    var value = raw;
+    if (raw && typeof raw === 'object' && Object.prototype.hasOwnProperty.call(raw, 'value')) {
+      value = raw.value;
+    }
+    if (typeof value === 'undefined' || value === null) {
+      continue;
+    }
+    try {
+      block.setFieldValue(String(value), name);
+    } catch (e) {
+      // Ignore invalid or read-only field updates.
+    }
+  }
+};
+
+/**
+ * Render a tiny read-only Blockly workspace containing a shortened stack.
+ * @param {!HTMLElement} host Host element.
+ * @param {*} serialized Serialized stack payload.
+ * @param {number} maxBlocks Maximum blocks to render.
+ * @return {{renderedCount:number,totalCount:number,hiddenCount:number}} Render metadata.
+ * @private
+ */
+Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlocks) {
+  var totalCount = serialized && Array.isArray(serialized.blocks) ? serialized.blocks.length : 0;
+  var traversal = Blockly.Highlight.extractScriptTraversal_(serialized, maxBlocks);
+  var orderedIds = traversal.order;
+  var byId = traversal.byId;
+  var result = {
+    renderedCount: orderedIds.length,
+    totalCount: totalCount,
+    hiddenCount: Math.max(0, totalCount - orderedIds.length)
+  };
+
+  if (!orderedIds.length) {
+    return result;
+  }
+
+  var workspace = Blockly.inject(host, {
+    comments: false,
+    disable: false,
+    collapse: false,
+    media: Blockly.Highlight.getMediaPath_(),
+    readOnly: true,
+    rtl: false,
+    scrollbars: false,
+    sounds: false,
+    toolbox: null,
+    trashcan: false,
+    zoom: {
+      controls: false,
+      wheel: false,
+      startScale: 0.52,
+      maxScale: 0.52,
+      minScale: 0.52,
+      pinch: false
+    }
+  });
+
+  var created = Object.create(null);
+  for (var i = 0; i < orderedIds.length; i++) {
+    var localId = orderedIds[i];
+    var model = byId[localId];
+    if (!model || typeof model.opcode !== 'string' || !Blockly.Blocks[model.opcode]) {
+      continue;
+    }
+
+    var block = workspace.newBlock(model.opcode);
+    if (model.shadow && typeof block.setShadow === 'function') {
+      block.setShadow(true);
+    }
+    block.setMovable(false);
+    block.setDeletable(false);
+    block.setEditable(false);
+    Blockly.Highlight.applySerializedFields_(block, model.fields || {});
+    block.initSvg();
+    created[localId] = block;
+  }
+
+  var connectChildToInput = function(parent, inputName, child) {
+    if (!parent || !child || !inputName) {
+      return;
+    }
+    var input = parent.getInput(inputName);
+    if (!input || !input.connection || input.connection.isConnected()) {
+      return;
+    }
+
+    if (child.previousConnection && input.connection.type === Blockly.NEXT_STATEMENT) {
+      input.connection.connect(child.previousConnection);
+      return;
+    }
+    if (child.outputConnection && input.connection.type === Blockly.INPUT_VALUE) {
+      input.connection.connect(child.outputConnection);
+      return;
+    }
+    if (child.previousConnection) {
+      input.connection.connect(child.previousConnection);
+    }
+  };
+
+  for (var j = 0; j < orderedIds.length; j++) {
+    var id = orderedIds[j];
+    var blockModel = byId[id];
+    var parentBlock = created[id];
+    if (!blockModel || !parentBlock) {
+      continue;
+    }
+
+    if (typeof blockModel.next === 'string' && created[blockModel.next] &&
+        parentBlock.nextConnection && created[blockModel.next].previousConnection &&
+        !parentBlock.nextConnection.isConnected()) {
+      parentBlock.nextConnection.connect(created[blockModel.next].previousConnection);
+    }
+
+    var inputs = (blockModel.inputs && typeof blockModel.inputs === 'object') ? blockModel.inputs : null;
+    if (!inputs) {
+      continue;
+    }
+    var inputNames = Object.keys(inputs);
+    for (var k = 0; k < inputNames.length; k++) {
+      var inputName = inputNames[k];
+      var inputModel = inputs[inputName];
+      if (!inputModel || typeof inputModel !== 'object') {
+        continue;
+      }
+      var childId = typeof inputModel.block === 'string' ? inputModel.block : '';
+      if (!childId && typeof inputModel.shadow === 'string') {
+        childId = inputModel.shadow;
+      }
+      if (!childId || !created[childId]) {
+        continue;
+      }
+      connectChildToInput(parentBlock, inputName, created[childId]);
+    }
+  }
+
+  var createdIds = Object.keys(created);
+  for (var r = 0; r < createdIds.length; r++) {
+    var rendered = created[createdIds[r]];
+    if (rendered && typeof rendered.render === 'function') {
+      rendered.render();
+    }
+  }
+
+  var topId = typeof serialized.top === 'string' ? serialized.top : '';
+  var topBlock = created[topId] || created[orderedIds[0]];
+  if (topBlock) {
+    topBlock.getRootBlock().moveBy(24, 18);
+  }
+
+  if (typeof Blockly.svgResize === 'function') {
+    Blockly.svgResize(workspace);
+  }
+
+  var previewHeight = 180;
+  try {
+    var canvas = typeof workspace.getCanvas === 'function' ? workspace.getCanvas() : null;
+    if (canvas && typeof canvas.getBBox === 'function') {
+      var bounds = canvas.getBBox();
+      if (bounds && isFinite(bounds.height)) {
+        previewHeight = Math.max(84, Math.ceil(bounds.height + 42));
+      }
+    }
+  } catch (e) {
+    // Keep default preview height when bbox metrics are unavailable.
+  }
+  previewHeight = Math.min(previewHeight, 320);
+  host.style.height = previewHeight + 'px';
+
+  workspace.resizeContents();
+  host.__scriptPreviewWorkspace = workspace;
+  return result;
+};
+
+/**
+ * Render a tiny read-only Blockly workspace containing a shortened stack.
+ * @param {!HTMLElement} host Host element.
+ * @param {*} serialized Serialized stack payload.
+ * @param {number} maxBlocks Maximum number of blocks.
+ * @param {function({renderedCount:number,totalCount:number,hiddenCount:number}):void} onDone Result callback.
+ * @return {boolean} True if workspace rendering started.
+ * @private
+ */
+Blockly.Highlight.renderMiniWorkspace_ = function(host, serialized, maxBlocks, onDone) {
+  if (!host || !serialized || typeof serialized !== 'object') {
+    return false;
+  }
+  if (typeof Blockly.inject !== 'function') {
+    return false;
+  }
+
+  setTimeout(function() {
+    if (!host.parentNode) {
+      return;
+    }
+
+    try {
+      if (host.__scriptPreviewWorkspace && typeof host.__scriptPreviewWorkspace.dispose === 'function') {
+        host.__scriptPreviewWorkspace.dispose();
+        host.__scriptPreviewWorkspace = null;
+      }
+
+      var renderInfo = Blockly.Highlight.createMiniScriptWorkspace_(host, serialized, maxBlocks);
+      if (!renderInfo.renderedCount) {
+        host.textContent = '(preview unavailable)';
+        host.style.display = 'flex';
+        host.style.alignItems = 'center';
+        host.style.justifyContent = 'center';
+        host.style.opacity = '0.72';
+        if (typeof onDone === 'function') {
+          onDone(renderInfo);
+        }
+        return;
+      }
+      if (typeof onDone === 'function') {
+        onDone(renderInfo);
+      }
+    } catch (e) {
+      host.textContent = '(preview unavailable)';
+      host.style.display = 'flex';
+      host.style.alignItems = 'center';
+      host.style.justifyContent = 'center';
+      host.style.opacity = '0.72';
+      if (typeof onDone === 'function') {
+        onDone({
+          renderedCount: 0,
+          totalCount: serialized && Array.isArray(serialized.blocks) ? serialized.blocks.length : 0,
+          hiddenCount: 0
+        });
+      }
+    }
+  }, 0);
+
+  return true;
+};
+
+Blockly.Highlight.registerRenderer('script', function(value) {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  var source = typeof value.source === 'string' ? value.source :
+      (typeof value.text === 'string' ? value.text : 'script');
+  var serialized = value.data && value.data.serialized &&
+      typeof value.data.serialized === 'object' ? value.data.serialized : null;
+  var maxBlocks = 5;
+
+  var cardBackground = Blockly.Highlight.getColour_('valueReportBackground', '#FFFFFF');
+  var panelBorder = Blockly.Highlight.getColour_('valueReportBorder', '#AAAAAA');
+  var panelText = Blockly.Highlight.getColour_(
+      'toolboxText',
+      Blockly.Highlight.getColour_('blackText', '#575E75'));
+  var previewBackground = Blockly.Highlight.withAlpha_(
+      panelText,
+      0.08,
+      '#f4f6fa');
+
+  var wrapper = goog.dom.createElement('div');
+  wrapper.style.display = 'inline-block';
+  wrapper.style.minWidth = '260px';
+  wrapper.style.maxWidth = '360px';
+  wrapper.style.border = '1px solid ' + panelBorder;
+  wrapper.style.borderRadius = '8px';
+  wrapper.style.background = cardBackground;
+  wrapper.style.color = panelText;
+  wrapper.style.overflow = 'hidden';
+  wrapper.style.fontFamily = '"Helvetica Neue", Helvetica, sans-serif';
+  wrapper.style.fontSize = '12px';
+
+  var title = goog.dom.createElement('div');
+  title.textContent = source;
+  title.style.padding = '8px';
+  title.style.fontWeight = '700';
+  title.style.borderBottom = '1px solid ' + panelBorder;
+  title.style.whiteSpace = 'nowrap';
+  title.style.overflow = 'hidden';
+  title.style.textOverflow = 'ellipsis';
+  wrapper.appendChild(title);
+
+  var preview = goog.dom.createElement('div');
+  preview.style.minHeight = '84px';
+  preview.style.maxHeight = '320px';
+  preview.style.width = '100%';
+  preview.style.position = 'relative';
+  preview.style.background = previewBackground;
+  preview.style.borderBottom = '1px solid ' + panelBorder;
+  preview.style.overflow = 'hidden';
+  wrapper.appendChild(preview);
+
+  var footer = goog.dom.createElement('div');
+  footer.style.padding = '6px 8px';
+  footer.style.fontSize = '11px';
+  footer.style.opacity = '0.78';
+  footer.textContent = 'loading preview...';
+  wrapper.appendChild(footer);
+
+  if (!serialized || !Array.isArray(serialized.blocks) || !serialized.blocks.length) {
+    var empty = goog.dom.createElement('div');
+    empty.textContent = '(empty script)';
+    empty.style.height = '100%';
+    empty.style.display = 'flex';
+    empty.style.alignItems = 'center';
+    empty.style.justifyContent = 'center';
+    empty.style.opacity = '0.7';
+    preview.appendChild(empty);
+    footer.textContent = '0 blocks';
+    return wrapper;
+  }
+
+  if (!Blockly.Highlight.renderMiniWorkspace_(preview, serialized, maxBlocks, function(info) {
+    if (!info || !info.renderedCount) {
+      footer.textContent = 'preview unavailable';
+      return;
+    }
+    if (info.hiddenCount > 0) {
+      footer.textContent = 'showing first ' + info.renderedCount +
+          ' blocks (' + info.hiddenCount + ' hidden)';
+      return;
+    }
+    footer.textContent = info.totalCount + ' block' +
+        (info.totalCount === 1 ? '' : 's');
+  })) {
+    var fallback = goog.dom.createElement('div');
+    fallback.textContent = '(preview unavailable)';
+    fallback.style.height = '100%';
+    fallback.style.display = 'flex';
+    fallback.style.alignItems = 'center';
+    fallback.style.justifyContent = 'center';
+    fallback.style.opacity = '0.72';
+    preview.appendChild(fallback);
+    footer.textContent = 'preview unavailable';
+  }
+
+  return wrapper;
+});

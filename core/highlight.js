@@ -83,13 +83,25 @@ Blockly.Highlight.renderSemantic_ = function(value, type) {
  * @private
  */
 Blockly.Highlight.makeBubble_ = function(text, opt_borderColor, opt_textColor, opt_backgroundColor) {
+  var defaultBorder = Blockly.Highlight.withAlpha_(
+      Blockly.Highlight.getColour_('blackText', '#575E75'),
+      0.3,
+      'rgba(127,127,127,0.35)');
+  var defaultBackground = Blockly.Highlight.withAlpha_(
+      Blockly.Highlight.getColour_('toolboxSelected', '#6f8cff'),
+      0.25,
+      'rgba(111,140,255,0.15)');
+    var defaultText = Blockly.Highlight.getColour_(
+      'toolboxText',
+      Blockly.Highlight.getColour_('blackText', '#575E75'));
+
   var bubble = goog.dom.createElement('span');
   bubble.style.display = 'inline-block';
   bubble.style.padding = '2px 8px';
   bubble.style.borderRadius = '999px';
-  bubble.style.border = '1px solid ' + (opt_borderColor || 'rgba(255, 255, 255, 0.45)');
-  bubble.style.background = opt_backgroundColor || 'rgba(111, 140, 255, 0.15)';
-  bubble.style.color = opt_textColor || '#1f2330';
+  bubble.style.border = '1px solid ' + (opt_borderColor || defaultBorder);
+  bubble.style.background = opt_backgroundColor || defaultBackground;
+  bubble.style.color = opt_textColor || defaultText;
   bubble.style.fontWeight = '600';
   bubble.style.fontSize = '11px';
   bubble.style.fontFamily = '"Helvetica Neue", Helvetica, sans-serif';
@@ -235,13 +247,14 @@ Blockly.Highlight.withAlpha_ = function(color, alpha, fallback) {
  */
 Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
   // @todo Pick better colours
-  const node = goog.dom.createElement('span');
+  var node = goog.dom.createElement('span');
   if (value == 0 && (typeof value == 'number') && (1 / value) < 0) {
     node.textContent = '-0';
   } else {
     node.textContent = value;
   }
-  node.style = `color: ${this.Colours[type || (typeof value)] || this.Colours['not.found']};`;
+  node.style = 'color: ' +
+      (this.Colours[type || (typeof value)] || this.Colours['not.found']) + ';';
   return node;
 }
 /**
@@ -264,26 +277,11 @@ Blockly.Highlight.highlight = function highlight(value, type) {
 
   if (type === 'object') {
     if (Array.isArray(value)) {
-      var pairArray = Blockly.Highlight.parsePair_(value);
-      if (pairArray) {
-        var vectorNode = Blockly.Highlight.renderSemantic_(value, 'vector');
-        if (vectorNode) {
-          return vectorNode;
-        }
-      }
       var arrayNode = Blockly.Highlight.renderSemantic_(value, 'array');
       if (arrayNode) {
         return arrayNode;
       }
     }
-    var inferredPair = Blockly.Highlight.parsePair_(value);
-    if (inferredPair) {
-      return Blockly.Highlight.makeBubble_(
-          Blockly.Highlight.formatNumber_(inferredPair.x) + ', ' +
-          Blockly.Highlight.formatNumber_(inferredPair.y),
-          '#6f8cff');
-    }
-
     var objectNode = Blockly.Highlight.renderSemantic_(value, 'object');
     if (objectNode) {
       return objectNode;
@@ -309,25 +307,25 @@ Blockly.Highlight.highlight = function highlight(value, type) {
       value = 'undefined';
     }
   }
-  let node = goog.dom.createElement('span');
+  var node = goog.dom.createElement('span');
   if (type === 'object' && typeof node === 'object') {
     if (Array.isArray(value)) {
-      const valueCount = value.length, valueCountComma = valueCount - 1;
+      var valueCount = value.length, valueCountComma = valueCount - 1;
       node.appendChild(this.highlightSingle('[', 'object.openBracket'));
-      for (let i = 0; i < valueCount; i++) {
-        let item = value[i];
-        if (typeof item === 'string') item = `"${item.replaceAll('"', '\\"')}"`;
+      for (var i = 0; i < valueCount; i++) {
+        var item = value[i];
+        if (typeof item === 'string') item = '"' + item.replaceAll('"', '\\"') + '"';
         node.appendChild(this.highlight(item, typeof item));
         if (i < valueCountComma) node.appendChild(this.highlightSingle(',', 'text'));
       }
       node.appendChild(this.highlightSingle(']', 'object.closeBracket'));
     } else {
       node.appendChild(this.highlightSingle('{', 'object.openParenth'));
-      const entrys = Object.entries(value), entryCount = entrys.length, entryCountComma = entryCount - 1;
-      for (let i = 0; i < entryCount; i++) {
-        const entry = entrys[i];
-        if (typeof entry[0] === 'string') entry[0] = `"${entry[0].replaceAll('"', '\\"')}"`;
-        if (typeof entry[1] === 'string') entry[1] = `"${entry[1].replaceAll('"', '\\"')}"`;
+      var entrys = Object.entries(value), entryCount = entrys.length, entryCountComma = entryCount - 1;
+      for (var i = 0; i < entryCount; i++) {
+        var entry = entrys[i];
+        if (typeof entry[0] === 'string') entry[0] = '"' + entry[0].replaceAll('"', '\\"') + '"';
+        if (typeof entry[1] === 'string') entry[1] = '"' + entry[1].replaceAll('"', '\\"') + '"';
         node.appendChild(this.highlight(entry[0], typeof entry[0]));
         node.appendChild(this.highlightSingle(': ', 'text'));
         node.appendChild(this.highlight(entry[1], typeof entry[1]));
