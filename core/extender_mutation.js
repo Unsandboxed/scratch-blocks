@@ -289,11 +289,12 @@ Blockly.ExtenderMutation.branchDomToMutation = function(xmlElement, defaultBranc
 Blockly.ExtenderMutation.domToMutation = function(xmlElement) {
   var argumentIds = xmlElement.getAttribute('argumentids');
   var extendCount = xmlElement.getAttribute('extendCount');
+  var parsedArgumentIds = JSON.parse(argumentIds || '[]');
   var parsedExtendCount = JSON.parse(extendCount || '0');
 
   // Even if argument IDs are unchanged, we may still need to refresh shape
   // because extend definitions/minProceed settings can change independently.
-  if (JSON.stringify(this.argumentIds_) === argumentIds && this.extendCount_ === parsedExtendCount) {
+  if (JSON.stringify(this.argumentIds_ || []) === JSON.stringify(parsedArgumentIds) && this.extendCount_ === parsedExtendCount) {
     Blockly.ExtenderMutation.updateMinusEnabled_(this);
     this.updateDisplay_();
     return;
@@ -304,7 +305,7 @@ Blockly.ExtenderMutation.domToMutation = function(xmlElement) {
   // applied or removed at will.
   this.extendCount_ = parsedExtendCount;
 
-  this.argumentIds_ = JSON.parse(argumentIds);
+  this.argumentIds_ = parsedArgumentIds;
   Blockly.ExtenderMutation.updateMinusEnabled_(this);
   this.updateDisplay_();
 };
@@ -849,12 +850,18 @@ Blockly.ExtenderMutation.insertInputWithIndex_ = function(index, definition) {
         Blockly.Events.recordUndo = false;
         try {
           var newBlock = this.workspace.newBlock(definition.shadow);
-          if (definition.field) {
+          // `shadowField` (if explicitly set on the definition) overrides `field`
+          // for the purpose of setFieldValue on the shadow block, so that input
+          // naming (driven by `field`) and shadow-block field initialization can
+          // differ.  A shadowField of null/'' means skip setFieldValue entirely.
+          var shadowFieldName = Object.prototype.hasOwnProperty.call(definition, 'shadowField')
+            ? definition.shadowField : definition.field;
+          if (shadowFieldName) {
             var defaultValue = definition.defaultValue;
             if (defaultValue === null || typeof defaultValue === 'undefined') {
-              defaultValue = Blockly.ExtenderMutation.getShadowFieldDefault_(definition.shadow, definition.field);
+              defaultValue = Blockly.ExtenderMutation.getShadowFieldDefault_(definition.shadow, shadowFieldName);
             }
-            newBlock.setFieldValue(defaultValue, definition.field);
+            newBlock.setFieldValue(defaultValue, shadowFieldName);
           }
           newBlock.setShadow(true);
 
