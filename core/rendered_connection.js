@@ -160,10 +160,6 @@ Blockly.RenderedConnection.prototype.setOffsetInBlock = function(x, y) {
  * @private
  */
 Blockly.RenderedConnection.prototype.tighten_ = function() {
-  var workspace = this.sourceBlock_ && this.sourceBlock_.workspace;
-  if (workspace && workspace.isDragging && workspace.isDragging()) {
-    return;
-  }
   var dx = this.targetConnection.x_ - this.x_;
   var dy = this.targetConnection.y_ - this.y_;
   if (dx != 0 || dy != 0) {

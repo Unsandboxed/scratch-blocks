@@ -1682,8 +1682,14 @@ Blockly.BlockSvg.getAlignedCursor_ = function(cursorX, input, rightEdge, inputRo
  * @private
  */
 Blockly.BlockSvg.prototype.renderMoveConnections_ = function() {
-  var isWorkspaceDragging = this.workspace && this.workspace.isDragging &&
-      this.workspace.isDragging();
+  var dragSurface = this.workspace && this.workspace.getBlockDragSurface &&
+    this.workspace.getBlockDragSurface();
+  var dragSurfaceRoot = dragSurface && dragSurface.getCurrentBlock &&
+    dragSurface.getCurrentBlock();
+  var rootBlock = this.getRootBlock && this.getRootBlock();
+  var rootSvg = rootBlock && rootBlock.getSvgRoot && rootBlock.getSvgRoot();
+  var isRenderingDraggedStack = !!dragSurfaceRoot && !!rootSvg &&
+    dragSurfaceRoot == rootSvg;
   var blockTL = this.getRelativeToSurfaceXY();
   // Don't tighten previous or output connections because they are inferior.
   if (this.previousConnection) {
@@ -1697,7 +1703,7 @@ Blockly.BlockSvg.prototype.renderMoveConnections_ = function() {
     var conn = this.inputList[i].connection;
     if (conn) {
       conn.moveToOffset(blockTL);
-      if (!isWorkspaceDragging && conn.isConnected()) {
+      if (!isRenderingDraggedStack && conn.isConnected()) {
         conn.tighten_();
       }
     }
@@ -1705,7 +1711,7 @@ Blockly.BlockSvg.prototype.renderMoveConnections_ = function() {
 
   if (this.nextConnection) {
     this.nextConnection.moveToOffset(blockTL);
-    if (!isWorkspaceDragging && this.nextConnection.isConnected()) {
+    if (!isRenderingDraggedStack && this.nextConnection.isConnected()) {
       this.nextConnection.tighten_();
     }
   }
