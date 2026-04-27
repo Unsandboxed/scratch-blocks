@@ -333,6 +333,88 @@ Blockly.Highlight.applySerializedFields_ = function(block, fieldMap) {
 };
 
 /**
+ * Rebuild a mutation XML element from VM mutation JSON.
+ * @param {*} mutation Mutation payload from serialized block model.
+ * @return {?Element} Mutation element.
+ * @private
+ */
+Blockly.Highlight.buildMutationDom_ = function(mutation) {
+  if (!mutation || typeof mutation !== 'object') {
+    return null;
+  }
+
+  var buildNode = function(nodeModel) {
+    if (!nodeModel || typeof nodeModel !== 'object') {
+      return null;
+    }
+
+    var tagName = typeof nodeModel.tagName === 'string' && nodeModel.tagName ?
+      nodeModel.tagName : 'mutation';
+    var node = goog.dom.createDom(tagName);
+    if (!node) {
+      return null;
+    }
+
+    var keys = Object.keys(nodeModel);
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      if (key === 'tagName' || key === 'children') {
+        continue;
+      }
+      var raw = nodeModel[key];
+      if (raw === null || typeof raw === 'undefined') {
+        continue;
+      }
+
+      var attrValue = '';
+      if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
+        attrValue = String(raw);
+      } else {
+        try {
+          attrValue = JSON.stringify(raw);
+        } catch (e) {
+          continue;
+        }
+      }
+      node.setAttribute(key, attrValue);
+    }
+
+    var children = Array.isArray(nodeModel.children) ? nodeModel.children : [];
+    for (var j = 0; j < children.length; j++) {
+      var childNode = buildNode(children[j]);
+      if (childNode) {
+        node.appendChild(childNode);
+      }
+    }
+    return node;
+  };
+
+  return buildNode(mutation);
+};
+
+/**
+ * Apply serialized mutation to a block before connecting children.
+ * @param {!Blockly.BlockSvg} block Blockly block.
+ * @param {*} mutation Serialized mutation model.
+ * @return {void}
+ * @private
+ */
+Blockly.Highlight.applySerializedMutation_ = function(block, mutation) {
+  if (!block || typeof block.domToMutation !== 'function') {
+    return;
+  }
+  var mutationDom = Blockly.Highlight.buildMutationDom_(mutation);
+  if (!mutationDom) {
+    return;
+  }
+  try {
+    block.domToMutation(mutationDom);
+  } catch (e) {
+    // Ignore malformed mutation payloads so preview can still render fallback content.
+  }
+};
+
+/**
  * Render a tiny read-only Blockly workspace containing a shortened stack.
  * @param {!HTMLElement} host Host element.
  * @param {*} serialized Serialized stack payload.
@@ -394,6 +476,7 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
     block.setMovable(false);
     block.setDeletable(false);
     block.setEditable(false);
+    Blockly.Highlight.applySerializedMutation_(block, model.mutation);
     Blockly.Highlight.applySerializedFields_(block, model.fields || {});
     block.initSvg();
     created[localId] = block;
@@ -412,20 +495,47 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
       return;
     }
     var input = parent.getInput(inputName);
-    if (!input || !input.connection || input.connection.isConnected()) {
+    if (!input || !input.connection) {
       return;
     }
 
+    var forceConnect = function(parentConnection, childConnection) {
+      if (!parentConnection || !childConnection) {
+        return;
+      }
+      if (parentConnection.isConnected()) {
+        if (parentConnection.targetConnection === childConnection) {
+          return;
+        }
+        parentConnection.disconnect();
+      }
+      if (childConnection.isConnected()) {
+        if (childConnection.targetConnection === parentConnection) {
+          return;
+        }
+        childConnection.disconnect();
+      }
+      try {
+        parentConnection.connect(childConnection);
+      } catch (e) {
+        // Ignore incompatible pairings.
+      }
+    };
+
     if (child.previousConnection && input.connection.type === Blockly.NEXT_STATEMENT) {
-      input.connection.connect(child.previousConnection);
+      forceConnect(input.connection, child.previousConnection);
       return;
     }
     if (child.outputConnection && input.connection.type === Blockly.INPUT_VALUE) {
-      input.connection.connect(child.outputConnection);
+      forceConnect(input.connection, child.outputConnection);
       return;
     }
     if (child.previousConnection) {
-      input.connection.connect(child.previousConnection);
+      forceConnect(input.connection, child.previousConnection);
+      return;
+    }
+    if (child.outputConnection) {
+      forceConnect(input.connection, child.outputConnection);
     }
   };
 
@@ -438,9 +548,22 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
     }
 
     if (typeof blockModel.next === 'string' && created[blockModel.next] &&
-        parentBlock.nextConnection && created[blockModel.next].previousConnection &&
-        !parentBlock.nextConnection.isConnected()) {
-      parentBlock.nextConnection.connect(created[blockModel.next].previousConnection);
+        parentBlock.nextConnection && created[blockModel.next].previousConnection) {
+      try {
+        if (parentBlock.nextConnection.isConnected() &&
+            parentBlock.nextConnection.targetConnection !== created[blockModel.next].previousConnection) {
+          parentBlock.nextConnection.disconnect();
+        }
+        if (created[blockModel.next].previousConnection.isConnected() &&
+            created[blockModel.next].previousConnection.targetConnection !== parentBlock.nextConnection) {
+          created[blockModel.next].previousConnection.disconnect();
+        }
+        if (!parentBlock.nextConnection.isConnected()) {
+          parentBlock.nextConnection.connect(created[blockModel.next].previousConnection);
+        }
+      } catch (e) {
+        // Ignore invalid next-link pairing.
+      }
     }
 
     var inputs = (blockModel.inputs && typeof blockModel.inputs === 'object') ? blockModel.inputs : null;
@@ -466,15 +589,41 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
   }
 
   var createdIds = Object.keys(created);
+
+  // Mutations can create placeholder shadows/reporters that remain disconnected
+  // after we wire the serialized structure. Remove those confusing scraps.
+  var serializedTopId = typeof serialized.top === 'string' ? serialized.top : '';
+  var rootBlock = created[serializedTopId] || created[orderedIds[0]] || null;
+  var rootId = rootBlock && typeof rootBlock.id === 'string' ? rootBlock.id : '';
+  if (rootId) {
+    for (var p = 0; p < createdIds.length; p++) {
+      var candidate = created[createdIds[p]];
+      if (!candidate || candidate === rootBlock || candidate.workspace !== workspace) {
+        continue;
+      }
+
+      var candidateRoot = candidate.getRootBlock ? candidate.getRootBlock() : null;
+      var candidateRootId = candidateRoot && typeof candidateRoot.id === 'string' ? candidateRoot.id : '';
+      if (candidateRootId === rootId) {
+        continue;
+      }
+
+      var isShadow = typeof candidate.isShadow === 'function' ? candidate.isShadow() : !!candidate.shadow;
+      var isReporterLike = !!candidate.outputConnection;
+      if (isShadow || isReporterLike) {
+        candidate.dispose(false, false);
+      }
+    }
+  }
+
   for (var r = 0; r < createdIds.length; r++) {
     var rendered = created[createdIds[r]];
-    if (rendered && typeof rendered.render === 'function') {
+    if (rendered && rendered.workspace === workspace && typeof rendered.render === 'function') {
       rendered.render();
     }
   }
 
-  var topId = typeof serialized.top === 'string' ? serialized.top : '';
-  var topBlock = created[topId] || created[orderedIds[0]];
+  var topBlock = rootBlock;
   if (topBlock) {
     topBlock.getRootBlock().moveBy(24, 18);
   }
