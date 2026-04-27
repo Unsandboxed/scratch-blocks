@@ -25,6 +25,80 @@ Blockly.Highlight.getMediaPath_ = function() {
 };
 
 /**
+ * Resolve script payload serialized data from multiple compatible shapes.
+ * @param {*} value Script visual-report payload.
+ * @return {?Object} Normalized serialized stack.
+ * @private
+ */
+Blockly.Highlight.getSerializedScriptData_ = function(value) {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  var candidates = [];
+  if (value.serialized && typeof value.serialized === 'object') {
+    candidates.push(value.serialized);
+  }
+  if (value.data && typeof value.data === 'object') {
+    if (value.data.serialized && typeof value.data.serialized === 'object') {
+      candidates.push(value.data.serialized);
+    }
+    if (value.data.value && typeof value.data.value === 'object' &&
+        value.data.value.serialized && typeof value.data.value.serialized === 'object') {
+      candidates.push(value.data.value.serialized);
+    }
+    if (value.data.type === 'serialized-stack') {
+      candidates.push(value.data);
+    }
+  }
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  var selected = candidates[0];
+  if (!selected || typeof selected !== 'object') {
+    return null;
+  }
+
+  var normalized = {
+    top: typeof selected.top === 'string' ? selected.top : '',
+    blocks: []
+  };
+
+  if (Array.isArray(selected.blocks)) {
+    normalized.blocks = selected.blocks;
+  } else if (selected.blocks && typeof selected.blocks === 'object') {
+    normalized.blocks = Object.keys(selected.blocks).map(function(id) {
+      var block = selected.blocks[id];
+      if (!block || typeof block !== 'object') {
+        return null;
+      }
+      if (typeof block.id !== 'string' || !block.id) {
+        block.id = id;
+      }
+      return block;
+    }).filter(Boolean);
+  }
+
+  if (!normalized.blocks.length) {
+    return null;
+  }
+
+  if (!normalized.top) {
+    for (var i = 0; i < normalized.blocks.length; i++) {
+      var block = normalized.blocks[i];
+      if (block && typeof block.id === 'string' && block.id) {
+        normalized.top = block.id;
+        break;
+      }
+    }
+  }
+
+  return normalized.top ? normalized : null;
+};
+
+/**
  * Build a truncated traversal that descends into nested stacks before next.
  * @param {*} serialized Serialized stack payload.
  * @param {number} limit Maximum number of blocks.
@@ -151,9 +225,9 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
   var orderedIds = traversal.order;
   var byId = traversal.byId;
   var result = {
-    renderedCount: orderedIds.length,
+    renderedCount: 0,
     totalCount: totalCount,
-    hiddenCount: Math.max(0, totalCount - orderedIds.length)
+    hiddenCount: Math.max(0, totalCount)
   };
 
   if (!orderedIds.length) {
@@ -182,6 +256,7 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
   });
 
   var created = Object.create(null);
+  var createdCount = 0;
   for (var i = 0; i < orderedIds.length; i++) {
     var localId = orderedIds[i];
     var model = byId[localId];
@@ -199,7 +274,15 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
     Blockly.Highlight.applySerializedFields_(block, model.fields || {});
     block.initSvg();
     created[localId] = block;
+    createdCount++;
   }
+
+  if (!createdCount) {
+    return result;
+  }
+
+  result.renderedCount = createdCount;
+  result.hiddenCount = Math.max(0, totalCount - createdCount);
 
   var connectChildToInput = function(parent, inputName, child) {
     if (!parent || !child || !inputName) {
@@ -282,7 +365,7 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
     var canvas = typeof workspace.getCanvas === 'function' ? workspace.getCanvas() : null;
     if (canvas && typeof canvas.getBBox === 'function') {
       var bounds = canvas.getBBox();
-      if (bounds && isFinite(bounds.height)) {
+      if (bounds && isFinite(bounds.height) && bounds.height > 0) {
         previewHeight = Math.max(84, Math.ceil(bounds.height + 42));
       }
     }
@@ -292,7 +375,11 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
   previewHeight = Math.min(previewHeight, 320);
   host.style.height = previewHeight + 'px';
 
-  workspace.resizeContents();
+  // Resize SVG after the host height is finalized so the viewport matches content.
+  if (typeof Blockly.svgResize === 'function') {
+    Blockly.svgResize(workspace);
+  }
+
   host.__scriptPreviewWorkspace = workspace;
   return result;
 };
@@ -366,8 +453,7 @@ Blockly.Highlight.registerRenderer('script', function(value) {
 
   var source = typeof value.source === 'string' ? value.source :
       (typeof value.text === 'string' ? value.text : 'script');
-  var serialized = value.data && value.data.serialized &&
-      typeof value.data.serialized === 'object' ? value.data.serialized : null;
+  var serialized = Blockly.Highlight.getSerializedScriptData_(value);
   var maxBlocks = 5;
 
   var cardBackground = Blockly.Highlight.getColour_('valueReportBackground', '#FFFFFF');

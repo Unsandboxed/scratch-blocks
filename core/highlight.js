@@ -15,7 +15,7 @@ goog.require('goog.dom');
  * A object for all the colours used by the highlighter
  */
 Blockly.Highlight.Colours = {
-  'not.found': '#ffffff',
+  'not.found': '#ffffff', // todo: needs to be visible in light mode.
   // Text part definitions
   'text': '#ffffff',
   'Infinity': '#9966ff',
@@ -239,7 +239,6 @@ Blockly.Highlight.withAlpha_ = function(color, alpha, fallback) {
   return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
 };
 
-
 /**
  * Highlight a single value
  * @param {value} The value to highlight
@@ -263,30 +262,10 @@ Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
  * @param {type} The type of the value
  */
 Blockly.Highlight.highlight = function highlight(value, type) {
-  if ((type === 'string' || typeof type === 'undefined') && Blockly.Highlight.isImageDataUri_(value)) {
-    var imageNode = Blockly.Highlight.renderSemantic_(value, 'image');
-    if (imageNode) {
-      return imageNode;
-    }
-  }
-
-  var semanticNode = Blockly.Highlight.renderSemantic_(value, type);
-  if (semanticNode) {
-    return semanticNode;
-  }
-
-  if (type === 'object') {
-    if (Array.isArray(value)) {
-      var arrayNode = Blockly.Highlight.renderSemantic_(value, 'array');
-      if (arrayNode) {
-        return arrayNode;
-      }
-    }
-    var objectNode = Blockly.Highlight.renderSemantic_(value, 'object');
-    if (objectNode) {
-      return objectNode;
-    }
-  }
+  // NOTE: No renderSemantic_ calls here — this function is used recursively
+  // for nested array items and object properties. Semantic renderers (which can
+  // produce large DOM widgets) are only invoked by highlightVisualReport at the
+  // top level of a visual report popup.
 
   // @todo Should we do what JSON.parse does and just delete these values?
   if (value === undefined) {
@@ -335,6 +314,46 @@ Blockly.Highlight.highlight = function highlight(value, type) {
     }
   } else node.appendChild(this.highlightSingle(value, type));
   return node;
+};
+
+/**
+ * Highlight a value for a top-level visual report popup.
+ * Unlike `highlight`, this entry point enforces display rules for semantic
+ * types so they never inject custom renderer DOM inline:
+ *   - 'array' type  → rendered as plain JS-array text (not the list monitor).
+ *   - Any other registered semantic type → displayed as <typeName>.
+ *   - All other types pass through to `highlight` unchanged.
+ * @param {*} value The value to display.
+ * @param {string} type The visual report type.
+ * @return {!Node} The rendered node.
+ */
+Blockly.Highlight.highlightVisualReport = function highlightVisualReport(value, type) {
+  // Image data URIs — render inline as an image, regardless of declared type.
+  if ((type === 'string' || typeof type === 'undefined') && Blockly.Highlight.isImageDataUri_(value)) {
+    var imageNode = Blockly.Highlight.renderSemantic_(value, 'image');
+    if (imageNode) return imageNode;
+  }
+
+  // For object-typed arrays, try the array semantic renderer explicitly —
+  // typeof [] === 'object' so the type coming from the VM will be 'object'.
+  if ((type === 'array' || type === 'object') && Array.isArray(value)) {
+    var arrayNode = Blockly.Highlight.renderSemantic_(value, 'array');
+    if (arrayNode) return arrayNode;
+  }
+
+  // For all other types, try the registered semantic renderer first.
+  // This is what makes script, vector, color, etc. show their visual UI.
+  var semanticNode = Blockly.Highlight.renderSemantic_(value, type);
+  if (semanticNode) return semanticNode;
+
+  // object type may have a non-array semantic renderer too.
+  if (type === 'object' && !Array.isArray(value)) {
+    var objectNode = Blockly.Highlight.renderSemantic_(value, 'object');
+    if (objectNode) return objectNode;
+  }
+
+  // Fall through to plain recursive rendering.
+  return Blockly.Highlight.highlight(value, type);
 };
 
 // Semantic renderers are registered in dedicated files:
