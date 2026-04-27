@@ -99,6 +99,38 @@ Blockly.Highlight.getSerializedScriptData_ = function(value) {
 };
 
 /**
+ * Check whether an input name likely represents a statement stack input.
+ * @param {string} inputName Input name.
+ * @return {boolean} True when the input is a statement slot.
+ * @private
+ */
+Blockly.Highlight.isStatementInputName_ = function(inputName) {
+  if (typeof inputName !== 'string' || !inputName) {
+    return false;
+  }
+  return /^SUBSTACK\d*$/.test(inputName) || /^STACK\d*$/.test(inputName) || /^BRANCH\d*$/.test(inputName);
+};
+
+/**
+ * Resolve an input's connected child block id.
+ * @param {*} inputData Serialized input entry.
+ * @return {string} Child id or empty string.
+ * @private
+ */
+Blockly.Highlight.getInputChildId_ = function(inputData) {
+  if (!inputData || typeof inputData !== 'object') {
+    return '';
+  }
+  if (typeof inputData.block === 'string' && inputData.block) {
+    return inputData.block;
+  }
+  if (typeof inputData.shadow === 'string' && inputData.shadow) {
+    return inputData.shadow;
+  }
+  return '';
+};
+
+/**
  * Build a truncated traversal that descends into nested stacks before next.
  * @param {*} serialized Serialized stack payload.
  * @param {number} limit Maximum number of blocks.
@@ -108,7 +140,10 @@ Blockly.Highlight.getSerializedScriptData_ = function(value) {
 Blockly.Highlight.extractScriptTraversal_ = function(serialized, limit) {
   var output = {
     order: [],
-    byId: Object.create(null)
+    byId: Object.create(null),
+    renderedStackCount: 0,
+    totalStackCount: 0,
+    hiddenStackCount: 0
   };
   if (!serialized || typeof serialized !== 'object') {
     return output;
@@ -130,51 +165,137 @@ Blockly.Highlight.extractScriptTraversal_ = function(serialized, limit) {
     }
   }
 
-  var visited = Object.create(null);
-  var walk = function(blockId) {
-    if (!blockId || output.order.length >= limit || visited[blockId]) {
+  var stackReachable = Object.create(null);
+  var collectStackGraph = function(blockId) {
+    if (!blockId || stackReachable[blockId]) {
       return;
     }
     var current = output.byId[blockId];
     if (!current) {
       return;
     }
-    visited[blockId] = true;
-    output.order.push(blockId);
+    stackReachable[blockId] = true;
 
     var inputs = (current.inputs && typeof current.inputs === 'object') ? current.inputs : null;
     if (inputs) {
       var inputNames = Object.keys(inputs);
-      for (var j = 0; j < inputNames.length && output.order.length < limit; j++) {
-        var inputData = inputs[inputNames[j]];
-        if (!inputData || typeof inputData !== 'object') {
+      for (var iName = 0; iName < inputNames.length; iName++) {
+        var inputName = inputNames[iName];
+        if (!Blockly.Highlight.isStatementInputName_(inputName)) {
           continue;
         }
-        var child = typeof inputData.block === 'string' ? inputData.block : '';
-        if (!child && typeof inputData.shadow === 'string') {
-          child = inputData.shadow;
-        }
-        if (child) {
-          walk(child);
+        var stackChild = Blockly.Highlight.getInputChildId_(inputs[inputName]);
+        if (stackChild) {
+          collectStackGraph(stackChild);
         }
       }
     }
 
-    if (output.order.length < limit && typeof current.next === 'string') {
-      walk(current.next);
+    if (typeof current.next === 'string' && current.next) {
+      collectStackGraph(current.next);
+    }
+  };
+
+  var included = Object.create(null);
+  var includeBlock = function(blockId) {
+    if (!blockId || included[blockId]) {
+      return;
+    }
+    if (!output.byId[blockId]) {
+      return;
+    }
+    included[blockId] = true;
+    output.order.push(blockId);
+  };
+
+  var includeValueTree = function(blockId) {
+    if (!blockId || included[blockId]) {
+      return;
+    }
+    var current = output.byId[blockId];
+    if (!current) {
+      return;
+    }
+
+    includeBlock(blockId);
+
+    var inputs = (current.inputs && typeof current.inputs === 'object') ? current.inputs : null;
+    if (!inputs) {
+      return;
+    }
+    var inputNames = Object.keys(inputs);
+    for (var j = 0; j < inputNames.length; j++) {
+      var inputName = inputNames[j];
+      if (Blockly.Highlight.isStatementInputName_(inputName)) {
+        continue;
+      }
+      var childId = Blockly.Highlight.getInputChildId_(inputs[inputName]);
+      if (childId) {
+        includeValueTree(childId);
+      }
+    }
+  };
+
+  var walkStackLimited = function(blockId) {
+    if (!blockId || output.renderedStackCount >= limit) {
+      return;
+    }
+    if (!stackReachable[blockId]) {
+      return;
+    }
+    var current = output.byId[blockId];
+    if (!current || included[blockId]) {
+      return;
+    }
+
+    includeBlock(blockId);
+    output.renderedStackCount++;
+
+    var inputs = (current.inputs && typeof current.inputs === 'object') ? current.inputs : null;
+    if (inputs) {
+      var inputNames = Object.keys(inputs);
+      for (var n = 0; n < inputNames.length; n++) {
+        var inputName = inputNames[n];
+        var childId = Blockly.Highlight.getInputChildId_(inputs[inputName]);
+        if (!childId) {
+          continue;
+        }
+        if (Blockly.Highlight.isStatementInputName_(inputName)) {
+          if (output.renderedStackCount < limit) {
+            walkStackLimited(childId);
+          }
+          continue;
+        }
+        includeValueTree(childId);
+      }
+    }
+
+    if (output.renderedStackCount < limit && typeof current.next === 'string' && current.next) {
+      walkStackLimited(current.next);
     }
   };
 
   var topId = typeof serialized.top === 'string' ? serialized.top : '';
   if (topId) {
-    walk(topId);
+    collectStackGraph(topId);
+    walkStackLimited(topId);
   }
 
+  output.totalStackCount = Object.keys(stackReachable).length;
+  output.hiddenStackCount = Math.max(0, output.totalStackCount - output.renderedStackCount);
+
   if (!output.order.length) {
-    for (var k = 0; k < blocks.length && output.order.length < limit; k++) {
+    for (var k = 0; k < blocks.length; k++) {
       var fallback = blocks[k];
-      if (fallback && typeof fallback.id === 'string' && fallback.id) {
-        output.order.push(fallback.id);
+      if (!fallback || typeof fallback.id !== 'string' || !fallback.id) {
+        continue;
+      }
+      includeBlock(fallback.id);
+      output.renderedStackCount = Math.min(limit, output.order.length);
+      output.totalStackCount = Math.max(output.totalStackCount, output.order.length);
+      output.hiddenStackCount = Math.max(0, output.totalStackCount - output.renderedStackCount);
+      if (output.order.length >= limit) {
+        break;
       }
     }
   }
@@ -220,14 +341,16 @@ Blockly.Highlight.applySerializedFields_ = function(block, fieldMap) {
  * @private
  */
 Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlocks) {
-  var totalCount = serialized && Array.isArray(serialized.blocks) ? serialized.blocks.length : 0;
   var traversal = Blockly.Highlight.extractScriptTraversal_(serialized, maxBlocks);
   var orderedIds = traversal.order;
   var byId = traversal.byId;
   var result = {
     renderedCount: 0,
-    totalCount: totalCount,
-    hiddenCount: Math.max(0, totalCount)
+    totalCount: traversal.totalStackCount || 0,
+    hiddenCount: traversal.hiddenStackCount || 0,
+    renderedStackCount: traversal.renderedStackCount || 0,
+    totalStackCount: traversal.totalStackCount || 0,
+    hiddenStackCount: traversal.hiddenStackCount || 0
   };
 
   if (!orderedIds.length) {
@@ -282,7 +405,7 @@ Blockly.Highlight.createMiniScriptWorkspace_ = function(host, serialized, maxBlo
   }
 
   result.renderedCount = createdCount;
-  result.hiddenCount = Math.max(0, totalCount - createdCount);
+  result.hiddenCount = traversal.hiddenStackCount || 0;
 
   var connectChildToInput = function(parent, inputName, child) {
     if (!parent || !child || !inputName) {
@@ -454,7 +577,7 @@ Blockly.Highlight.registerRenderer('script', function(value) {
   var source = typeof value.source === 'string' ? value.source :
       (typeof value.text === 'string' ? value.text : 'script');
   var serialized = Blockly.Highlight.getSerializedScriptData_(value);
-  var maxBlocks = 5;
+  var maxBlocks = 12;
 
   var cardBackground = Blockly.Highlight.getColour_('valueReportBackground', '#FFFFFF');
   var panelBorder = Blockly.Highlight.getColour_('valueReportBorder', '#AAAAAA');
@@ -523,13 +646,13 @@ Blockly.Highlight.registerRenderer('script', function(value) {
       footer.textContent = 'preview unavailable';
       return;
     }
-    if (info.hiddenCount > 0) {
-      footer.textContent = 'showing first ' + info.renderedCount +
-          ' blocks (' + info.hiddenCount + ' hidden)';
+    if (info.hiddenStackCount > 0) {
+      footer.textContent = 'showing first ' + info.renderedStackCount +
+          ' stack blocks (' + info.hiddenStackCount + ' hidden)';
       return;
     }
-    footer.textContent = info.totalCount + ' block' +
-        (info.totalCount === 1 ? '' : 's');
+    footer.textContent = info.totalStackCount + ' stack block' +
+        (info.totalStackCount === 1 ? '' : 's');
   })) {
     var fallback = goog.dom.createElement('div');
     fallback.textContent = '(preview unavailable)';

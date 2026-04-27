@@ -240,6 +240,133 @@ Blockly.Highlight.withAlpha_ = function(color, alpha, fallback) {
 };
 
 /**
+ * Resolve inline render mode for a visual report payload.
+ * Modes:
+ *   - inline: use semantic renderer for the type.
+ *   - value-inline: render the payload value with plain recursive highlighting.
+ *   - class: show <TypeName> using event category color.
+ * @param {*} value Report value.
+ * @param {string} type Visual report type.
+ * @param {*=} opt_meta Extra payload metadata from the VM event.
+ * @return {string|null} Inline mode or null when unspecified.
+ * @private
+ */
+Blockly.Highlight.getInlineVisualReportMode_ = function(value, type, opt_meta) {
+  if (opt_meta && typeof opt_meta.inlineVisualReportMode === 'string' && opt_meta.inlineVisualReportMode) {
+    return opt_meta.inlineVisualReportMode;
+  }
+  return null;
+};
+
+/**
+ * Infer highlight type for plain value-inline rendering.
+ * @param {*} value Report value.
+ * @return {string} Inferred highlight type.
+ * @private
+ */
+Blockly.Highlight.getInlineValueType_ = function(value) {
+  if (Array.isArray(value)) {
+    return 'object';
+  }
+  if (value === null) {
+    return 'null';
+  }
+  if (value === Infinity) {
+    return 'Infinity';
+  }
+  if (typeof value === 'undefined') {
+    return 'undefined';
+  }
+  return typeof value;
+};
+
+/**
+ * Extract embedded visual report metadata from object-like payloads.
+ * Supports both shapes:
+ *   - {visualReportType, inlineVisualReportMode, value}
+ *   - {visualReportType, inlineVisualReportMode, ...payloadFields}
+ * @param {*} value Candidate payload.
+ * @return {{type:string, mode:string, value:*}|null} Extracted metadata.
+ * @private
+ */
+Blockly.Highlight.extractEmbeddedVisualReport_ = function(value) {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  if (typeof value.visualReportType !== 'string' || !value.visualReportType) {
+    return null;
+  }
+
+  var mode = typeof value.inlineVisualReportMode === 'string' && value.inlineVisualReportMode ?
+      value.inlineVisualReportMode : 'class';
+
+  if (Object.prototype.hasOwnProperty.call(value, 'value')) {
+    return {
+      type: value.visualReportType,
+      mode: mode,
+      value: value.value
+    };
+  }
+
+  // If inline metadata is mixed into payload fields, strip control keys.
+  var payload = {};
+  var keys = Object.keys(value);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (key === 'visualReportType' || key === 'inlineVisualReportMode') {
+      continue;
+    }
+    payload[key] = value[key];
+  }
+
+  return {
+    type: value.visualReportType,
+    mode: mode,
+    value: payload
+  };
+};
+
+/**
+ * Convert a semantic report type into a class-style label.
+ * @param {string} type Visual report type.
+ * @return {string} Type label text.
+ * @private
+ */
+Blockly.Highlight.getCustomTypeClassLabel_ = function(type) {
+  if (typeof type !== 'string') {
+    return 'CustomType';
+  }
+  var normalized = type.replace(/[_-]+/g, ' ').trim();
+  if (!normalized) {
+    return 'CustomType';
+  }
+  var parts = normalized.split(/\s+/);
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i];
+    if (!part) {
+      continue;
+    }
+    parts[i] = part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+  }
+  return parts.join('');
+};
+
+/**
+ * Render a custom type as class-style text (<TypeName>) using event color.
+ * @param {string} type Visual report type.
+ * @return {!HTMLElement} Rendered type node.
+ * @private
+ */
+Blockly.Highlight.renderCustomTypeClass_ = function(type) {
+  var classLabel = Blockly.Highlight.getCustomTypeClassLabel_(type);
+  var eventPrimary = (Blockly.Colours && Blockly.Colours.event && Blockly.Colours.event.primary) || '#FFBF00';
+  var node = goog.dom.createElement('span');
+  node.textContent = '<' + classLabel + '>';
+  node.style = 'color: ' + eventPrimary + '; font-weight: 600;';
+  return node;
+};
+
+/**
  * Highlight a single value
  * @param {value} The value to highlight
  * @param {?type} The type of the value
@@ -286,6 +413,16 @@ Blockly.Highlight.highlight = function highlight(value, type) {
       value = 'undefined';
     }
   }
+
+  if (type === 'object') {
+    var embedded = Blockly.Highlight.extractEmbeddedVisualReport_(value);
+    if (embedded) {
+      return Blockly.Highlight.highlightVisualReport(embedded.value, embedded.type, {
+        inlineVisualReportMode: embedded.mode
+      });
+    }
+  }
+
   var node = goog.dom.createElement('span');
   if (type === 'object' && typeof node === 'object') {
     if (Array.isArray(value)) {
@@ -317,17 +454,26 @@ Blockly.Highlight.highlight = function highlight(value, type) {
 };
 
 /**
- * Highlight a value for a top-level visual report popup.
- * Unlike `highlight`, this entry point enforces display rules for semantic
- * types so they never inject custom renderer DOM inline:
- *   - 'array' type  → rendered as plain JS-array text (not the list monitor).
- *   - Any other registered semantic type → displayed as <typeName>.
- *   - All other types pass through to `highlight` unchanged.
+ * Highlight a value for a visual report popup.
+ * Top-level reports prefer semantic renderers.
+ * Inline embedded custom reports pass `inlineVisualReportMode` metadata.
  * @param {*} value The value to display.
  * @param {string} type The visual report type.
+ * @param {*=} opt_meta Extra payload metadata from runtime visual report events.
  * @return {!Node} The rendered node.
  */
-Blockly.Highlight.highlightVisualReport = function highlightVisualReport(value, type) {
+Blockly.Highlight.highlightVisualReport = function highlightVisualReport(value, type, opt_meta) {
+  var inlineMode = Blockly.Highlight.getInlineVisualReportMode_(value, type, opt_meta);
+
+  // When inline mode metadata is present, this render request came from an
+  // inline context (embedded in another value).
+  if (inlineMode === 'value-inline') {
+    return Blockly.Highlight.highlight(value, Blockly.Highlight.getInlineValueType_(value));
+  }
+  if (inlineMode === 'inline' || inlineMode === 'class') {
+    return Blockly.Highlight.renderCustomTypeClass_(type);
+  }
+
   // Image data URIs — render inline as an image, regardless of declared type.
   if ((type === 'string' || typeof type === 'undefined') && Blockly.Highlight.isImageDataUri_(value)) {
     var imageNode = Blockly.Highlight.renderSemantic_(value, 'image');
