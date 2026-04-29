@@ -8,6 +8,11 @@ Blockly.Highlight.registerRenderer('color', function(value) {
   if (!color) {
     return null;
   }
+  var panelBorder = Blockly.Highlight.withAlpha_(
+      Blockly.Highlight.getColour_('blackText', '#575E75'),
+      0.3,
+      'rgba(127,127,127,0.35)');
+
   var wrapper = goog.dom.createElement('span');
   wrapper.style.display = 'inline-flex';
   wrapper.style.alignItems = 'center';
@@ -18,9 +23,15 @@ Blockly.Highlight.registerRenderer('color', function(value) {
   swatch.style.width = '12px';
   swatch.style.height = '12px';
   swatch.style.borderRadius = '50%';
-  swatch.style.border = '1px solid rgba(255,255,255,0.55)';
+  swatch.style.border = '1px solid ' + panelBorder;
   swatch.style.background = color;
   wrapper.appendChild(swatch);
-  wrapper.appendChild(Blockly.Highlight.makeBubble_(color, '#bbbbbb', '#1f2330', '#ffffff'));
+  wrapper.appendChild(Blockly.Highlight.makeBubble_(
+      color,
+      panelBorder,
+      Blockly.Highlight.getColour_(
+          'toolboxText',
+          Blockly.Highlight.getColour_('blackText', '#575E75')),
+      Blockly.Highlight.getColour_('valueReportBackground', '#FFFFFF')));
   return wrapper;
 });

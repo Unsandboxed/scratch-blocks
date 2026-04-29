@@ -55,3 +55,51 @@ Blockly.Blocks['text'] = {
     });
   }
 };
+
+Blockly.Blocks['shadow_label'] = {
+  /**
+   * Block for non-editable label shadow text.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": "%1",
+      "args0": [
+        {
+          "type": "field_label_serializable",
+          "name": "TEXT",
+          "text": ""
+        }
+      ],
+      "output": null,
+      "colour": Blockly.Colours.textField,
+      "colourSecondary": Blockly.Colours.textField,
+      "colourTertiary": Blockly.Colours.textField,
+      "colourQuaternary": Blockly.Colours.textField
+    });
+
+    this.setOnChange(this.onChange_.bind(this));
+    this.syncParentStyle_();
+  },
+
+  syncParentStyle_: function() {
+    if (!this.isShadow || !this.isShadow() || !this.outputConnection) return;
+    var parentConnection = this.outputConnection.targetConnection;
+    if (!parentConnection) return;
+
+    var parentBlock = parentConnection.getSourceBlock && parentConnection.getSourceBlock();
+    if (!parentBlock) return;
+
+    // Keep this shadow's silhouette aligned with the socket shape it occupies.
+    this.setOutputShape(parentConnection.getOutputShape());
+
+    // Use only the parent tertiary colour for shadow fill/stroke.
+    this.setShadowColour(parentBlock.getColourTertiary());
+
+    if (this.rendered && this.render) this.render();
+  },
+
+  onChange_: function() {
+    this.syncParentStyle_();
+  }
+};

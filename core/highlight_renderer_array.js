@@ -10,17 +10,18 @@ goog.require('goog.dom');
  * @private
  */
 Blockly.Highlight.makeListMonitor_ = function(items) {
-  var headerFooterBackground = Blockly.Highlight.getColour_('valueReportBackground', '#FFFFFF');
-  var monitorBackground = Blockly.Highlight.getColour_('toolboxSelected', '#E9EEF2');
-  var panelBorder = Blockly.Highlight.getColour_('valueReportBorder', '#AAAAAA');
-  var panelText = Blockly.Highlight.getColour_('blackText', '#575E75');
+  var headerFooterBackground = '#FFFFFF';
+  var monitorBackground = '#E9EEF2';
+  var panelBorder = '#AAAAAA';
+  var panelText = '#575E75';
   var listBackground = monitorBackground;
-  var listItemBackground = (Blockly.Colours && Blockly.Colours.data_lists && Blockly.Colours.data_lists.primary) || '#FF661A';
+  var listItemBackground = (Blockly.Colours && Blockly.Colours.data_lists &&
+      Blockly.Colours.data_lists.primary) || '#FF661A';
   var listItemBorder = Blockly.Highlight.withAlpha_(
-      Blockly.Highlight.getColour_('blackText', '#575E75'), 0.22, 'rgba(0,0,0,0.2)');
-  var listItemText = Blockly.Highlight.getColour_('text', '#FFFFFF');
+      '#575E75', 0.22, 'rgba(0,0,0,0.2)');
+  var listItemText = '#FFFFFF';
   var containerBorder = Blockly.Highlight.withAlpha_(
-      Blockly.Highlight.getColour_('blackText', '#575E75'), 0.25, panelBorder);
+      '#575E75', 0.25, panelBorder);
 
   var wrapper = goog.dom.createElement('div');
   wrapper.style.display = 'inline-block';

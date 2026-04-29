@@ -518,6 +518,22 @@ Blockly.Blocks['motion_yposition'] = {
   }
 };
 
+Blockly.Blocks['motion_position'] = {
+  /**
+   * Block to report position.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.MOTION_POSITION,
+      "output": true,
+      "category": Blockly.Categories.motion,
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "extensions": ["colours_motion"]
+    });
+  }
+};
+
 Blockly.Blocks['motion_direction'] = {
   /**
    * Block to report direction.

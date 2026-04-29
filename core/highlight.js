@@ -15,7 +15,7 @@ goog.require('goog.dom');
  * A object for all the colours used by the highlighter
  */
 Blockly.Highlight.Colours = {
-  'not.found': '#ffffff',
+  'not.found': '#ffffff', // todo: needs to be visible in light mode.
   // Text part definitions
   'text': '#ffffff',
   'Infinity': '#9966ff',
@@ -83,13 +83,25 @@ Blockly.Highlight.renderSemantic_ = function(value, type) {
  * @private
  */
 Blockly.Highlight.makeBubble_ = function(text, opt_borderColor, opt_textColor, opt_backgroundColor) {
+  var defaultBorder = Blockly.Highlight.withAlpha_(
+      Blockly.Highlight.getColour_('blackText', '#575E75'),
+      0.3,
+      'rgba(127,127,127,0.35)');
+  var defaultBackground = Blockly.Highlight.withAlpha_(
+      Blockly.Highlight.getColour_('toolboxSelected', '#6f8cff'),
+      0.25,
+      'rgba(111,140,255,0.15)');
+    var defaultText = Blockly.Highlight.getColour_(
+      'toolboxText',
+      Blockly.Highlight.getColour_('blackText', '#575E75'));
+
   var bubble = goog.dom.createElement('span');
   bubble.style.display = 'inline-block';
   bubble.style.padding = '2px 8px';
   bubble.style.borderRadius = '999px';
-  bubble.style.border = '1px solid ' + (opt_borderColor || 'rgba(255, 255, 255, 0.45)');
-  bubble.style.background = opt_backgroundColor || 'rgba(111, 140, 255, 0.15)';
-  bubble.style.color = opt_textColor || '#1f2330';
+  bubble.style.border = '1px solid ' + (opt_borderColor || defaultBorder);
+  bubble.style.background = opt_backgroundColor || defaultBackground;
+  bubble.style.color = opt_textColor || defaultText;
   bubble.style.fontWeight = '600';
   bubble.style.fontSize = '11px';
   bubble.style.fontFamily = '"Helvetica Neue", Helvetica, sans-serif';
@@ -227,6 +239,132 @@ Blockly.Highlight.withAlpha_ = function(color, alpha, fallback) {
   return 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
 };
 
+/**
+ * Resolve inline render mode for a visual report payload.
+ * Modes:
+ *   - inline: use semantic renderer for the type.
+ *   - value-inline: render the payload value with plain recursive highlighting.
+ *   - class: show <TypeName> using event category color.
+ * @param {*} value Report value.
+ * @param {string} type Visual report type.
+ * @param {*=} opt_meta Extra payload metadata from the VM event.
+ * @return {string|null} Inline mode or null when unspecified.
+ * @private
+ */
+Blockly.Highlight.getInlineVisualReportMode_ = function(value, type, opt_meta) {
+  if (opt_meta && typeof opt_meta.inlineVisualReportMode === 'string' && opt_meta.inlineVisualReportMode) {
+    return opt_meta.inlineVisualReportMode;
+  }
+  return null;
+};
+
+/**
+ * Infer highlight type for plain value-inline rendering.
+ * @param {*} value Report value.
+ * @return {string} Inferred highlight type.
+ * @private
+ */
+Blockly.Highlight.getInlineValueType_ = function(value) {
+  if (Array.isArray(value)) {
+    return 'object';
+  }
+  if (value === null) {
+    return 'null';
+  }
+  if (value === Infinity) {
+    return 'Infinity';
+  }
+  if (typeof value === 'undefined') {
+    return 'undefined';
+  }
+  return typeof value;
+};
+
+/**
+ * Extract embedded visual report metadata from object-like payloads.
+ * Supports both shapes:
+ *   - {visualReportType, inlineVisualReportMode, value}
+ *   - {visualReportType, inlineVisualReportMode, ...payloadFields}
+ * @param {*} value Candidate payload.
+ * @return {{type:string, mode:string, value:*}|null} Extracted metadata.
+ * @private
+ */
+Blockly.Highlight.extractEmbeddedVisualReport_ = function(value) {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+  if (typeof value.visualReportType !== 'string' || !value.visualReportType) {
+    return null;
+  }
+
+  var mode = typeof value.inlineVisualReportMode === 'string' && value.inlineVisualReportMode ?
+      value.inlineVisualReportMode : 'class';
+
+  if (Object.prototype.hasOwnProperty.call(value, 'value')) {
+    return {
+      type: value.visualReportType,
+      mode: mode,
+      value: value.value
+    };
+  }
+
+  // If inline metadata is mixed into payload fields, strip control keys.
+  var payload = {};
+  var keys = Object.keys(value);
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (key === 'visualReportType' || key === 'inlineVisualReportMode') {
+      continue;
+    }
+    payload[key] = value[key];
+  }
+
+  return {
+    type: value.visualReportType,
+    mode: mode,
+    value: payload
+  };
+};
+
+/**
+ * Convert a semantic report type into a class-style label.
+ * @param {string} type Visual report type.
+ * @return {string} Type label text.
+ * @private
+ */
+Blockly.Highlight.getCustomTypeClassLabel_ = function(type) {
+  if (typeof type !== 'string') {
+    return 'CustomType';
+  }
+  var normalized = type.replace(/[_-]+/g, ' ').trim();
+  if (!normalized) {
+    return 'CustomType';
+  }
+  var parts = normalized.split(/\s+/);
+  for (var i = 0; i < parts.length; i++) {
+    var part = parts[i];
+    if (!part) {
+      continue;
+    }
+    parts[i] = part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+  }
+  return parts.join('');
+};
+
+/**
+ * Render a custom type as class-style text (<TypeName>) using event color.
+ * @param {string} type Visual report type.
+ * @return {!HTMLElement} Rendered type node.
+ * @private
+ */
+Blockly.Highlight.renderCustomTypeClass_ = function(type) {
+  var classLabel = Blockly.Highlight.getCustomTypeClassLabel_(type);
+  var eventPrimary = (Blockly.Colours && Blockly.Colours.event && Blockly.Colours.event.primary) || '#FFBF00';
+  var node = goog.dom.createElement('span');
+  node.textContent = '<' + classLabel + '>';
+  node.style = 'color: ' + eventPrimary + '; font-weight: 600;';
+  return node;
+};
 
 /**
  * Highlight a single value
@@ -235,13 +373,14 @@ Blockly.Highlight.withAlpha_ = function(color, alpha, fallback) {
  */
 Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
   // @todo Pick better colours
-  const node = goog.dom.createElement('span');
+  var node = goog.dom.createElement('span');
   if (value == 0 && (typeof value == 'number') && (1 / value) < 0) {
     node.textContent = '-0';
   } else {
     node.textContent = value;
   }
-  node.style = `color: ${this.Colours[type || (typeof value)] || this.Colours['not.found']};`;
+  node.style = 'color: ' +
+      (this.Colours[type || (typeof value)] || this.Colours['not.found']) + ';';
   return node;
 }
 /**
@@ -250,45 +389,10 @@ Blockly.Highlight.highlightSingle = function highlightSingle(value, type) {
  * @param {type} The type of the value
  */
 Blockly.Highlight.highlight = function highlight(value, type) {
-  if ((type === 'string' || typeof type === 'undefined') && Blockly.Highlight.isImageDataUri_(value)) {
-    var imageNode = Blockly.Highlight.renderSemantic_(value, 'image');
-    if (imageNode) {
-      return imageNode;
-    }
-  }
-
-  var semanticNode = Blockly.Highlight.renderSemantic_(value, type);
-  if (semanticNode) {
-    return semanticNode;
-  }
-
-  if (type === 'object') {
-    if (Array.isArray(value)) {
-      var pairArray = Blockly.Highlight.parsePair_(value);
-      if (pairArray) {
-        var vectorNode = Blockly.Highlight.renderSemantic_(value, 'vector');
-        if (vectorNode) {
-          return vectorNode;
-        }
-      }
-      var arrayNode = Blockly.Highlight.renderSemantic_(value, 'array');
-      if (arrayNode) {
-        return arrayNode;
-      }
-    }
-    var inferredPair = Blockly.Highlight.parsePair_(value);
-    if (inferredPair) {
-      return Blockly.Highlight.makeBubble_(
-          Blockly.Highlight.formatNumber_(inferredPair.x) + ', ' +
-          Blockly.Highlight.formatNumber_(inferredPair.y),
-          '#6f8cff');
-    }
-
-    var objectNode = Blockly.Highlight.renderSemantic_(value, 'object');
-    if (objectNode) {
-      return objectNode;
-    }
-  }
+  // NOTE: No renderSemantic_ calls here — this function is used recursively
+  // for nested array items and object properties. Semantic renderers (which can
+  // produce large DOM widgets) are only invoked by highlightVisualReport at the
+  // top level of a visual report popup.
 
   // @todo Should we do what JSON.parse does and just delete these values?
   if (value === undefined) {
@@ -309,25 +413,35 @@ Blockly.Highlight.highlight = function highlight(value, type) {
       value = 'undefined';
     }
   }
-  let node = goog.dom.createElement('span');
+
+  if (type === 'object') {
+    var embedded = Blockly.Highlight.extractEmbeddedVisualReport_(value);
+    if (embedded) {
+      return Blockly.Highlight.highlightVisualReport(embedded.value, embedded.type, {
+        inlineVisualReportMode: embedded.mode
+      });
+    }
+  }
+
+  var node = goog.dom.createElement('span');
   if (type === 'object' && typeof node === 'object') {
     if (Array.isArray(value)) {
-      const valueCount = value.length, valueCountComma = valueCount - 1;
+      var valueCount = value.length, valueCountComma = valueCount - 1;
       node.appendChild(this.highlightSingle('[', 'object.openBracket'));
-      for (let i = 0; i < valueCount; i++) {
-        let item = value[i];
-        if (typeof item === 'string') item = `"${item.replaceAll('"', '\\"')}"`;
+      for (var i = 0; i < valueCount; i++) {
+        var item = value[i];
+        if (typeof item === 'string') item = '"' + item.replaceAll('"', '\\"') + '"';
         node.appendChild(this.highlight(item, typeof item));
         if (i < valueCountComma) node.appendChild(this.highlightSingle(',', 'text'));
       }
       node.appendChild(this.highlightSingle(']', 'object.closeBracket'));
     } else {
       node.appendChild(this.highlightSingle('{', 'object.openParenth'));
-      const entrys = Object.entries(value), entryCount = entrys.length, entryCountComma = entryCount - 1;
-      for (let i = 0; i < entryCount; i++) {
-        const entry = entrys[i];
-        if (typeof entry[0] === 'string') entry[0] = `"${entry[0].replaceAll('"', '\\"')}"`;
-        if (typeof entry[1] === 'string') entry[1] = `"${entry[1].replaceAll('"', '\\"')}"`;
+      var entrys = Object.entries(value), entryCount = entrys.length, entryCountComma = entryCount - 1;
+      for (var i = 0; i < entryCount; i++) {
+        var entry = entrys[i];
+        if (typeof entry[0] === 'string') entry[0] = '"' + entry[0].replaceAll('"', '\\"') + '"';
+        if (typeof entry[1] === 'string') entry[1] = '"' + entry[1].replaceAll('"', '\\"') + '"';
         node.appendChild(this.highlight(entry[0], typeof entry[0]));
         node.appendChild(this.highlightSingle(': ', 'text'));
         node.appendChild(this.highlight(entry[1], typeof entry[1]));
@@ -337,6 +451,55 @@ Blockly.Highlight.highlight = function highlight(value, type) {
     }
   } else node.appendChild(this.highlightSingle(value, type));
   return node;
+};
+
+/**
+ * Highlight a value for a visual report popup.
+ * Top-level reports prefer semantic renderers.
+ * Inline embedded custom reports pass `inlineVisualReportMode` metadata.
+ * @param {*} value The value to display.
+ * @param {string} type The visual report type.
+ * @param {*=} opt_meta Extra payload metadata from runtime visual report events.
+ * @return {!Node} The rendered node.
+ */
+Blockly.Highlight.highlightVisualReport = function highlightVisualReport(value, type, opt_meta) {
+  var inlineMode = Blockly.Highlight.getInlineVisualReportMode_(value, type, opt_meta);
+
+  // When inline mode metadata is present, this render request came from an
+  // inline context (embedded in another value).
+  if (inlineMode === 'value-inline') {
+    return Blockly.Highlight.highlight(value, Blockly.Highlight.getInlineValueType_(value));
+  }
+  if (inlineMode === 'inline' || inlineMode === 'class') {
+    return Blockly.Highlight.renderCustomTypeClass_(type);
+  }
+
+  // Image data URIs — render inline as an image, regardless of declared type.
+  if ((type === 'string' || typeof type === 'undefined') && Blockly.Highlight.isImageDataUri_(value)) {
+    var imageNode = Blockly.Highlight.renderSemantic_(value, 'image');
+    if (imageNode) return imageNode;
+  }
+
+  // For object-typed arrays, try the array semantic renderer explicitly —
+  // typeof [] === 'object' so the type coming from the VM will be 'object'.
+  if ((type === 'array' || type === 'object') && Array.isArray(value)) {
+    var arrayNode = Blockly.Highlight.renderSemantic_(value, 'array');
+    if (arrayNode) return arrayNode;
+  }
+
+  // For all other types, try the registered semantic renderer first.
+  // This is what makes script, vector, color, etc. show their visual UI.
+  var semanticNode = Blockly.Highlight.renderSemantic_(value, type);
+  if (semanticNode) return semanticNode;
+
+  // object type may have a non-array semantic renderer too.
+  if (type === 'object' && !Array.isArray(value)) {
+    var objectNode = Blockly.Highlight.renderSemantic_(value, 'object');
+    if (objectNode) return objectNode;
+  }
+
+  // Fall through to plain recursive rendering.
+  return Blockly.Highlight.highlight(value, type);
 };
 
 // Semantic renderers are registered in dedicated files:
