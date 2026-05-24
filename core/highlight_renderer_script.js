@@ -2,7 +2,9 @@ goog.provide('Blockly.Highlight.RendererScript');
 
 goog.require('Blockly.Css');
 goog.require('Blockly.Highlight');
+goog.require('Blockly.Xml');
 goog.require('Blockly.inject');
+goog.require('Blockly.utils');
 goog.require('goog.dom');
 
 /**
@@ -679,6 +681,10 @@ Blockly.Highlight.renderMiniWorkspace_ = function(host, serialized, maxBlocks, o
     }
 
     try {
+      if (typeof host.__scriptPreviewDragCleanup === 'function') {
+        host.__scriptPreviewDragCleanup();
+        host.__scriptPreviewDragCleanup = null;
+      }
       if (host.__scriptPreviewWorkspace && typeof host.__scriptPreviewWorkspace.dispose === 'function') {
         host.__scriptPreviewWorkspace.dispose();
         host.__scriptPreviewWorkspace = null;
