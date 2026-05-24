@@ -90,6 +90,7 @@ Blockly.FieldTextInputRemovable.prototype.init = function() {
  * @private
  */
 Blockly.FieldTextInputRemovable.prototype.showEditor_ = function() {
+  // Show the text editor first.
   Blockly.FieldTextInputRemovable.superClass_.showEditor_.call(this);
 
   var div = Blockly.WidgetDiv.DIV;
@@ -101,6 +102,13 @@ Blockly.FieldTextInputRemovable.prototype.showEditor_ = function() {
   this.removeButtonMouseWrapper_ = Blockly.bindEvent_(removeButton,
       'mousedown', this, this.removeCallback_);
   div.appendChild(removeButton);
+
+  // Show the shape dropdown alongside the text editor if this block supports it.
+  if (this.sourceBlock_ &&
+      typeof this.sourceBlock_.showShapeOptionsDropDown_ === 'function') {
+    // Defer to next tick to ensure WidgetDiv is fully positioned first.
+    setTimeout(this.sourceBlock_.showShapeOptionsDropDown_.bind(this.sourceBlock_), 10);
+  }
 };
 
 /**
