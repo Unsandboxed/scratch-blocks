@@ -26,6 +26,27 @@
 
 goog.provide('Blockly.BlockAnimations');
 
+/**
+ * Block currently running disconnect wiggle animation.
+ * @type {?Blockly.BlockSvg}
+ * @private
+ */
+Blockly.BlockAnimations.disconnectUiBlock_ = null;
+
+/**
+ * Original transform to restore when disconnect wiggle ends.
+ * @type {?string}
+ * @private
+ */
+Blockly.BlockAnimations.disconnectUiOriginalTransform_ = null;
+
+/**
+ * Timeout id for disconnect wiggle loop.
+ * @type {?number}
+ * @private
+ */
+Blockly.BlockAnimations.disconnectUiPid_ = null;
+
 
 /**
  * Play some UI effects (sound, animation) when disposing of a block.
@@ -35,7 +56,7 @@ goog.provide('Blockly.BlockAnimations');
 Blockly.BlockAnimations.disposeUiEffect = function(block) {
   var workspace = block.workspace;
   var svgGroup = block.getSvgRoot();
-  // workspace.getAudioManager().play('delete');
+  workspace.getAudioManager().play('delete');
 
   var blockDragSurface =
       workspace.getBlockDragSurface && workspace.getBlockDragSurface();
@@ -126,30 +147,174 @@ Blockly.BlockAnimations.disposeUiStep_ = function(clone, rtl, start,
 
 /**
  * Play some UI effects (sound, ripple) after a connection has been established.
- * @param {!Blockly.BlockSvg} _block The block being connected.
+ * @param {!Blockly.BlockSvg} block The block being connected.
  * @package
  */
 Blockly.BlockAnimations.connectionUiEffect = function(
-    /* eslint-disable no-unused-vars */ _block
-    /* eslint-enable no-unused-vars */) {
-  // block.workspace.getAudioManager().play('click');
+    block) {
+  if (!block || !block.workspace) {
+    return;
+  }
+
+  var workspace = block.workspace;
+  var scale = workspace.scale;
+  workspace.getAudioManager().play('click');
+
+  if (!Blockly.SPORK_FLARES) {
+    return;
+  }
+
+  // At small scales the visual pulse is noisy, so play audio only.
+  if (scale < 1) {
+    return;
+  }
+
+  var xy = workspace.getSvgXY(block.getSvgRoot());
+  if (block.outputConnection) {
+    xy.x += (block.RTL ? 3 : -3) * scale;
+    xy.y += 13 * scale;
+  } else if (block.previousConnection) {
+    xy.x += (block.RTL ? -23 : 23) * scale;
+    xy.y += 3 * scale;
+  }
+
+  var parentSvg = workspace.getParentSvg();
+  var ripple = Blockly.utils.createSvgElement('circle', {
+    'cx': xy.x,
+    'cy': xy.y,
+    'r': 0,
+    'fill': 'none',
+    'stroke': '#888',
+    'stroke-width': 10
+  }, parentSvg);
+
+  var radiusAnim = Blockly.utils.createSvgElement('animate', {
+    'begin': 'indefinite',
+    'attributeName': 'r',
+    'dur': '150ms',
+    'from': 0,
+    'to': 25 * scale
+  }, ripple);
+
+  var opacityAnim = Blockly.utils.createSvgElement('animate', {
+    'begin': 'indefinite',
+    'attributeName': 'opacity',
+    'dur': '150ms',
+    'from': 1,
+    'to': 0
+  }, ripple);
+
+  radiusAnim.beginElement();
+  opacityAnim.beginElement();
+  setTimeout(function() {
+    goog.dom.removeNode(ripple);
+  }, 150);
 };
 
 /**
  * Play some UI effects (sound, animation) when disconnecting a block.
- * No-op in scratch-blocks, which has no disconnect animation.
- * @param {!Blockly.BlockSvg} _block The block being disconnected.
+ * @param {!Blockly.BlockSvg} block The block being disconnected.
  * @package
  */
 Blockly.BlockAnimations.disconnectUiEffect = function(
-    /* eslint-disable no-unused-vars */ _block
-    /* eslint-enable no-unused-vars */) {
+    block) {
+  if (!block || !block.workspace) {
+    return;
+  }
+  Blockly.BlockAnimations.disconnectUiStop();
+  block.workspace.getAudioManager().play('disconnect', undefined, true);
+
+  if (!Blockly.SPORK_FLARES) {
+    return;
+  }
+
+  // Match modern Blockly: at small scales, play sound only.
+  if (block.workspace.scale < 1) {
+    return;
+  }
+
+  var svgRoot = block.getSvgRoot();
+  if (!svgRoot) {
+    return;
+  }
+
+  var originalTransform = svgRoot.getAttribute('transform');
+
+  var blockHeight = Math.max(1, block.getHeightWidth().height);
+  var magnitude = Math.atan(10 / blockHeight) / Math.PI * 180;
+  if (!block.RTL) {
+    magnitude *= -1;
+  }
+
+  Blockly.BlockAnimations.disconnectUiBlock_ = block;
+  Blockly.BlockAnimations.disconnectUiOriginalTransform_ = originalTransform;
+  Blockly.BlockAnimations.disconnectUiStep_(magnitude, new Date(), 0);
+};
+
+/**
+ * Step disconnect wiggle animation.
+ * @param {number} magnitude Wiggle magnitude in degrees.
+ * @param {!Date} start Animation start.
+ * @param {number} stepIndex Current step index.
+ * @private
+ */
+Blockly.BlockAnimations.disconnectUiStep_ = function(magnitude, start,
+    stepIndex) {
+  var block = Blockly.BlockAnimations.disconnectUiBlock_;
+  if (!block) {
+    return;
+  }
+  var svgRoot = block.getSvgRoot();
+  if (!svgRoot) {
+    Blockly.BlockAnimations.disconnectUiStop();
+    return;
+  }
+
+  var wiggle = [0.66, 1, 0.66, 0, -0.66, -1, -0.66, 0];
+  var skew = '';
+  var isAnimating = start.getTime() + 200 > new Date().getTime();
+  if (isAnimating) {
+    var angle = Math.round(wiggle[stepIndex % wiggle.length] * magnitude);
+    skew = ' skewX(' + angle + ')';
+  }
+
+  var baseTransform = Blockly.BlockAnimations.disconnectUiOriginalTransform_ || '';
+  if (baseTransform || skew) {
+    svgRoot.setAttribute('transform', baseTransform + skew);
+  } else {
+    svgRoot.removeAttribute('transform');
+  }
+
+  if (isAnimating) {
+    Blockly.BlockAnimations.disconnectUiPid_ = setTimeout(
+        Blockly.BlockAnimations.disconnectUiStep_, 15, magnitude, start,
+        stepIndex + 1);
+  } else {
+    Blockly.BlockAnimations.disconnectUiStop();
+  }
 };
 
 /**
  * Stop the disconnect UI animation immediately.
- * No-op in scratch-blocks, which has no disconnect animation.
  * @package
  */
 Blockly.BlockAnimations.disconnectUiStop = function() {
+  if (Blockly.BlockAnimations.disconnectUiPid_) {
+    clearTimeout(Blockly.BlockAnimations.disconnectUiPid_);
+    Blockly.BlockAnimations.disconnectUiPid_ = null;
+  }
+
+  if (Blockly.BlockAnimations.disconnectUiBlock_) {
+    var svgRoot = Blockly.BlockAnimations.disconnectUiBlock_.getSvgRoot();
+    if (svgRoot) {
+      if (Blockly.BlockAnimations.disconnectUiOriginalTransform_ !== null) {
+        svgRoot.setAttribute('transform',
+            Blockly.BlockAnimations.disconnectUiOriginalTransform_);
+      } else {
+        svgRoot.removeAttribute('transform');
+      }
+    }
+  }
+  Blockly.BlockAnimations.disconnectUiBlock_ = null;
+  Blockly.BlockAnimations.disconnectUiOriginalTransform_ = null;
 };

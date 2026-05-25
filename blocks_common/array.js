@@ -47,17 +47,11 @@ Blockly.Blocks['array'] = {
     this.extendCount_ = 0;
     this.argumentIds_ = [];
     this.minProceedGroups_ = 0;
+    this.shadowType_ = 'text';
     this.extendDefinitions_ = {
       collapse: false,
       starts: [],
-      proceeds: [
-        Blockly.ExtenderMutation.defineNewInput(
-          Blockly.VALUE_INPUT,
-          'text',
-          'TEXT',
-          null
-        )
-      ],
+      proceeds: [this.makeProceedDefinition_()],
       ends: []
     };
     this.plusminus_ = new Blockly.FieldExtender(
@@ -149,11 +143,46 @@ Blockly.Blocks['array'] = {
     this.updateParentShadowStyle_();
   },
 
-  mutationToDom: Blockly.ExtenderMutation.mutationToDom,
+  mutationToDom: function() {
+    var container = Blockly.ExtenderMutation.mutationToDom.call(this);
+    if (this.shadowType_ && this.shadowType_ !== 'text') {
+      container.setAttribute('shadowtype', this.shadowType_);
+    }
+    return container;
+  },
   domToMutation: function(xmlElement) {
+    var shadowtype = xmlElement.getAttribute('shadowtype');
+    if (shadowtype) {
+      this.shadowType_ = shadowtype;
+      this.extendDefinitions_.proceeds = [this.makeProceedDefinition_()];
+    }
     Blockly.ExtenderMutation.domToMutation.call(this, xmlElement);
     this.syncParentShadowDom_();
     this.updateParentShadowStyle_();
+  },
+
+  /**
+   * Build an input definition for the current shadowType_.
+   * Always uses 'TEXT' as the id-prefix (so VM input names remain TEXT/TEXT2/…),
+   * but sets shadowField to null for shadow types that manage their own field
+   * defaults (e.g. math_position, math_vector2).
+   * @return {Object}
+   */
+  makeProceedDefinition_: function() {
+    var shadowType = this.shadowType_ || 'text';
+    var def = Blockly.ExtenderMutation.defineNewInput(
+      Blockly.VALUE_INPUT,
+      shadowType,
+      'TEXT',   // keeps input IDs as TEXT / TEXT2 / TEXT3 … for the VM
+      null
+    );
+    // For shadow blocks whose primary field is not named 'TEXT', skip the
+    // setFieldValue call so the block keeps its own built-in defaults.
+    var TEXT_FIELD_SHADOWS = ['text', 'math_whole_number', 'math_positive_number'];
+    if (TEXT_FIELD_SHADOWS.indexOf(shadowType) === -1) {
+      def.shadowField = null;
+    }
+    return def;
   },
   updateDisplay_: function() {
     Blockly.ExtenderMutation.updateDisplay_.call(this);

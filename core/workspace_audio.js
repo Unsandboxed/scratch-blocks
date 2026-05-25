@@ -139,13 +139,19 @@ Blockly.WorkspaceAudio.prototype.preload = function() {
  * use full volume (1).
  * @param {string} name Name of sound.
  * @param {number=} opt_volume Volume of sound (0-1).
+ * @param {boolean=} opt_bypassSoundLimit True to ignore SOUND_LIMIT throttle.
  */
-Blockly.WorkspaceAudio.prototype.play = function(name, opt_volume) {
+Blockly.WorkspaceAudio.prototype.play = function(name, opt_volume,
+  opt_bypassSoundLimit) {
+  if (!Blockly.WORKSPACE_SOUNDS_ENABLED) {
+    return;
+  }
+
   var sound = this.SOUNDS_[name];
   if (sound) {
     // Don't play one sound on top of another.
     var now = new Date;
-    if (this.lastSound_ != null &&
+    if (!opt_bypassSoundLimit && this.lastSound_ != null &&
         now - this.lastSound_ < Blockly.SOUND_LIMIT) {
       return;
     }
@@ -161,10 +167,29 @@ Blockly.WorkspaceAudio.prototype.play = function(name, opt_volume) {
     } else {
       mySound = sound.cloneNode();
     }
+    // Normalize playback state in case the browser reuses altered audio state.
+    mySound.playbackRate = 1;
+    mySound.defaultPlaybackRate = 1;
+    if ('preservesPitch' in mySound) {
+      mySound.preservesPitch = true;
+    }
+    if ('mozPreservesPitch' in mySound) {
+      mySound.mozPreservesPitch = true;
+    }
+    if ('webkitPreservesPitch' in mySound) {
+      mySound.webkitPreservesPitch = true;
+    }
+    // Always play from the beginning.
+    try {
+      mySound.currentTime = 0;
+    } catch (e) {
+      // Some browsers disallow currentTime updates before metadata is ready.
+    }
     mySound.volume = (opt_volume === undefined ? 1 : opt_volume);
     mySound.play();
   } else if (this.parentWorkspace_) {
     // Maybe a workspace on a lower level knows about this sound.
-    this.parentWorkspace_.getAudioManager().play(name, opt_volume);
+    this.parentWorkspace_.getAudioManager().play(name, opt_volume,
+        opt_bypassSoundLimit);
   }
 };

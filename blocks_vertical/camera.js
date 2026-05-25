@@ -379,6 +379,30 @@ Blockly.Blocks['camera_yposition'] = {
   }
 };
 
+Blockly.Blocks['camera_position'] = {
+  /**
+   * Block to report camera's position.
+   * @this Blockly.Block
+   */
+  init: function() {
+    this.jsonInit({
+      "message0": Blockly.Msg.CAMERA_POSITION,
+      "args0": [
+        {
+          "type": "field_image",
+          "src": Blockly.mainWorkspace.options.pathToMedia + "camera.svg",
+          "width": 24,
+          "height": 24
+        }
+      ],
+      "output": true,
+      "category": Blockly.Categories.camera,
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "extensions": ["colours_camera"]
+    });
+  }
+};
+
 Blockly.Blocks['camera_zoom'] = {
   /**
    * Block to report camera's zoom.

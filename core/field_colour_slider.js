@@ -346,7 +346,12 @@ Blockly.FieldColourSlider.prototype.showEditor_ = function() {
   }
 
   Blockly.DropDownDiv.setColour(Blockly.Colours.valueReportBackground, Blockly.Colours.valueReportBorder);
-  Blockly.DropDownDiv.setCategory(this.sourceBlock_.parentBlock_.getCategory());
+  var categorySource = this.sourceBlock_;
+  if (this.sourceBlock_ && this.sourceBlock_.isShadow && this.sourceBlock_.isShadow() &&
+      this.sourceBlock_.parentBlock_) {
+    categorySource = this.sourceBlock_.parentBlock_;
+  }
+  Blockly.DropDownDiv.setCategory(categorySource.getCategory());
   Blockly.DropDownDiv.showPositionedByBlock(this, this.sourceBlock_);
 
   // Set value updates the slider positions

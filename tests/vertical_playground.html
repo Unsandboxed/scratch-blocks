@@ -40,6 +40,219 @@
 
       var workspace = null;
 
+      Blockly.Blocks['field_test_input'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "input %1",
+            "args0": [{"type": "field_input", "name": "TEXT", "text": "abc"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_number'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "number %1",
+            "args0": [{"type": "field_number", "name": "NUM", "value": 10}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_angle'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "angle %1",
+            "args0": [{"type": "field_angle", "name": "ANGLE", "value": 90}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_checkbox'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "checkbox %1",
+            "args0": [{"type": "field_checkbox", "name": "CHECKED", "checked": true}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_date'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "date %1",
+            "args0": [{"type": "field_date", "name": "DATE", "date": "2026-04-21"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_colour'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "colour %1",
+            "args0": [{"type": "field_colour", "name": "COLOUR", "colour": "#ff6680"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_colour_slider'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "colour slider %1",
+            "args0": [{"type": "field_colour_slider", "name": "COLOUR", "colour": "#4dd0ff"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_dropdown'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "dropdown %1",
+            "args0": [{
+              "type": "field_dropdown",
+              "name": "CHOICE",
+              "options": [["alpha", "A"], ["beta", "B"], ["gamma", "C"]]
+            }],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_image'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "image %1",
+            "args0": [{
+              "type": "field_image",
+              "src": this.workspace.options.pathToMedia + "icons/control_wait.svg",
+              "width": 24,
+              "height": 24,
+              "alt": "img"
+            }],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_vertical_separator'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "separator %1 after",
+            "args0": [{"type": "field_vertical_separator"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_note'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "note %1",
+            "args0": [{"type": "field_note", "name": "NOTE", "value": 60}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_matrix'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "matrix %1",
+            "args0": [{"type": "field_matrix", "name": "MATRIX", "value": "0000000000000000000000000"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_vec2'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "vec2 %1",
+            "args0": [{"type": "field_vec2", "name": "VEC", "value": "0, 0"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_position'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "position %1",
+            "args0": [{"type": "field_position", "name": "POS", "value": "0, 0"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_duration'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "duration %1",
+            "args0": [{"type": "field_duration", "name": "DURATION", "value": "1 s"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      Blockly.Blocks['field_test_range'] = {
+        init: function() {
+          this.jsonInit({
+            "message0": "range %1",
+            "args0": [{"type": "field_range", "name": "RANGE", "value": "0..100"}],
+            "extensions": ["colours_more", "shape_statement"]
+          });
+        }
+      };
+
+      function buildFieldTestsToolbox_(toolboxName) {
+        if (toolboxName !== 'categories') {
+          return document.getElementById('toolbox-' + toolboxName);
+        }
+
+        var parser = new DOMParser();
+        var toolboxDoc = parser.parseFromString(Blockly.Blocks.defaultToolbox, 'text/xml');
+        var toolbox = toolboxDoc.documentElement;
+        var fieldCategory = toolboxDoc.createElement('category');
+        fieldCategory.setAttribute('name', 'Field Tests');
+        fieldCategory.setAttribute('id', 'field-tests');
+        fieldCategory.setAttribute('colour', '#ff8c1a');
+        fieldCategory.setAttribute('secondaryColour', '#db6e00');
+
+        var fieldTypes = [
+          'field_test_input',
+          'field_test_number',
+          'field_test_angle',
+          'field_test_checkbox',
+          'field_test_date',
+          'field_test_colour',
+          'field_test_colour_slider',
+          'field_test_dropdown',
+          'field_test_image',
+          'field_test_vertical_separator',
+          'field_test_note',
+          'field_test_matrix',
+          'field_test_vec2',
+          'field_test_position',
+          'field_test_duration',
+          'field_test_range'
+        ];
+
+        for (var i = 0; i < fieldTypes.length; i++) {
+          var block = toolboxDoc.createElement('block');
+          block.setAttribute('type', fieldTypes[i]);
+          fieldCategory.appendChild(block);
+        }
+
+        toolbox.appendChild(fieldCategory);
+        return toolbox;
+      }
+
       function start() {
         var soundsEnabled = null;
         if (sessionStorage) {
@@ -124,7 +337,8 @@
 
       function getToolboxElement() {
         var match = location.search.match(/toolbox=([^&]+)/);
-        return document.getElementById('toolbox-' + (match ? match[1] : 'categories'));
+        var toolboxName = match ? match[1] : 'categories';
+        return buildFieldTestsToolbox_(toolboxName);
       }
 
       function toXml() {

@@ -47,14 +47,18 @@ goog.require('Blockly.FieldColourSlider');
 // Date picker commented out since it increases footprint by 60%.
 // Add it only if you need it.
 //goog.require('Blockly.FieldDate');
+goog.require('Blockly.FieldDuration');
 goog.require('Blockly.FieldDropdown');
 goog.require('Blockly.FieldExtender');
 goog.require('Blockly.FieldIconMenu');
 goog.require('Blockly.FieldImage');
 goog.require('Blockly.FieldNote');
+goog.require('Blockly.FieldPosition');
+goog.require('Blockly.FieldRange');
 goog.require('Blockly.FieldTextInput');
 goog.require('Blockly.FieldTextInputRemovable');
 goog.require('Blockly.FieldTextDropdown');
+goog.require('Blockly.FieldVec2');
 goog.require('Blockly.FieldNumber');
 goog.require('Blockly.FieldNumberDropdown');
 goog.require('Blockly.FieldMatrix');
@@ -73,6 +77,16 @@ goog.require('Blockly.CustomShapes');
 goog.require('Blockly.SecretTransformations');
 goog.require('Blockly.Shpr');
 goog.require('Blockly.Highlight');
+goog.require('Blockly.Highlight.RendererArray');
+goog.require('Blockly.Highlight.RendererObject');
+goog.require('Blockly.Highlight.RendererVector');
+goog.require('Blockly.Highlight.RendererPosition');
+goog.require('Blockly.Highlight.RendererColor');
+goog.require('Blockly.Highlight.RendererImage');
+goog.require('Blockly.Highlight.RendererSprite');
+goog.require('Blockly.Highlight.RendererAsset');
+goog.require('Blockly.Highlight.RendererScript');
+goog.require('Blockly.Highlight.RendererVariable');
 goog.require('Blockly.constants');
 goog.require('Blockly.inject');
 goog.require('Blockly.utils');
@@ -96,6 +110,20 @@ Blockly.mainWorkspace = null;
  * @type {Blockly.Block}
  */
 Blockly.selected = null;
+
+/**
+ * Master toggle for workspace sound effects.
+ * Set to false to disable all Blockly workspace sounds.
+ * @type {boolean}
+ */
+Blockly.WORKSPACE_SOUNDS_ENABLED = false;
+
+/**
+ * Master toggle for connect/disconnect visual flares.
+ * Set to false to disable ripple and wiggle animations.
+ * @type {boolean}
+ */
+Blockly.SPORK_FLARES = true;
 
 /**
  * All of the connections on blocks that are currently being dragged.
@@ -205,6 +233,12 @@ Blockly.onKeyDown_ = function(e) {
     return;
   }
   var deleteBlock = false;
+  if (Blockly.mainWorkspace.isDragging() && !e.altKey && !e.ctrlKey && !e.metaKey &&
+      (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)) {
+    // Disable extender keyboard adjustments while dragging.
+    return;
+  }
+
   if (e.keyCode == 27) {
     // Pressing esc closes the context menu and any drop-down
     Blockly.hideChaff();
@@ -227,6 +261,20 @@ Blockly.onKeyDown_ = function(e) {
     if (Blockly.mainWorkspace.isDragging()) {
       return;
     }
+
+    if (e.ctrlKey && !e.altKey && !e.metaKey &&
+        (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)) {
+      // Ctrl + Arrows adjust focused extendable block.
+      // Branch blocks use Down/Up; reporter blocks use Left/Right.
+      e.preventDefault();
+      var didAdjust = Blockly.ExtenderMutation.applyKeyboardAdjustForKeyCode(e.keyCode);
+      if (didAdjust) {
+        Blockly.hideChaff();
+      }
+      return;
+    }
+
+    Blockly.ExtenderMutation.rememberFocusedExtendableBlock(Blockly.selected);
     if (Blockly.selected &&
         Blockly.selected.isDeletable() && Blockly.selected.isMovable()) {
       // Don't allow copying immovable or undeletable blocks. The next step

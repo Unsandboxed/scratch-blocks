@@ -603,9 +603,12 @@ Blockly.Toolbox.prototype.selectCategoryByName = function(name) {
   for (var i = 0; i < this.categoryMenu_.categories_.length; i++) {
     var category = this.categoryMenu_.categories_[i];
     if (name === category.name_) {
-      this.selectedItem_.setSelected(false);
+      if (this.selectedItem_) {
+        this.selectedItem_.setSelected(false);
+      }
       this.selectedItem_ = category;
       this.selectedItem_.setSelected(true);
+      return;
     }
   }
 };
@@ -619,9 +622,12 @@ Blockly.Toolbox.prototype.selectCategoryById = function(id) {
   for (var i = 0; i < this.categoryMenu_.categories_.length; i++) {
     var category = this.categoryMenu_.categories_[i];
     if (id === category.id_) {
-      this.selectedItem_.setSelected(false);
+      if (this.selectedItem_) {
+        this.selectedItem_.setSelected(false);
+      }
       this.selectedItem_ = category;
       this.selectedItem_.setSelected(true);
+      return;
     }
   }
 };
