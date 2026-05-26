@@ -220,7 +220,9 @@ Blockly.InsertionMarkerManager.prototype.applyConnections = function() {
           inferiorConnection.getSourceBlock());
       // Bring the just-edited stack to the front.
       var rootBlock = this.topBlock_.getRootBlock();
-      rootBlock.bringToFront();
+      if (rootBlock && typeof rootBlock.bringToFront === 'function') {
+        rootBlock.bringToFront();
+      }
     }
   }
 };
