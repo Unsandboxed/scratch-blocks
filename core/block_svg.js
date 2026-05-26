@@ -1188,7 +1188,11 @@ Blockly.BlockSvg.prototype.bringToFront = function() {
   var block = this;
   do {
     var root = block.getSvgRoot();
-    root.parentNode.appendChild(root);
+    // During some drag/insertion-marker transitions a block's SVG can be
+    // temporarily detached. In that case, skip reordering instead of throwing.
+    if (root && root.parentNode) {
+      root.parentNode.appendChild(root);
+    }
     block = block.getParent();
   } while (block);
 };
