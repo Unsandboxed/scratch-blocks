@@ -126,7 +126,8 @@ Blockly.Blocks['sensing_distanceto'] = {
       "args0": [
         {
           "type": "input_value",
-          "name": "DISTANCETOMENU"
+          "name": "DISTANCETOMENU",
+          "outputShape": Blockly.OUTPUT_SHAPE_VECTOR
         }
       ],
       "category": Blockly.Categories.sensing,
@@ -153,7 +154,9 @@ Blockly.Blocks['sensing_distancetomenu'] = {
           ]
         }
       ],
-      "extensions": ["colours_sensing", "output_string"]
+      "output": "String",
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "extensions": ["colours_sensing"]
     });
   }
 };
