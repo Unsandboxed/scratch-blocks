@@ -143,7 +143,9 @@ Blockly.Blocks['motion_pointtowards_menu'] = {
       "colourSecondary": Blockly.Colours.motion.secondary,
       "colourTertiary": Blockly.Colours.motion.tertiary,
       "colourQuaternary": Blockly.Colours.motion.quaternary,
-      "extensions": ["output_string"]
+      "output": "String",
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "extensions": []
     });
   }
 };
@@ -159,7 +161,8 @@ Blockly.Blocks['motion_pointtowards'] = {
       "args0": [
         {
           "type": "input_value",
-          "name": "TOWARDS"
+          "name": "TOWARDS",
+          "outputShape": Blockly.OUTPUT_SHAPE_VECTOR
         }
       ],
       "category": Blockly.Categories.motion,
@@ -215,7 +218,9 @@ Blockly.Blocks['motion_goto_menu'] = {
       "colourSecondary": Blockly.Colours.motion.secondary,
       "colourTertiary": Blockly.Colours.motion.tertiary,
       "colourQuaternary": Blockly.Colours.motion.quaternary,
-      "extensions": ["output_string"]
+      "output": "String",
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "extensions": []
     });
   }
 };
@@ -255,7 +260,8 @@ Blockly.Blocks['motion_goto'] = {
       "args0": [
         {
           "type": "input_value",
-          "name": "TO"
+          "name": "TO",
+          "outputShape": Blockly.OUTPUT_SHAPE_VECTOR
         }
       ],
       "category": Blockly.Categories.motion,
@@ -339,7 +345,9 @@ Blockly.Blocks['motion_glideto_menu'] = {
       "colourSecondary": Blockly.Colours.motion.secondary,
       "colourTertiary": Blockly.Colours.motion.tertiary,
       "colourQuaternary": Blockly.Colours.motion.quaternary,
-      "extensions": ["output_string"]
+      "output": "String",
+      "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
+      "extensions": []
     });
   }
 };
@@ -359,7 +367,8 @@ Blockly.Blocks['motion_glideto'] = {
         },
         {
           "type": "input_value",
-          "name": "TO"
+          "name": "TO",
+          "outputShape": Blockly.OUTPUT_SHAPE_VECTOR
         }
       ],
       "category": Blockly.Categories.motion,
