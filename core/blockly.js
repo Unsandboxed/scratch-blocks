@@ -262,6 +262,9 @@ Blockly.onKeyDown_ = function(e) {
       return;
     }
 
+    // Keep keyboard extender targeting in sync with current selection.
+    Blockly.ExtenderMutation.rememberFocusedExtendableBlock(Blockly.selected);
+
     if (e.ctrlKey && !e.altKey && !e.metaKey &&
         (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 39 || e.keyCode == 40)) {
       // Ctrl + Arrows adjust focused extendable block.
@@ -274,7 +277,6 @@ Blockly.onKeyDown_ = function(e) {
       return;
     }
 
-    Blockly.ExtenderMutation.rememberFocusedExtendableBlock(Blockly.selected);
     if (Blockly.selected &&
         Blockly.selected.isDeletable() && Blockly.selected.isMovable()) {
       // Don't allow copying immovable or undeletable blocks. The next step

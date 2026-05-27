@@ -163,10 +163,12 @@ Blockly.InsertionMarkerManager.prototype.dispose = function() {
   Blockly.Events.disable();
   try {
     if (this.firstMarker_) {
+      this.disconnectBlocksFromMarker_(this.firstMarker_);
       this.firstMarker_.dispose();
       this.firstMarker_ = null;
     }
     if (this.lastMarker_) {
+      this.disconnectBlocksFromMarker_(this.lastMarker_);
       this.lastMarker_.dispose();
       this.lastMarker_ = null;
     }
@@ -175,6 +177,21 @@ Blockly.InsertionMarkerManager.prototype.dispose = function() {
   }
 
   this.highlightedBlock_ = null;
+};
+
+/**
+ * Disconnect all live connections on an insertion marker block so disposing
+ * the marker cannot recursively dispose attached non-marker stacks.
+ * @param {!Blockly.BlockSvg} markerBlock Insertion marker block.
+ * @private
+ */
+Blockly.InsertionMarkerManager.prototype.disconnectBlocksFromMarker_ = function(markerBlock) {
+  var connections = markerBlock.getConnections_(true);
+  for (var i = 0; i < connections.length; i++) {
+    if (connections[i] && connections[i].isConnected()) {
+      connections[i].disconnect();
+    }
+  }
 };
 
 /**

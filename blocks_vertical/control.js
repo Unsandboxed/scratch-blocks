@@ -1113,4 +1113,28 @@ if (Blockly.SecretTransformations) {
       ['control_if', 'control_if_else']);
   Blockly.SecretTransformations.addGroup(
       ['control_break', 'control_continue']);
+
+  Blockly.SecretTransformations.addSpecialTransformation(
+      'control_if_else_extends',
+      function(block) {
+        if (!block || !Array.isArray(block.branchStates_) ||
+            typeof block.handlePlus_ !== 'function' ||
+            typeof block.handleMinus_ !== 'function') {
+          return false;
+        }
+
+        var tailState = block.branchStates_[block.branchStates_.length - 1];
+        var hasElseTail = !!(tailState && tailState.kind === 'else');
+
+        if (hasElseTail) {
+          if (typeof block.canRemove_ === 'function' && !block.canRemove_()) {
+            return false;
+          }
+          block.handleMinus_();
+          return true;
+        }
+
+        block.handlePlus_();
+        return true;
+      });
 }

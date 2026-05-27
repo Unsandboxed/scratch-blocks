@@ -1686,13 +1686,25 @@ Blockly.Blocks['operator_mathop'] = {
     Blockly.SecretTransformations.addGroup(
       ['operator_add', 'operator_subtract']);
     Blockly.SecretTransformations.addGroup(
+      ['operator_add_extends', 'operator_subtract_extends']);
+    Blockly.SecretTransformations.addGroup(
       ['operator_multiply', 'operator_divide']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_multiply_extends', 'operator_divide_extends']);
     Blockly.SecretTransformations.addGroup(
       ['operator_min', 'operator_max']);
     Blockly.SecretTransformations.addGroup(
+      ['operator_min_extends', 'operator_max_extends']);
+    Blockly.SecretTransformations.addGroup(
       ['operator_gt', 'operator_lt']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_gt_extends', 'operator_lt_extends']);
     Blockly.SecretTransformations.addGroup(
       ['operator_gt_equals', 'operator_lt_equals']);
     Blockly.SecretTransformations.addGroup(
-      ['operator_and', 'operator_or']);
+      ['operator_gt_equals_extends', 'operator_lt_equals_extends']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_and', 'operator_or', 'operator_xor']);
+    Blockly.SecretTransformations.addGroup(
+      ['operator_and_extends', 'operator_or_extends', 'operator_xor_extends']);
   }
