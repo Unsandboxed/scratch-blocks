@@ -31,11 +31,31 @@ goog.require('Blockly.Xml');
 Blockly.SecretTransformations.groups_ = [];
 
 /**
+ * Per-block-type special transformations executed on shake.
+ * Handlers should return true when they applied a transformation.
+ * @type {!Object<string, function(!Blockly.BlockSvg, !Blockly.BlockDragger,
+ *     !goog.math.Coordinate): boolean>}
+ * @private
+ */
+Blockly.SecretTransformations.specialTransformsByType_ = Object.create(null);
+
+/**
  * Register a transformation group.
  * @param {!Array<string>} blockTypes Ordered array of block type strings.
  */
 Blockly.SecretTransformations.addGroup = function(blockTypes) {
   Blockly.SecretTransformations.groups_.push(blockTypes.slice());
+};
+
+/**
+ * Register a special shake transformation for one block type.
+ * @param {string} blockType
+ * @param {function(!Blockly.BlockSvg, !Blockly.BlockDragger,
+ *     !goog.math.Coordinate): boolean} transformFn
+ */
+Blockly.SecretTransformations.addSpecialTransformation = function(
+    blockType, transformFn) {
+  Blockly.SecretTransformations.specialTransformsByType_[blockType] = transformFn;
 };
 
 /**
@@ -157,6 +177,55 @@ Blockly.SecretTransformations.updateShake = function(tracker, deltaXY) {
   return false;
 };
 
+/**
+ * Compute current workspace coordinates for the dragged block.
+ * @param {!Blockly.BlockDragger} dragger
+ * @param {!goog.math.Coordinate} currentDragDeltaXY
+ * @return {!goog.math.Coordinate}
+ * @private
+ */
+Blockly.SecretTransformations.getCurrentWsPosition_ = function(
+    dragger, currentDragDeltaXY) {
+  var wsUnit = dragger.pixelsToWorkspaceUnits_(currentDragDeltaXY);
+  return goog.math.Coordinate.sum(dragger.startXY_, wsUnit);
+};
+
+/**
+ * Apply a registered special transformation to the dragged block, if any.
+ * @param {!Blockly.BlockDragger} dragger
+ * @param {!goog.math.Coordinate} currentDragDeltaXY
+ * @return {boolean} True if a special transform was applied.
+ * @private
+ */
+Blockly.SecretTransformations.applySpecialTransformMidDrag_ = function(
+    dragger, currentDragDeltaXY) {
+  var block = dragger.draggingBlock_;
+  if (!block || !block.workspace) return false;
+
+  var transformFn =
+      Blockly.SecretTransformations.specialTransformsByType_[block.type];
+  if (!transformFn) return false;
+  if (!Blockly.SecretTransformations.isStandalone_(block)) return false;
+
+  if (!transformFn(block, dragger, currentDragDeltaXY)) {
+    return false;
+  }
+
+  if (block.rendered) {
+    block.render(false);
+  }
+
+  if (dragger.draggedConnectionManager_) {
+    dragger.draggedConnectionManager_.dispose();
+  }
+  dragger.draggedConnectionManager_ = new Blockly.InsertionMarkerManager(block);
+
+  var currentWsPos = Blockly.SecretTransformations.getCurrentWsPosition_(
+      dragger, currentDragDeltaXY);
+  Blockly.SecretTransformations.sparkleEffect_(dragger.workspace_, currentWsPos, block);
+  return true;
+};
+
 // ─── Mid-drag block swap ──────────────────────────────────────────────────────
 
 /**
@@ -184,8 +253,8 @@ Blockly.SecretTransformations.transformBlockMidDrag_ = function(
 
   // Current workspace-coordinate position of the dragged block.
   // pixelsToWorkspaceUnits_ is a private method but lives on the prototype.
-  var wsUnit = dragger.pixelsToWorkspaceUnits_(currentDragDeltaXY);
-  var currentWsPos = goog.math.Coordinate.sum(dragger.startXY_, wsUnit);
+  var currentWsPos = Blockly.SecretTransformations.getCurrentWsPosition_(
+      dragger, currentDragDeltaXY);
 
   // --- Step 1: create the replacement block (old block still alive) ---
   Blockly.Events.disable();
@@ -500,8 +569,11 @@ Blockly.SecretTransformations.confettiTick_ = function(
 
     if (ST.updateShake(this.stShakeTracker_, currentDragDeltaXY)) {
       var block = this.draggingBlock_;
-      if (block && ST.getNextType_(block.type)) {
-        if (ST.isStandalone_(block)) {
+      if (block) {
+        if (ST.applySpecialTransformMidDrag_(this, currentDragDeltaXY)) {
+          return result;
+        }
+        if (ST.getNextType_(block.type) && ST.isStandalone_(block)) {
           // Swap the block mid-drag. After this call, this.draggingBlock_,
           // this.startXY_, and this.draggedConnectionManager_ all refer to
           // the new block, and the drag continues seamlessly.
