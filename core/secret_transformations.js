@@ -55,22 +55,20 @@ Blockly.SecretTransformations.getNextType_ = function(type) {
 };
 
 /**
- * True if `block` is "standalone": no parent connection and no non-shadow
- * descendants (only auto-generated shadow inputs are allowed).
+ * True if `block` has no live non-marker connections.
+ * If it is connected to anything, transformation is blocked.
  * @param {!Blockly.BlockSvg} block
  * @return {boolean}
  * @private
  */
 Blockly.SecretTransformations.isStandalone_ = function(block) {
-  if (block.previousConnection && block.previousConnection.isConnected()) {
-    return false;
-  }
-  if (block.outputConnection && block.outputConnection.isConnected()) {
-    return false;
-  }
-  var desc = block.getDescendants(false);
-  for (var i = 0; i < desc.length; i++) {
-    if (desc[i] !== block && !desc[i].isShadow()) return false;
+  var connections = block.getConnections_(true);
+  for (var i = 0; i < connections.length; i++) {
+    if (!connections[i].isConnected()) continue;
+    var target = connections[i].targetBlock();
+    if (!target || (!target.isInsertionMarker() && !target.isShadow())) {
+      return false;
+    }
   }
   return true;
 };
@@ -503,15 +501,7 @@ Blockly.SecretTransformations.confettiTick_ = function(
     if (ST.updateShake(this.stShakeTracker_, currentDragDeltaXY)) {
       var block = this.draggingBlock_;
       if (block && ST.getNextType_(block.type)) {
-        var isStandalone = true;
-        var desc = block.getDescendants(false);
-        for (var i = 0; i < desc.length; i++) {
-          if (desc[i] !== block && !desc[i].isShadow()) {
-            isStandalone = false;
-            break;
-          }
-        }
-        if (isStandalone) {
+        if (ST.isStandalone_(block)) {
           // Swap the block mid-drag. After this call, this.draggingBlock_,
           // this.startXY_, and this.draggedConnectionManager_ all refer to
           // the new block, and the drag continues seamlessly.
