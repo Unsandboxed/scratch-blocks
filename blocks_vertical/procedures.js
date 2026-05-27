@@ -1163,6 +1163,24 @@ Blockly.ScratchBlocks.ProcedureUtils.showArgumentShapeOptionsDropDown_ = functio
     return;
   }
 
+  var reportForeground = (Blockly.Colours && Blockly.Colours.valueReportForeground) || '#000000';
+  var hasHexForeground = /^#([0-9a-f]{6})$/i.test(reportForeground);
+  var reportForegroundIsLight = false;
+  if (hasHexForeground) {
+    var rgb = reportForeground.match(/[0-9a-f]{2}/ig).map(function(channel) {
+      return parseInt(channel, 16);
+    });
+    var luminance = (0.2126 * rgb[0]) + (0.7152 * rgb[1]) + (0.0722 * rgb[2]);
+    reportForegroundIsLight = luminance >= 128;
+  }
+
+  // Requested behavior: opposite text contrast from visual report values.
+  // If report text is light (dark mode), shape-option text should be dark, and vice versa.
+  var textColour = reportForegroundIsLight ? '#1f1f1f' : '#ffffff';
+  var selectedBackground = reportForegroundIsLight ? '#dcecff' : '#4c97ff';
+  var unselectedBackground = reportForegroundIsLight ? '#ffffff' : '#575e75';
+  var borderColour = (Blockly.Colours && Blockly.Colours.valueReportBorder) || '#b0b0b0';
+
   Blockly.DropDownDiv.hideWithoutAnimation();
   Blockly.DropDownDiv.clearContent();
   var contentDiv = Blockly.DropDownDiv.getContentDiv();
@@ -1183,12 +1201,13 @@ Blockly.ScratchBlocks.ProcedureUtils.showArgumentShapeOptionsDropDown_ = functio
       var button = document.createElement('button');
       button.type = 'button';
       button.textContent = option.label;
-      button.style.border = '1px solid #b0b0b0';
+      button.style.border = '1px solid ' + borderColour;
       button.style.borderRadius = '8px';
       button.style.padding = '4px 8px';
       button.style.cursor = 'pointer';
       button.style.font = '11px sans-serif';
-      button.style.background = option.shape === currentShape ? '#e8f1ff' : '#ffffff';
+      button.style.color = textColour;
+      button.style.background = option.shape === currentShape ? selectedBackground : unselectedBackground;
       button.addEventListener('mousedown', function(e) {
         e.preventDefault();
         e.stopPropagation();
