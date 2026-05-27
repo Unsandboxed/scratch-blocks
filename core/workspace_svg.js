@@ -1200,6 +1200,7 @@ Blockly.WorkspaceSvg.prototype.reportValue = function(id, value) {
   Blockly.DropDownDiv.clearContent();
   var contentDiv = Blockly.DropDownDiv.getContentDiv();
   var valueReportBox = goog.dom.createElement('div');
+  valueReportBox.className = 'valueReportBox';
   this.sanitizeReportValue(value, valueReportBox);
   contentDiv.appendChild(valueReportBox);
   Blockly.DropDownDiv.setColour(

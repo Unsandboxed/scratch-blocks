@@ -527,3 +527,4 @@ Blockly.Blocks['extension_music_play_note'] = {
     });
   }
 };
+
