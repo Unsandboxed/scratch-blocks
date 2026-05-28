@@ -144,6 +144,21 @@ Blockly.FlyoutButton.prototype.init = function(
    * @private
    */
   this.cssClass_ = xml.getAttribute('web-class') || null;
+
+  /**
+   * If specified, a short icon token rendered as a chip before label text.
+   * @type {?string}
+   * @private
+   */
+  this.labelIcon_ = xml.getAttribute('label-icon') || null;
+
+  // Provider labels should sit closer to block height than category headers.
+  if (this.isLabel_ && this.cssClass_) {
+    var classes = this.cssClass_.split(/\s+/);
+    if (classes.indexOf('providedByLabel') !== -1) {
+      this.height = 30;
+    }
+  }
 };
 
 /**
@@ -203,7 +218,59 @@ Blockly.FlyoutButton.prototype.addTextSvg = function(isLabel) {
       this.svgGroup_);
   svgText.textContent = Blockly.utils.replaceMessageReferences(this.text_);
 
-  this.width = Blockly.Field.getCachedWidth(svgText);
+  var textWidth = Blockly.Field.getCachedWidth(svgText);
+  var labelIconWidth = 0;
+  var labelIconGap = 0;
+  var labelIconLeft = 0;
+
+  if (isLabel && this.labelIcon_) {
+    var iconToken = String(this.labelIcon_).trim();
+    var iconTokenLower = iconToken.toLowerCase();
+
+    labelIconGap = 8;
+    labelIconLeft = 2;
+
+    if (iconTokenLower === 'arrow' || iconTokenLower === '->') {
+      var iconHeight = 10;
+      var iconTop = (this.height - iconHeight) / 2;
+      labelIconWidth = 10;
+      Blockly.utils.createSvgElement('path',
+          {
+            'class': 'blocklyFlyoutLabelIconPath',
+            'd':
+              'M' + (labelIconLeft + 1) + ' ' + (iconTop + 5) +
+              ' H' + (labelIconLeft + 9) +
+              ' M' + (labelIconLeft + 5) + ' ' + (iconTop + 1) +
+              ' L' + (labelIconLeft + 9) + ' ' + (iconTop + 5) +
+              ' L' + (labelIconLeft + 5) + ' ' + (iconTop + 9)
+          },
+          this.svgGroup_);
+    } else {
+      var iconText = Blockly.utils.replaceMessageReferences(iconToken);
+      var labelIconText = Blockly.utils.createSvgElement('text',
+          {
+            'class': 'blocklyFlyoutLabelIconText',
+            'x': 0,
+            'y': 0,
+            'text-anchor': 'middle'
+          },
+          this.svgGroup_);
+      labelIconText.textContent = iconText;
+
+      labelIconWidth = Blockly.Field.getCachedWidth(labelIconText);
+      labelIconText.setAttribute('x', labelIconLeft + (labelIconWidth / 2));
+      labelIconText.setAttribute('y', this.height / 2);
+      labelIconText.setAttribute('dominant-baseline', 'central');
+      labelIconText.setAttribute('dy', goog.userAgent.EDGE_OR_IE ?
+        Blockly.Field.IE_TEXT_OFFSET : '0');
+    }
+  }
+
+  this.width = textWidth;
+
+  if (isLabel && labelIconWidth > 0) {
+    this.width += labelIconLeft + labelIconWidth + labelIconGap + 2;
+  }
 
   if (!isLabel) {
     this.width += 2 * Blockly.FlyoutButton.MARGIN;
@@ -218,7 +285,12 @@ Blockly.FlyoutButton.prototype.addTextSvg = function(isLabel) {
   svgText.setAttribute('dominant-baseline', 'central');
   svgText.setAttribute('dy', goog.userAgent.EDGE_OR_IE ?
     Blockly.Field.IE_TEXT_OFFSET : '0');
-  svgText.setAttribute('x', this.width / 2);
+  if (isLabel && labelIconWidth > 0) {
+    const textLeft = labelIconLeft + labelIconWidth + labelIconGap;
+    svgText.setAttribute('x', textLeft + (textWidth / 2));
+  } else {
+    svgText.setAttribute('x', this.width / 2);
+  }
   svgText.setAttribute('y', this.height / 2);
 };
 

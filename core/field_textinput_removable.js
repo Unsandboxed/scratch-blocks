@@ -86,6 +86,27 @@ Blockly.FieldTextInputRemovable.prototype.init = function() {
 };
 
 /**
+ * Removable text fields should always be single-line.
+ * @return {boolean} False to disable multiline editor behavior.
+ * @private
+ */
+Blockly.FieldTextInputRemovable.prototype.isMultilineEnabled_ = function() {
+  return false;
+};
+
+/**
+ * Set the value of this field, normalizing line breaks to spaces.
+ * @param {?string} newValue New value.
+ * @override
+ */
+Blockly.FieldTextInputRemovable.prototype.setValue = function(newValue) {
+  if (typeof newValue === 'string') {
+    newValue = newValue.replace(/[\r\n]+/g, ' ');
+  }
+  Blockly.FieldTextInput.prototype.setValue.call(this, newValue);
+};
+
+/**
  * Show the inline free-text editor on top of the text with the remove button.
  * @private
  */
