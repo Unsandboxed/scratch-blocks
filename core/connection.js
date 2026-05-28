@@ -672,6 +672,24 @@ Blockly.Connection.prototype.checkType_ = function(otherConnection) {
       return true;
     }
   }
+
+  // Treat position and vector as mutually compatible custom value kinds.
+  var normalizeType_ = function(typeName) {
+    return String(typeName || '').toLowerCase();
+  };
+  var hasVectorOrPositionType_ = function(checkList) {
+    for (var j = 0; j < checkList.length; j++) {
+      var normalized = normalizeType_(checkList[j]);
+      if (normalized === 'vector' || normalized === 'position') {
+        return true;
+      }
+    }
+    return false;
+  };
+  if (hasVectorOrPositionType_(this.check_) && hasVectorOrPositionType_(otherConnection.check_)) {
+    return true;
+  }
+
   // No intersection.
   return false;
 };
