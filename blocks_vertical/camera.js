@@ -395,7 +395,7 @@ Blockly.Blocks['camera_position'] = {
           "height": 24
         }
       ],
-      "output": true,
+      "output": ["Position", "Vector", "Array"],
       "category": Blockly.Categories.camera,
       "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
       "extensions": ["colours_camera"]
