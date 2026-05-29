@@ -535,7 +535,7 @@ Blockly.Blocks['motion_position'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.MOTION_POSITION,
-      "output": true,
+      "output": ["Position", "Vector", "Array"],
       "category": Blockly.Categories.motion,
       "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
       "extensions": ["colours_motion"]

@@ -173,7 +173,7 @@ Blockly.Blocks['math_vector2'] = {
           "value": "0, 0"
         }
       ],
-      "output": "Array",
+      "output": ["Vector", "Array"],
       "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
       "colour": Blockly.Colours.textField,
       "colourSecondary": Blockly.Colours.textField,
@@ -198,7 +198,7 @@ Blockly.Blocks['math_position'] = {
           "value": "0, 0"
         }
       ],
-      "output": "Array",
+      "output": ["Position", "Array"],
       "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
       "colour": Blockly.Colours.textField,
       "colourSecondary": Blockly.Colours.textField,

@@ -332,7 +332,7 @@ Blockly.Blocks['sensing_mouseposition'] = {
   init: function() {
     this.jsonInit({
       "message0": Blockly.Msg.SENSING_MOUSEPOSITION,
-      "output": true,
+      "output": ["Position", "Vector", "Array"],
       "category": Blockly.Categories.sensing,
       "outputShape": Blockly.OUTPUT_SHAPE_VECTOR,
       "extensions": ["colours_sensing"]
